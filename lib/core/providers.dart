@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
@@ -38,8 +39,10 @@ final pendingLinkProvider = NotifierProvider<PendingLink, String?>(
   PendingLink.new,
 );
 
+bool get _isAndroid => !kIsWeb && Platform.isAndroid;
+
 final sharedLinkBootstrapProvider = Provider<void>((ref) {
-  if (!Platform.isAndroid) {
+  if (!_isAndroid) {
     return;
   }
   final subscription = ReceiveSharingIntent.instance.getMediaStream().listen((
@@ -75,7 +78,7 @@ String? sharedText(List<SharedMediaFile> files) {
 
 Future<void> signInWithGoogle() async {
   final UserCredential credential;
-  if (Platform.isAndroid) {
+  if (_isAndroid) {
     final account = await GoogleSignIn.instance.authenticate();
     final google = GoogleAuthProvider.credential(
       idToken: account.authentication.idToken,
@@ -98,7 +101,7 @@ Future<void> signInWithGoogle() async {
 
 Future<void> signOut() async {
   await FirebaseAuth.instance.signOut();
-  if (Platform.isAndroid) {
+  if (_isAndroid) {
     await GoogleSignIn.instance.signOut();
   }
 }
