@@ -1,4 +1,6 @@
 import 'dart:io';
+
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -15,7 +17,15 @@ Future<void> shareQuotePdf({
   required Customer? customer,
 }) async {
   final currency = order.currencyCode;
-  final doc = pw.Document();
+  final regular = pw.Font.ttf(
+    await rootBundle.load('assets/fonts/NotoSans-Regular.ttf'),
+  );
+  final bold = pw.Font.ttf(
+    await rootBundle.load('assets/fonts/NotoSans-Bold.ttf'),
+  );
+  final doc = pw.Document(
+    theme: pw.ThemeData.withFont(base: regular, bold: bold),
+  );
   doc.addPage(
     pw.Page(
       pageFormat: PdfPageFormat.a4,

@@ -14,6 +14,13 @@ class AppShell extends StatelessWidget {
     (label: 'More', icon: Icons.menu),
   ];
 
+  void _selectBranch(int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 840;
@@ -23,7 +30,7 @@ class AppShell extends StatelessWidget {
           children: [
             NavigationRail(
               selectedIndex: navigationShell.currentIndex,
-              onDestinationSelected: navigationShell.goBranch,
+              onDestinationSelected: _selectBranch,
               labelType: NavigationRailLabelType.all,
               destinations: [
                 for (final destination in destinations)
@@ -43,7 +50,7 @@ class AppShell extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: navigationShell.goBranch,
+        onDestinationSelected: _selectBranch,
         destinations: [
           for (final destination in destinations)
             NavigationDestination(

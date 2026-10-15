@@ -7,7 +7,8 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError('Gramnota does not target the web.');
+      // Windows is registered as a Firebase web app, so the browser uses it too.
+      return windows;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -22,17 +23,21 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'REPLACE_ME',
-    appId: 'REPLACE_ME',
-    messagingSenderId: 'REPLACE_ME',
-    projectId: 'REPLACE_ME',
+    apiKey: 'AIzaSyAqD00513zk9kdB9LeyM3_e0pXsE7FwmDA',
+    appId: '1:877210506403:android:1ceb0b0dc89a303655db16',
+    messagingSenderId: '877210506403',
+    projectId: 'gramnota-2c353',
+    storageBucket: 'gramnota-2c353.firebasestorage.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'REPLACE_ME',
-    appId: 'REPLACE_ME',
-    messagingSenderId: 'REPLACE_ME',
-    projectId: 'REPLACE_ME',
+    apiKey: 'AIzaSyCYwapnkaSAfWdShhtl0dy6UkZt10bUlBY',
+    appId: '1:877210506403:web:fe938bab702adcc355db16',
+    messagingSenderId: '877210506403',
+    projectId: 'gramnota-2c353',
+    authDomain: 'gramnota-2c353.firebaseapp.com',
+    storageBucket: 'gramnota-2c353.firebasestorage.app',
+    measurementId: 'G-5F53T8QMLJ',
   );
 }
 

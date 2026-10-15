@@ -231,22 +231,26 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
                 child: const Text('Call'),
               ),
               OutlinedButton(
-                onPressed: () {
-                  final query = [
-                    _street.text,
-                    _postal.text,
-                    _city.text,
-                    _country.text,
-                  ].where((part) => part.trim().isNotEmpty).join(' ');
-                  if (query.isEmpty) {
-                    return;
-                  }
-                  launchUrl(
-                    Uri.parse(
-                      'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}',
-                    ),
-                  );
-                },
+                onPressed: [
+                  _street.text,
+                  _postal.text,
+                  _city.text,
+                  _country.text,
+                ].every((part) => part.trim().isEmpty)
+                    ? null
+                    : () {
+                        final query = [
+                          _street.text,
+                          _postal.text,
+                          _city.text,
+                          _country.text,
+                        ].where((part) => part.trim().isNotEmpty).join(' ');
+                        launchUrl(
+                          Uri.parse(
+                            'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}',
+                          ),
+                        );
+                      },
                 child: const Text('Map'),
               ),
             ],
@@ -259,7 +263,7 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
             for (final order in customerOrders)
               ListTile(
                 title: Text(order.title),
-                subtitle: Text(order.status.name),
+                subtitle: Text(orderStatusLabel(order.status)),
                 onTap: () => context.go('/orders/${order.id}'),
               ),
           ],

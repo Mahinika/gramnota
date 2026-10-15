@@ -10,6 +10,11 @@ enum OrderStatus { quote, accepted, printed, delivered, cancelled }
 bool statusHoldsStock(OrderStatus status) =>
     status == OrderStatus.printed || status == OrderStatus.delivered;
 
+String orderStatusLabel(OrderStatus status) {
+  final name = status.name;
+  return '${name[0].toUpperCase()}${name.substring(1)}';
+}
+
 @freezed
 abstract class FilamentUsage with _$FilamentUsage {
   const factory FilamentUsage({

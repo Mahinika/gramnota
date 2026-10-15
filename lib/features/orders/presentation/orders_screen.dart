@@ -47,27 +47,22 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               : sorted.where((order) => order.status == _filter).toList();
           return Column(
             children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: const Text('All'),
-                        selected: _filter == null,
-                        onSelected: (_) => setState(() => _filter = null),
-                      ),
+                    FilterChip(
+                      label: const Text('All'),
+                      selected: _filter == null,
+                      onSelected: (_) => setState(() => _filter = null),
                     ),
                     for (final status in OrderStatus.values)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(status.name),
-                          selected: _filter == status,
-                          onSelected: (_) => setState(() => _filter = status),
-                        ),
+                      FilterChip(
+                        label: Text(orderStatusLabel(status)),
+                        selected: _filter == status,
+                        onSelected: (_) => setState(() => _filter = status),
                       ),
                   ],
                 ),
@@ -81,7 +76,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                             ListTile(
                               title: Text(order.title),
                               subtitle: Text(
-                                '${order.status.name} · ${formatMoney(order.breakdown.totalMinor, order.currencyCode)}',
+                                '${orderStatusLabel(order.status)} · ${formatMoney(order.breakdown.totalMinor, order.currencyCode)}',
                               ),
                               onTap: () => context.go('/orders/${order.id}'),
                             ),
@@ -155,7 +150,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 order.title,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              Text(order.status.name),
+              Text(orderStatusLabel(order.status)),
               if (order.stockWarning.isNotEmpty)
                 Text(order.stockWarning),
               const SizedBox(height: 12),
@@ -164,7 +159,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 children: [
                   for (final status in OrderStatus.values)
                     ChoiceChip(
-                      label: Text(status.name),
+                      label: Text(orderStatusLabel(status)),
                       selected: order.status == status,
                       onSelected: (_) async {
                         final change = await OrderStock(store).setStatus(

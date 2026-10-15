@@ -1,0 +1,25 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "gramnota-2c353",
+          "appId": "1:877210506403:android:1ceb0b0dc89a303655db16",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "gramnota-2c353",
+          "configurations": {
+            "android": "1:877210506403:android:1ceb0b0dc89a303655db16",
+            "windows": "1:877210506403:web:fe938bab702adcc355db16"
+          }
+        }
+      }
+    }
+  }
+}
