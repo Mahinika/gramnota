@@ -1,0 +1,79 @@
+# Gramnota
+
+Flutter app that quotes a sale price for a 3D print. Package name `gramnota`. Same project runs on Android and Windows. UI copy is English. The default currency is SEK.
+
+## Commands
+
+- Analyze: `flutter analyze`
+- Test: `flutter test`
+- Run: `flutter run -d android` or `flutter run -d windows`
+- After editing a Freezed or JSON model: `dart run build_runner build --delete-conflicting-outputs`
+- Firestore rules live in `firestore.rules`. Ask before `firebase deploy`.
+
+## Layout
+
+```
+lib/
+  main.dart, app.dart, router.dart, firebase_options.dart
+  core/          theme, money, format, UserStore, providers, shell
+  features/<name>/domain|data|presentation
+```
+
+Features: `pricing`, `orders`, `customers`, `filaments`, `printers`, `settings`, `auth`, `import`, `sharing`.
+
+Navigation is a `StatefulShellRoute` in `router.dart`: Calculator, Orders, Customers, Filament, More (printers, settings, inbox). `AppShell` uses a navigation rail at width >= 840 and a bottom bar otherwise. Auth redirects live in the router.
+
+## Money and pricing
+
+Money is integer minor units (öre). `100` minor is one currency unit. Percents are basis points: `10000` is 100%. Defaults in `WorkshopSettings`: markup `3000` (30%), VAT `2500` (25%).
+
+Parse typed amounts with `parseMinor` and `parseBasisPoints` in `lib/core/money.dart`. Display with `formatMoney` and `formatPercent` in `lib/core/format.dart`.
+
+`PriceCalculator` is pure. Quantity scales material, electricity, machine wear, the failure buffer, and labor. Extras stay a flat amount. Failure is a percent of material + electricity + machine. Markup applies to full cost. VAT applies to net (cost + markup). Filament price per kilogram is derived from spool price and spool weight (`FilamentSpool.pricePerKgMinor`); it is not stored.
+
+## Data
+
+`UserStore` is the only Firestore gateway, scoped to the signed-in uid:
+
+- `users/{uid}/settings/main` — `WorkshopSettings`, including `nextQuoteNumber`
+- `users/{uid}/printers|filaments|customers|orders|inbox`
+- `userDirectory/{lowercaseEmail}` — uid lookup so one user can send an item to another
+
+Persisted models are Freezed + `json_serializable`, with `explicit_to_json` in `build.yaml`. Do not hand-edit `*.freezed.dart` or `*.g.dart`. Ids are client UUIDs, except inbox documents created by Firestore. Timestamps are UTC ISO-8601 strings. `UserStore._watch` injects the document id and skips a document that fails to decode.
+
+`OrderStock.allocateQuoteNumber` increments `nextQuoteNumber` in a transaction. Stock moves only when status enters or leaves `printed` / `delivered` (`statusHoldsStock`). A short spool still deducts what remains and stores `stockWarning` plus `deductedGrams` on the order.
+
+Inbox is the only cross-user write. The payload is a JSON string (`payloadJson`), not a nested map. Keep `firestore.rules` in step with any new field the create rule requires.
+
+## Auth and platforms
+
+`firebaseIsConfigured` is false while an API key starts with `REPLACE`. An unconfigured build shows `SetupScreen` and does not touch Firebase. Android sign-in uses `google_sign_in`. Windows sign-in uses Firebase Auth in the browser; Windows is registered as a Firebase web app. `android/app/google-services.json` is gitignored. Do not commit secrets.
+
+Share-into-app (`receive_sharing_intent`) is Android only. The URL lands in `pendingLinkProvider` for the calculator.
+
+## Link import
+
+`LinkImportService` fills a quote from a model URL. MakerWorld, Printables, and Creality Cloud supply title, print time, and filament grams. Thingiverse, Thangs, Cults3D, MyMiniFactory, Makeronline, Nexprint, and GrabCAD supply a title when the page has one, and hop once to a supported link if the HTML contains one. The sale price still comes from the user's spools. Importers take a `TextFetcher` so tests do not hit the network.
+
+## UI
+
+Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProvider`. Confirm deletes with `confirmDelete`. Empty lists use `EmptyView`. Theme is `buildGramnotaTheme()`. Quote PDFs go through `shareQuotePdf` and the Noto Sans files in `assets/fonts/`.
+
+## Tests
+
+- `test/price_calculator_test.dart` — pricing math
+- `test/order_stock_test.dart` — quote numbers and stock, via `fake_cloud_firestore`
+- `test/link_import_test.dart` — importers with a fake fetcher
+- `test/widget_test.dart` — breakdown card
+
+Add or update a test when changing the calculator, stock transitions, or an importer.
+
+## Leave out of this version
+
+G-code import, duplicating an order as a new quote, a saved product catalog, and quotes that contain several different prints.
+
+## Working agreements
+
+- Keep pricing and stock rules in `PriceCalculator` and `OrderStock`, not in widgets.
+- Stay on Android and Windows unless asked to add a platform.
+- Ask before deploying Firebase, pushing, or publishing.
