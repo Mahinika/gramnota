@@ -9,6 +9,7 @@ import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
+import '../domain/common_printers.dart';
 import '../domain/printer_profile.dart';
 
 class PrintersScreen extends ConsumerWidget {
@@ -129,6 +130,41 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           if (_error != null) Text(_error!),
+          if (widget.id == 'new') ...[
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(labelText: 'Common printer'),
+              items: [
+                for (final printer in commonPrinters)
+                  DropdownMenuItem(
+                    value: printer.name,
+                    child: Text(
+                      '${printer.name} · ${printer.powerWatts} W · ${printer.purchasePriceKronor} kr',
+                    ),
+                  ),
+              ],
+              onChanged: (name) {
+                if (name == null) {
+                  return;
+                }
+                final printer = commonPrinters.firstWhere(
+                  (item) => item.name == name,
+                );
+                setState(() {
+                  _name.text = printer.name;
+                  _watts.text = printer.powerWatts.toString();
+                  _price.text = printer.purchasePriceKronor.toString();
+                  _life.text = CommonPrinter.lifetimeHours.round().toString();
+                  _maintenance.text = '0';
+                  _error = null;
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Power is the average while printing PLA. The price is a Swedish shop price including VAT from October 2026. Lifetime starts at 5,000 hours because makers do not publish one. Change the price to what you paid.',
+            ),
+            const SizedBox(height: 12),
+          ],
           TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
           TextField(controller: _watts, decoration: const InputDecoration(labelText: 'Power W'), keyboardType: TextInputType.number),
           TextField(controller: _price, decoration: const InputDecoration(labelText: 'Purchase price'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
