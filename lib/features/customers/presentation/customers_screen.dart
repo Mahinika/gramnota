@@ -257,6 +257,31 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
           ),
           const SizedBox(height: 12),
           FilledButton(onPressed: () => _save(store), child: const Text('Save')),
+          if (widget.id != 'new')
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () async {
+                final name = _name.text.trim();
+                final quotes = customerOrders.length;
+                final confirmed = await confirmDelete(
+                  context,
+                  title: 'Delete customer',
+                  message: quotes == 0
+                      ? 'This removes $name.'
+                      : 'This removes $name. ${quotes == 1 ? '1 quote stays' : '$quotes quotes stay'}, without this customer.',
+                );
+                if (!confirmed || !context.mounted) {
+                  return;
+                }
+                await store.deleteCustomer(widget.id);
+                if (context.mounted) {
+                  context.go('/customers');
+                }
+              },
+              child: const Text('Delete customer'),
+            ),
           if (customerOrders.isNotEmpty) ...[
             const SizedBox(height: 24),
             Text('Orders', style: Theme.of(context).textTheme.titleMedium),

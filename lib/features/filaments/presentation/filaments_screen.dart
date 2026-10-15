@@ -222,6 +222,28 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
               },
               child: const Text('Adjust remaining'),
             ),
+          if (widget.id != 'new')
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () async {
+                final confirmed = await confirmDelete(
+                  context,
+                  title: 'Delete spool',
+                  message:
+                      'This removes the spool. Quotes keep their saved weights.',
+                );
+                if (!confirmed || !context.mounted) {
+                  return;
+                }
+                await store.deleteFilament(widget.id);
+                if (context.mounted) {
+                  context.go('/filaments');
+                }
+              },
+              child: const Text('Delete spool'),
+            ),
         ],
       ),
     );

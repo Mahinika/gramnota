@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/format.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../customers/domain/customer.dart';
+import '../../filaments/domain/filament_spool.dart';
+import '../../filaments/presentation/filaments_screen.dart';
+import '../../printers/domain/printer_profile.dart';
+import '../../printers/presentation/printers_screen.dart';
 import '../../settings/domain/workshop_settings.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
@@ -107,6 +112,8 @@ class OrderDetailScreen extends ConsumerWidget {
     final orders = ref.watch(ordersProvider(store));
     final settings = ref.watch(settingsProvider(store));
     final customers = ref.watch(customersProvider(store));
+    final filaments = ref.watch(filamentsProvider(store));
+    final printers = ref.watch(printersProvider(store));
     return orders.when(
       data: (list) {
         final matches = list.where((order) => order.id == id);
@@ -118,6 +125,12 @@ class OrderDetailScreen extends ConsumerWidget {
             .where((item) => item.id == order.customerId)
             .cast<Customer?>()
             .firstOrNull;
+        final spools = filaments.asData?.value ?? const <FilamentSpool>[];
+        final printer = printers.asData?.value
+            .where((item) => item.id == order.printerId)
+            .cast<PrinterProfile?>()
+            .firstOrNull;
+        final source = Uri.tryParse(order.sourceUrl);
         return Scaffold(
           appBar: AppBar(
             title: Text('Quote ${order.quoteNumber}'),
@@ -153,6 +166,40 @@ class OrderDetailScreen extends ConsumerWidget {
               Text(orderStatusLabel(order.status)),
               if (order.stockWarning.isNotEmpty)
                 Text(order.stockWarning),
+              const SizedBox(height: 12),
+              if (customer == null)
+                const Text('No customer')
+              else
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(customer.name),
+                  subtitle: Text(
+                    customer.addressLine.isEmpty
+                        ? 'Customer'
+                        : customer.addressLine,
+                  ),
+                  onTap: () => context.go('/customers/${customer.id}'),
+                ),
+              Text('Quantity ${order.quantity}'),
+              Text('Print time ${formatDuration(order.printTimeSeconds)}'),
+              if (order.validUntil.length >= 10)
+                Text('Valid until ${order.validUntil.substring(0, 10)}'),
+              if (printer != null) Text(printer.name),
+              if (order.filaments.isEmpty)
+                const Text('No filament')
+              else
+                for (final usage in order.filaments)
+                  Text(_filamentLine(usage, spools)),
+              if (order.sourceProfileTitle.isNotEmpty)
+                Text(order.sourceProfileTitle),
+              if (source != null && source.hasScheme)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => launchUrl(source),
+                    child: const Text('Open source'),
+                  ),
+                ),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -193,6 +240,21 @@ class OrderDetailScreen extends ConsumerWidget {
       error: (error, _) => Scaffold(body: EmptyView(message: '$error')),
     );
   }
+}
+
+String _filamentLine(FilamentUsage usage, List<FilamentSpool> spools) {
+  final spool = spools.where((item) => item.id == usage.filamentId).firstOrNull;
+  final material = usage.material.isNotEmpty
+      ? usage.material
+      : spool?.material ?? '';
+  final name = [
+    spool?.brand ?? '',
+    material,
+  ].where((part) => part.trim().isNotEmpty).join(' ');
+  if (name.isEmpty) {
+    return formatGrams(usage.grams);
+  }
+  return '${formatGrams(usage.grams)} $name';
 }
 
 final ordersProvider = StreamProvider.family<List<PrintOrder>, UserStore>(

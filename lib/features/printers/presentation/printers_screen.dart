@@ -156,6 +156,28 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
             },
             child: const Text('Save'),
           ),
+          if (widget.id != 'new')
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () async {
+                final confirmed = await confirmDelete(
+                  context,
+                  title: 'Delete printer',
+                  message:
+                      'This removes the printer. Saved quotes keep their prices.',
+                );
+                if (!confirmed || !context.mounted) {
+                  return;
+                }
+                await store.deletePrinter(widget.id);
+                if (context.mounted) {
+                  context.go('/more/printers');
+                }
+              },
+              child: const Text('Delete printer'),
+            ),
         ],
       ),
     );
