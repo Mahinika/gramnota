@@ -72,6 +72,14 @@ Add or update a test when changing the calculator, stock transitions, or an impo
 
 G-code import, duplicating an order as a new quote, a saved product catalog, and quotes that contain several different prints.
 
+## Skills
+
+Read the matching file in `.cursor/skills/` before changing that area:
+
+- `quote-pricing` — `PriceCalculator`, minor units, basis points
+- `link-import` — a model URL, `LinkImportService`, a new host
+- `firestore-data` — `UserStore`, `OrderStock`, `firestore.rules`, inbox
+
 ## Working agreements
 
 - Keep pricing and stock rules in `PriceCalculator` and `OrderStock`, not in widgets.
