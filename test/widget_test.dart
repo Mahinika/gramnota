@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:printprice/core/format.dart';
-import 'package:printprice/features/pricing/domain/price_breakdown.dart';
-import 'package:printprice/features/pricing/presentation/breakdown_card.dart';
+import 'package:gramnota/core/format.dart';
+import 'package:gramnota/features/pricing/domain/price_breakdown.dart';
+import 'package:gramnota/features/pricing/presentation/breakdown_card.dart';
 
 void main() {
   testWidgets('shows every cost line and the total', (tester) async {

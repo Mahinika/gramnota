@@ -5,16 +5,16 @@ import 'core/providers.dart';
 import 'core/theme.dart';
 import 'router.dart';
 
-class PrintPriceApp extends ConsumerWidget {
-  const PrintPriceApp({super.key});
+class GramnotaApp extends ConsumerWidget {
+  const GramnotaApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(sharedLinkBootstrapProvider);
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
-      title: 'PrintPrice',
-      theme: buildPrintPriceTheme(),
+      title: 'Gramnota',
+      theme: buildGramnotaTheme(),
       routerConfig: router,
     );
   }

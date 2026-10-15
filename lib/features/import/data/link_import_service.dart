@@ -123,7 +123,7 @@ class HttpTextFetcher implements TextFetcher {
   Future<String> get(Uri uri) async {
     final response = await _client.get(
       uri,
-      headers: const {'User-Agent': 'PrintPrice/1.0'},
+      headers: const {'User-Agent': 'Gramnota/1.0'},
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw HttpException('Request failed (${response.statusCode}) for $uri');
@@ -136,7 +136,7 @@ class HttpTextFetcher implements TextFetcher {
     final response = await _client.post(
       uri,
       headers: const {
-        'User-Agent': 'PrintPrice/1.0',
+        'User-Agent': 'Gramnota/1.0',
         'Content-Type': 'application/json',
       },
       body: jsonEncode(body),

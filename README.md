@@ -1,6 +1,6 @@
-# PrintPrice
+# Gramnota
 
-PrintPrice works out a sale price for a 3D print. It runs as an Android app and as a Windows desktop app from the same Flutter project.
+Gramnota works out a sale price for a 3D print. It runs as an Android app and as a Windows desktop app from the same Flutter project.
 
 A quote can include filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT. Customers, filament spools, and printers stay with the signed-in user. Marking an order printed takes filament out of stock. A PDF quote can be shared from the order.
 
@@ -30,7 +30,7 @@ flutter run -d windows
 Paste a link, or on Android share it into the app.
 
 - MakerWorld, Printables, and Creality Cloud fill the title, print time, and filament grams.
-- Thingiverse, Thangs, Cults3D, MyMiniFactory, Makeronline, Nexprint, and GrabCAD fill the title when the page publishes one, and say that time and weight were not published. If that page links to MakerWorld, Printables, or Creality Cloud, PrintPrice follows that link once.
+- Thingiverse, Thangs, Cults3D, MyMiniFactory, Makeronline, Nexprint, and GrabCAD fill the title when the page publishes one, and say that time and weight were not published. If that page links to MakerWorld, Printables, or Creality Cloud, Gramnota follows that link once.
 - The price still comes from your own spools.
 
 ## Later

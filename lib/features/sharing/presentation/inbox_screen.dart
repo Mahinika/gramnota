@@ -53,7 +53,7 @@ Future<void> sendItem({
   }
   if (recipient == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No PrintPrice user with that email.')),
+      const SnackBar(content: Text('No Gramnota user with that email.')),
     );
     return;
   }
@@ -68,7 +68,7 @@ Future<void> sendItem({
     recipientUid: recipient.uid,
     type: type,
     payload: payload,
-    senderName: user?.displayName ?? user?.email ?? 'PrintPrice user',
+    senderName: user?.displayName ?? user?.email ?? 'Gramnota user',
     senderEmail: user?.email ?? '',
   );
   if (context.mounted) {

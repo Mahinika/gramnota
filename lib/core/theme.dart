@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-ThemeData buildPrintPriceTheme() {
+ThemeData buildGramnotaTheme() {
   const seed = Color(0xFF0F6E56);
   final scheme = ColorScheme.fromSeed(
     seedColor: seed,

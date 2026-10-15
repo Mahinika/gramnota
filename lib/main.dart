@@ -20,5 +20,5 @@ Future<void> main() async {
       await GoogleSignIn.instance.initialize();
     }
   }
-  runApp(const ProviderScope(child: PrintPriceApp()));
+  runApp(const ProviderScope(child: GramnotaApp()));
 }

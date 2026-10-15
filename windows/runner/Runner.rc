@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "se.printprice" "\0"
-            VALUE "FileDescription", "printprice" "\0"
+            VALUE "CompanyName", "se.gramnota" "\0"
+            VALUE "FileDescription", "Gramnota" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "printprice" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 se.printprice. All rights reserved." "\0"
-            VALUE "OriginalFilename", "printprice.exe" "\0"
-            VALUE "ProductName", "printprice" "\0"
+            VALUE "InternalName", "gramnota" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 se.gramnota. All rights reserved." "\0"
+            VALUE "OriginalFilename", "gramnota.exe" "\0"
+            VALUE "ProductName", "Gramnota" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

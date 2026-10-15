@@ -1,4 +1,4 @@
-package se.printprice.printprice
+package se.gramnota.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:printprice/features/import/data/link_import_service.dart';
-import 'package:printprice/features/import/domain/import_models.dart';
+import 'package:gramnota/features/import/data/link_import_service.dart';
+import 'package:gramnota/features/import/domain/import_models.dart';
 
 class _FakeFetcher implements TextFetcher {
   _FakeFetcher(this.responses);

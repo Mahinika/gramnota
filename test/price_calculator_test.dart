@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:printprice/features/pricing/domain/price_calculator.dart';
+import 'package:gramnota/features/pricing/domain/price_calculator.dart';
 
 void main() {
   const calculator = PriceCalculator();

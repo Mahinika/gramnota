@@ -10,7 +10,7 @@ class SetupScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('PrintPrice setup')),
+      appBar: AppBar(title: const Text('Gramnota setup')),
       body: const Padding(
         padding: EdgeInsets.all(24),
         child: Text(
@@ -63,7 +63,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'PrintPrice',
+                  'Gramnota',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 8),

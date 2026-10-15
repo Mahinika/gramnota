@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError('PrintPrice does not target the web.');
+      throw UnsupportedError('Gramnota does not target the web.');
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -16,7 +16,7 @@ class DefaultFirebaseOptions {
         return windows;
       default:
         throw UnsupportedError(
-          'PrintPrice is set up for Android and Windows.',
+          'Gramnota is set up for Android and Windows.',
         );
     }
   }

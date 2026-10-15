@@ -1,10 +1,10 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:printprice/core/user_store.dart';
-import 'package:printprice/features/filaments/domain/filament_spool.dart';
-import 'package:printprice/features/orders/data/order_stock.dart';
-import 'package:printprice/features/orders/domain/print_order.dart';
-import 'package:printprice/features/pricing/domain/price_breakdown.dart';
+import 'package:gramnota/core/user_store.dart';
+import 'package:gramnota/features/filaments/domain/filament_spool.dart';
+import 'package:gramnota/features/orders/data/order_stock.dart';
+import 'package:gramnota/features/orders/domain/print_order.dart';
+import 'package:gramnota/features/pricing/domain/price_breakdown.dart';
 
 void main() {
   test('sums the same spool and clamps remaining at zero', () async {

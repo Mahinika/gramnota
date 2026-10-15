@@ -192,7 +192,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 builder: (context) => AlertDialog(
                   title: const Text('Delete account'),
                   content: const Text(
-                    'This deletes your workshop data and Google sign-in for PrintPrice.',
+                    'This deletes your workshop data and Google sign-in for Gramnota.',
                   ),
                   actions: [
                     TextButton(
