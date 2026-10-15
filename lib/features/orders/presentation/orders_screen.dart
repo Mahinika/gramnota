@@ -1,0 +1,213 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/format.dart';
+import '../../../core/providers.dart';
+import '../../../core/shell.dart';
+import '../../../core/user_store.dart';
+import '../../customers/domain/customer.dart';
+import '../../settings/domain/workshop_settings.dart';
+import '../../sharing/domain/inbox_item.dart';
+import '../../sharing/presentation/inbox_screen.dart';
+import '../data/order_stock.dart';
+import '../domain/print_order.dart';
+import 'quote_pdf.dart';
+
+class OrdersScreen extends ConsumerStatefulWidget {
+  const OrdersScreen({super.key});
+
+  @override
+  ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends ConsumerState<OrdersScreen> {
+  OrderStatus? _filter;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = ref.watch(userStoreProvider);
+    if (store == null) {
+      return const Scaffold(body: EmptyView(message: 'Sign in to see orders.'));
+    }
+    final orders = ref.watch(ordersProvider(store));
+    return Scaffold(
+      appBar: AppBar(title: const Text('Orders')),
+      body: orders.when(
+        data: (list) {
+          if (list.isEmpty) {
+            return const EmptyView(
+              message: 'No quotes yet. Save one from the calculator.',
+            );
+          }
+          final sorted = [...list]
+            ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          final visible = _filter == null
+              ? sorted
+              : sorted.where((order) => order.status == _filter).toList();
+          return Column(
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: const Text('All'),
+                        selected: _filter == null,
+                        onSelected: (_) => setState(() => _filter = null),
+                      ),
+                    ),
+                    for (final status in OrderStatus.values)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(status.name),
+                          selected: _filter == status,
+                          onSelected: (_) => setState(() => _filter = status),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: visible.isEmpty
+                    ? const EmptyView(message: 'No orders with that status.')
+                    : ListView(
+                        children: [
+                          for (final order in visible)
+                            ListTile(
+                              title: Text(order.title),
+                              subtitle: Text(
+                                '${order.status.name} · ${formatMoney(order.breakdown.totalMinor, order.currencyCode)}',
+                              ),
+                              onTap: () => context.go('/orders/${order.id}'),
+                            ),
+                        ],
+                      ),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => EmptyView(message: '$error'),
+      ),
+    );
+  }
+}
+
+class OrderDetailScreen extends ConsumerWidget {
+  const OrderDetailScreen({required this.id, super.key});
+
+  final String id;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final store = ref.watch(userStoreProvider);
+    if (store == null) {
+      return const Scaffold(body: EmptyView(message: 'Sign in to see this quote.'));
+    }
+    final orders = ref.watch(ordersProvider(store));
+    final settings = ref.watch(settingsProvider(store));
+    final customers = ref.watch(customersProvider(store));
+    return orders.when(
+      data: (list) {
+        final matches = list.where((order) => order.id == id);
+        if (matches.isEmpty) {
+          return const Scaffold(body: EmptyView(message: 'Quote not found.'));
+        }
+        final order = matches.first;
+        final customer = customers.asData?.value
+            .where((item) => item.id == order.customerId)
+            .cast<Customer?>()
+            .firstOrNull;
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('Quote ${order.quoteNumber}'),
+            actions: [
+              IconButton(
+                tooltip: 'Share quote',
+                onPressed: () => shareQuotePdf(
+                  order: order,
+                  settings: settings.asData?.value ?? const WorkshopSettings(),
+                  customer: customer,
+                ),
+                icon: const Icon(Icons.ios_share),
+              ),
+              IconButton(
+                tooltip: 'Send to user',
+                onPressed: () => sendItem(
+                  context: context,
+                  store: store,
+                  type: SharedItemType.order,
+                  payload: order.toJson(),
+                ),
+                icon: const Icon(Icons.send_outlined),
+              ),
+            ],
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text(
+                order.title,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              Text(order.status.name),
+              if (order.stockWarning.isNotEmpty)
+                Text(order.stockWarning),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final status in OrderStatus.values)
+                    ChoiceChip(
+                      label: Text(status.name),
+                      selected: order.status == status,
+                      onSelected: (_) async {
+                        final change = await OrderStock(store).setStatus(
+                          order: order,
+                          next: status,
+                        );
+                        if (change.warning.isNotEmpty && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(change.warning)),
+                          );
+                        }
+                      },
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(formatMoney(order.breakdown.totalMinor, order.currencyCode)),
+              Text('Per unit ${formatMoney(order.breakdown.perUnitMinor, order.currencyCode)}'),
+              Text('Material ${formatMoney(order.breakdown.materialMinor, order.currencyCode)}'),
+              Text('Electricity ${formatMoney(order.breakdown.electricityMinor, order.currencyCode)}'),
+              Text('Machine ${formatMoney(order.breakdown.machineMinor, order.currencyCode)}'),
+              Text('Failure ${formatMoney(order.breakdown.failureMinor, order.currencyCode)}'),
+              Text('Labor ${formatMoney(order.breakdown.laborMinor, order.currencyCode)}'),
+              Text('Extras ${formatMoney(order.breakdown.extrasMinor, order.currencyCode)}'),
+              Text('VAT ${formatMoney(order.breakdown.vatMinor, order.currencyCode)}'),
+            ],
+          ),
+        );
+      },
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (error, _) => Scaffold(body: EmptyView(message: '$error')),
+    );
+  }
+}
+
+final ordersProvider = StreamProvider.family<List<PrintOrder>, UserStore>(
+  (ref, store) => store.watchOrders(),
+);
+
+final settingsProvider = StreamProvider.family<WorkshopSettings, UserStore>(
+  (ref, store) => store.watchSettings(),
+);
+
+final customersProvider = StreamProvider.family<List<Customer>, UserStore>(
+  (ref, store) => store.watchCustomers(),
+);
