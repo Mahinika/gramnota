@@ -45,12 +45,14 @@ class OrderStock {
 
       if (!holdsNow && holdsNext) {
         final requested = <String, double>{};
-        for (final usage in order.filaments) {
-          if (usage.filamentId.isEmpty) {
-            continue;
+        for (final line in orderPrints(order)) {
+          for (final usage in line.filaments) {
+            if (usage.filamentId.isEmpty) {
+              continue;
+            }
+            requested[usage.filamentId] =
+                (requested[usage.filamentId] ?? 0) + usage.grams * line.quantity;
           }
-          requested[usage.filamentId] =
-              (requested[usage.filamentId] ?? 0) + usage.grams * order.quantity;
         }
         final deducted = <String, double>{};
         final shortfalls = <String>[];

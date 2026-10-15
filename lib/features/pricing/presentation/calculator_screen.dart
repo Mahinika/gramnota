@@ -16,11 +16,15 @@ import '../../orders/data/order_stock.dart';
 import '../../orders/domain/print_order.dart';
 import '../../printers/domain/printer_profile.dart';
 import '../../settings/domain/workshop_settings.dart';
+import '../domain/price_breakdown.dart';
 import '../domain/price_calculator.dart';
 import 'breakdown_card.dart';
 
 class CalculatorScreen extends ConsumerStatefulWidget {
-  const CalculatorScreen({super.key});
+  const CalculatorScreen({this.orderId, this.lineId, super.key});
+
+  final String? orderId;
+  final String? lineId;
 
   @override
   ConsumerState<CalculatorScreen> createState() => _CalculatorScreenState();
@@ -59,6 +63,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   String? _importNote;
   var _importing = false;
   var _saving = false;
+  String? _appliedKey;
+  String? _scheduledKey;
+
+  String get _targetKey => '${widget.orderId ?? ''}|${widget.lineId ?? ''}';
 
   @override
   void initState() {
@@ -76,6 +84,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     ]) {
       controller.addListener(_refresh);
     }
+    _rows.first.grams.addListener(_refresh);
   }
 
   void _refresh() {
@@ -282,14 +291,205 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     );
   }
 
+  void _scheduleQuoteEdit(PrintOrder? order, WorkshopSettings? settings) {
+    if (_appliedKey == _targetKey) {
+      return;
+    }
+    if (widget.orderId != null && order == null) {
+      return;
+    }
+    if (_scheduledKey == _targetKey) {
+      return;
+    }
+    _scheduledKey = _targetKey;
+    final key = _targetKey;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || key != _targetKey) {
+        return;
+      }
+      _applyQuoteEdit(order, settings);
+      _appliedKey = key;
+      _scheduledKey = null;
+      setState(() {});
+    });
+  }
+
+  void _applyQuoteEdit(PrintOrder? order, WorkshopSettings? settings) {
+    if (widget.orderId == null) {
+      if (_appliedKey != null && _appliedKey != '|') {
+        _clearForm(settings);
+      }
+      return;
+    }
+    if (widget.lineId == null) {
+      _clearForm(settings);
+      return;
+    }
+    if (order == null) {
+      return;
+    }
+    for (final line in orderPrints(order)) {
+      if (line.id == widget.lineId) {
+        _fillFromLine(line);
+        return;
+      }
+    }
+    _importNote = 'That print is no longer on the quote.';
+  }
+
+  void _clearForm(WorkshopSettings? settings) {
+    _title.clear();
+    _link.clear();
+    _hours.text = '0';
+    _minutes.text = '0';
+    _prep.text = '0';
+    _post.text = '0';
+    _quantity.text = '1';
+    _markup.text = settings == null
+        ? ''
+        : basisPointsLabel(settings.defaultMarkupBasisPoints);
+    _failure.text = settings == null
+        ? ''
+        : basisPointsLabel(settings.defaultFailureBasisPoints);
+    _vat.text = settings == null
+        ? ''
+        : basisPointsLabel(settings.vatBasisPoints);
+    _printerId = null;
+    _sourceUrl = '';
+    _profileTitle = '';
+    _importNote = null;
+    for (final row in _rows) {
+      row.grams.removeListener(_refresh);
+      row.grams.dispose();
+    }
+    final row = _FilamentRow();
+    row.grams.addListener(_refresh);
+    _rows
+      ..clear()
+      ..add(row);
+    for (final extra in _extras) {
+      extra.cost.removeListener(_refresh);
+      extra.name.dispose();
+      extra.cost.dispose();
+    }
+    _extras.clear();
+  }
+
+  void _fillFromLine(QuoteLine line) {
+    _title.text = line.title;
+    _link.text = line.sourceUrl;
+    _hours.text = '${line.printTimeSeconds ~/ 3600}';
+    _minutes.text = '${(line.printTimeSeconds % 3600) ~/ 60}';
+    _prep.text = '${line.prepMinutes}';
+    _post.text = '${line.postMinutes}';
+    _quantity.text = '${line.quantity}';
+    _markup.text = basisPointsLabel(line.markupBasisPoints);
+    _failure.text = basisPointsLabel(line.failureBasisPoints);
+    _vat.text = basisPointsLabel(line.vatBasisPoints);
+    _printerId = line.printerId.isEmpty ? null : line.printerId;
+    _sourceUrl = line.sourceUrl;
+    _profileTitle = line.sourceProfileTitle;
+    _importNote = null;
+    for (final row in _rows) {
+      row.grams.removeListener(_refresh);
+      row.grams.dispose();
+    }
+    _rows.clear();
+    if (line.filaments.isEmpty) {
+      final row = _FilamentRow();
+      row.grams.addListener(_refresh);
+      _rows.add(row);
+    } else {
+      for (final filament in line.filaments) {
+        final row = _FilamentRow(
+          material: filament.material,
+          colorHex: filament.colorHex,
+        );
+        row.filamentId = filament.filamentId.isEmpty
+            ? null
+            : filament.filamentId;
+        row.grams.text = filament.grams.toString();
+        row.grams.addListener(_refresh);
+        _rows.add(row);
+      }
+    }
+    for (final extra in _extras) {
+      extra.cost.removeListener(_refresh);
+      extra.name.dispose();
+      extra.cost.dispose();
+    }
+    _extras
+      ..clear()
+      ..addAll(
+        line.extras.map((extra) {
+          final row = _ExtraRow();
+          row.name.text = extra.name;
+          final amount = extra.costMinor / 100;
+          row.cost.text = amount == amount.roundToDouble()
+              ? amount.round().toString()
+              : amount.toStringAsFixed(2);
+          row.cost.addListener(_refresh);
+          return row;
+        }),
+      );
+  }
+
+  QuoteLine _captureLine(
+    String id,
+    PriceInput input,
+    PriceBreakdown breakdown,
+    List<FilamentSpool> spools,
+  ) {
+    return QuoteLine(
+      id: id,
+      title: _title.text.trim(),
+      quantity: input.quantity,
+      printerId: _printerId ?? '',
+      printTimeSeconds: input.printTimeSeconds,
+      filaments: [
+        for (final row in _rows)
+          FilamentUsage(
+            filamentId: row.filamentId ?? '',
+            grams: parseNonNegativeDouble(row.grams.text) ?? 0,
+            material: row.material.isNotEmpty
+                ? row.material
+                : _spool(spools, row.filamentId)?.material ?? '',
+            colorHex: row.colorHex,
+          ),
+      ],
+      prepMinutes: input.prepMinutes,
+      postMinutes: input.postMinutes,
+      extras: [
+        for (final extra in _extras)
+          if (extra.name.text.trim().isNotEmpty)
+            ExtraCost(
+              name: extra.name.text.trim(),
+              costMinor: parseMinor(extra.cost.text) ?? 0,
+            ),
+      ],
+      markupBasisPoints: input.markupBasisPoints,
+      failureBasisPoints: input.failureBasisPoints,
+      vatBasisPoints: input.vatBasisPoints,
+      breakdown: breakdown,
+      sourceUrl: _sourceUrl,
+      sourceModelTitle: _title.text.trim(),
+      sourceProfileTitle: _profileTitle,
+    );
+  }
+
   Future<void> _save(
     UserStore store,
     WorkshopSettings settings,
     PriceInput input,
     List<FilamentSpool> spools,
+    PrintOrder? target,
   ) async {
     if (_title.text.trim().isEmpty) {
       setState(() => _importNote = 'Add a title before saving the quote.');
+      return;
+    }
+    if (widget.orderId != null) {
+      await _saveOnQuote(store, input, spools, target);
       return;
     }
     final customers = await store.watchCustomers().first;
@@ -333,53 +533,98 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       final number = await OrderStock(store).allocateQuoteNumber();
       final now = DateTime.now().toUtc();
       final breakdown = const PriceCalculator().calculate(input);
-      final order = PrintOrder(
+      final line = _captureLine(const Uuid().v4(), input, breakdown, spools);
+      final draft = PrintOrder(
         id: const Uuid().v4(),
         quoteNumber: number,
         customerId: resolvedCustomer,
-        title: _title.text.trim(),
+        title: line.title,
         status: OrderStatus.quote,
         validUntil: now
             .add(Duration(days: settings.quoteValidityDays))
             .toIso8601String(),
-        quantity: input.quantity,
-        printerId: _printerId ?? '',
-        printTimeSeconds: input.printTimeSeconds,
-        filaments: [
-          for (final row in _rows)
-            FilamentUsage(
-              filamentId: row.filamentId ?? '',
-              grams: parseNonNegativeDouble(row.grams.text) ?? 0,
-              material: row.material.isNotEmpty
-                  ? row.material
-                  : _spool(spools, row.filamentId)?.material ?? '',
-              colorHex: row.colorHex,
-            ),
-        ],
-        prepMinutes: input.prepMinutes,
-        postMinutes: input.postMinutes,
-        extras: [
-          for (final extra in _extras)
-            if (extra.name.text.trim().isNotEmpty)
-              ExtraCost(
-                name: extra.name.text.trim(),
-                costMinor: parseMinor(extra.cost.text) ?? 0,
-              ),
-        ],
-        markupBasisPoints: input.markupBasisPoints,
-        failureBasisPoints: input.failureBasisPoints,
-        vatBasisPoints: input.vatBasisPoints,
+        quantity: line.quantity,
+        printerId: line.printerId,
+        printTimeSeconds: line.printTimeSeconds,
+        filaments: line.filaments,
+        prepMinutes: line.prepMinutes,
+        postMinutes: line.postMinutes,
+        extras: line.extras,
+        markupBasisPoints: line.markupBasisPoints,
+        failureBasisPoints: line.failureBasisPoints,
+        vatBasisPoints: line.vatBasisPoints,
         currencyCode: settings.currencyCode,
-        breakdown: breakdown,
-        sourceUrl: _sourceUrl,
-        sourceModelTitle: _title.text.trim(),
-        sourceProfileTitle: _profileTitle,
+        breakdown: line.breakdown,
+        sourceUrl: line.sourceUrl,
+        sourceModelTitle: line.sourceModelTitle,
+        sourceProfileTitle: line.sourceProfileTitle,
         createdAt: now.toIso8601String(),
         updatedAt: now.toIso8601String(),
       );
+      final order = orderWithPrints(draft, [line]);
       await store.saveOrder(order);
       if (mounted) {
         context.go('/orders/${order.id}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  Future<void> _saveOnQuote(
+    UserStore store,
+    PriceInput input,
+    List<FilamentSpool> spools,
+    PrintOrder? target,
+  ) async {
+    if (target == null) {
+      setState(() => _importNote = 'Quote not found.');
+      return;
+    }
+    if (target.stockDeducted) {
+      setState(
+        () => _importNote =
+            'Move the order back to Accepted before changing prints.',
+      );
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      final breakdown = const PriceCalculator().calculate(input);
+      final line = _captureLine(
+        widget.lineId ?? const Uuid().v4(),
+        input,
+        breakdown,
+        spools,
+      );
+      final current = orderPrints(target);
+      final next = <QuoteLine>[];
+      if (widget.lineId == null) {
+        next.addAll([...current, line]);
+      } else {
+        var found = false;
+        for (final item in current) {
+          if (item.id == widget.lineId) {
+            next.add(line);
+            found = true;
+          } else {
+            next.add(item);
+          }
+        }
+        if (!found) {
+          next.add(line);
+        }
+      }
+      final now = DateTime.now().toUtc().toIso8601String();
+      final updated = orderWithPrints(target, next).copyWith(
+        title: quoteTitleFor(target, next),
+        updatedAt: now,
+      );
+      await store.saveOrder(updated);
+      if (mounted) {
+        context.go('/orders/${updated.id}');
       }
     } finally {
       if (mounted) {
@@ -451,7 +696,21 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         ref.watch(_printersProvider(store)).asData?.value ?? const [];
     final spools =
         ref.watch(_filamentsProvider(store)).asData?.value ?? const [];
-    if (settings != null && _markup.text.isEmpty && _vat.text.isEmpty) {
+    final orders = ref.watch(_ordersProvider(store)).asData?.value;
+    PrintOrder? target;
+    if (widget.orderId != null && orders != null) {
+      for (final order in orders) {
+        if (order.id == widget.orderId) {
+          target = order;
+        }
+      }
+    }
+    _scheduleQuoteEdit(target, settings);
+    if (settings != null &&
+        widget.lineId == null &&
+        _markup.text.isEmpty &&
+        _vat.text.isEmpty &&
+        _failure.text.isEmpty) {
       _markup.text = basisPointsLabel(settings.defaultMarkupBasisPoints);
       _failure.text = basisPointsLabel(settings.defaultFailureBasisPoints);
       _vat.text = basisPointsLabel(settings.vatBasisPoints);
@@ -463,11 +722,43 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       spools: spools,
     );
     final breakdown = const PriceCalculator().calculate(input);
+    final locked = target != null && target.stockDeducted;
+    final saveLabel = widget.lineId != null
+        ? 'Update print'
+        : widget.orderId != null
+        ? 'Add print'
+        : 'Save as quote';
     return Scaffold(
-      appBar: AppBar(title: const Text('Calculator')),
+      appBar: AppBar(
+        title: Text(
+          widget.lineId != null
+              ? 'Edit print'
+              : widget.orderId != null
+              ? 'Add print'
+              : 'Calculator',
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (target != null) ...[
+            Text(
+              widget.lineId == null
+                  ? 'Adding a print to ${target.title}'
+                  : 'Editing a print on ${target.title}',
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => context.go('/calculator'),
+                child: const Text('Cancel'),
+              ),
+            ),
+          ],
+          if (locked)
+            const Text(
+              'Move the order back to Accepted before changing prints.',
+            ),
           TextField(
             controller: _link,
             decoration: const InputDecoration(
@@ -641,10 +932,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           ),
           const SizedBox(height: 12),
           FilledButton(
-            onPressed: _saving
+            onPressed: _saving || locked
                 ? null
-                : () => _save(store, activeSettings, input, spools),
-            child: Text(_saving ? 'Saving…' : 'Save as quote'),
+                : () => _save(store, activeSettings, input, spools, target),
+            child: Text(_saving ? 'Saving…' : saveLabel),
           ),
         ],
       ),
@@ -705,4 +996,8 @@ final _printersProvider = StreamProvider.family<List<PrinterProfile>, UserStore>
 
 final _filamentsProvider = StreamProvider.family<List<FilamentSpool>, UserStore>(
   (ref, store) => store.watchFilaments(),
+);
+
+final _ordersProvider = StreamProvider.family<List<PrintOrder>, UserStore>(
+  (ref, store) => store.watchOrders(),
 );

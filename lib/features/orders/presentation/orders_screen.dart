@@ -126,11 +126,9 @@ class OrderDetailScreen extends ConsumerWidget {
             .cast<Customer?>()
             .firstOrNull;
         final spools = filaments.asData?.value ?? const <FilamentSpool>[];
-        final printer = printers.asData?.value
-            .where((item) => item.id == order.printerId)
-            .cast<PrinterProfile?>()
-            .firstOrNull;
-        final source = Uri.tryParse(order.sourceUrl);
+        final printerList = printers.asData?.value ?? const <PrinterProfile>[];
+        final prints = orderPrints(order);
+        final locked = order.stockDeducted;
         return Scaffold(
           appBar: AppBar(
             title: Text('Quote ${order.quoteNumber}'),
@@ -159,9 +157,20 @@ class OrderDetailScreen extends ConsumerWidget {
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Text(
-                order.title,
-                style: Theme.of(context).textTheme.headlineSmall,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      order.title,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Edit title',
+                    onPressed: () => _renameQuote(context, store, order),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                ],
               ),
               Text(orderStatusLabel(order.status)),
               if (order.stockWarning.isNotEmpty)
@@ -180,24 +189,31 @@ class OrderDetailScreen extends ConsumerWidget {
                   ),
                   onTap: () => context.go('/customers/${customer.id}'),
                 ),
-              Text('Quantity ${order.quantity}'),
-              Text('Print time ${formatDuration(order.printTimeSeconds)}'),
               if (order.validUntil.length >= 10)
                 Text('Valid until ${order.validUntil.substring(0, 10)}'),
-              if (printer != null) Text(printer.name),
-              if (order.filaments.isEmpty)
-                const Text('No filament')
+              const SizedBox(height: 12),
+              Text('Prints', style: Theme.of(context).textTheme.titleMedium),
+              for (final line in prints)
+                _PrintLineTile(
+                  order: order,
+                  line: line,
+                  spools: spools,
+                  printers: printerList,
+                  locked: locked,
+                  store: store,
+                ),
+              if (locked)
+                const Text(
+                  'Move the order back to Accepted before changing prints.',
+                )
               else
-                for (final usage in order.filaments)
-                  Text(_filamentLine(usage, spools)),
-              if (order.sourceProfileTitle.isNotEmpty)
-                Text(order.sourceProfileTitle),
-              if (source != null && source.hasScheme)
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton(
-                    onPressed: () => launchUrl(source),
-                    child: const Text('Open source'),
+                    onPressed: () => context.go(
+                      '/calculator?orderId=${order.id}',
+                    ),
+                    child: const Text('Add print'),
                   ),
                 ),
               const SizedBox(height: 12),
@@ -224,7 +240,10 @@ class OrderDetailScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               Text(formatMoney(order.breakdown.totalMinor, order.currencyCode)),
-              Text('Per unit ${formatMoney(order.breakdown.perUnitMinor, order.currencyCode)}'),
+              if (prints.length == 1)
+                Text(
+                  'Per unit ${formatMoney(prints.single.breakdown.perUnitMinor, order.currencyCode)}',
+                ),
               Text('Material ${formatMoney(order.breakdown.materialMinor, order.currencyCode)}'),
               Text('Electricity ${formatMoney(order.breakdown.electricityMinor, order.currencyCode)}'),
               Text('Machine ${formatMoney(order.breakdown.machineMinor, order.currencyCode)}'),
@@ -240,6 +259,157 @@ class OrderDetailScreen extends ConsumerWidget {
       error: (error, _) => Scaffold(body: EmptyView(message: '$error')),
     );
   }
+}
+
+class _PrintLineTile extends StatelessWidget {
+  const _PrintLineTile({
+    required this.order,
+    required this.line,
+    required this.spools,
+    required this.printers,
+    required this.locked,
+    required this.store,
+  });
+
+  final PrintOrder order;
+  final QuoteLine line;
+  final List<FilamentSpool> spools;
+  final List<PrinterProfile> printers;
+  final bool locked;
+  final UserStore store;
+
+  @override
+  Widget build(BuildContext context) {
+    final printer = printers
+        .where((item) => item.id == line.printerId)
+        .firstOrNull;
+    final source = Uri.tryParse(line.sourceUrl);
+    final prints = orderPrints(order);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  line.title,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              if (!locked) ...[
+                IconButton(
+                  tooltip: 'Edit print',
+                  onPressed: () => context.go(
+                    '/calculator?orderId=${order.id}&lineId=${line.id}',
+                  ),
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+                if (prints.length > 1)
+                  IconButton(
+                    tooltip: 'Remove print',
+                    onPressed: () => _removePrint(context, store, order, line),
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+              ],
+            ],
+          ),
+          Text(
+            'Quantity ${line.quantity} · ${formatDuration(line.printTimeSeconds)} · ${formatMoney(line.breakdown.totalMinor, order.currencyCode)}',
+          ),
+          if (printer != null) Text(printer.name),
+          if (line.filaments.isEmpty)
+            const Text('No filament')
+          else
+            for (final usage in line.filaments)
+              Text(_filamentLine(usage, spools)),
+          if (line.sourceProfileTitle.isNotEmpty)
+            Text(line.sourceProfileTitle),
+          if (source != null && source.hasScheme)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => launchUrl(source),
+                child: const Text('Open source'),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _renameQuote(
+  BuildContext context,
+  UserStore store,
+  PrintOrder order,
+) async {
+  final title = TextEditingController(text: order.title);
+  final saved = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Quote title'),
+      content: TextField(
+        controller: title,
+        decoration: const InputDecoration(labelText: 'Title'),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Save'),
+        ),
+      ],
+    ),
+  );
+  final next = title.text.trim();
+  title.dispose();
+  if (saved != true || next.isEmpty) {
+    return;
+  }
+  await store.saveOrder(
+    order.copyWith(
+      title: next,
+      updatedAt: DateTime.now().toUtc().toIso8601String(),
+    ),
+  );
+}
+
+Future<void> _removePrint(
+  BuildContext context,
+  UserStore store,
+  PrintOrder order,
+  QuoteLine line,
+) async {
+  if (order.stockDeducted) {
+    return;
+  }
+  final confirmed = await confirmDelete(
+    context,
+    title: 'Remove print',
+    message: 'Remove ${line.title} from this quote?',
+  );
+  if (!confirmed) {
+    return;
+  }
+  final next = [
+    for (final item in orderPrints(order))
+      if (item.id != line.id) item,
+  ];
+  if (next.isEmpty) {
+    return;
+  }
+  await store.saveOrder(
+    orderWithPrints(order, next).copyWith(
+      title: quoteTitleFor(order, next),
+      updatedAt: DateTime.now().toUtc().toIso8601String(),
+    ),
+  );
 }
 
 String _filamentLine(FilamentUsage usage, List<FilamentSpool> spools) {

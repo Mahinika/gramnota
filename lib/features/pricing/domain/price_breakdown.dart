@@ -40,3 +40,55 @@ abstract class PriceBreakdown with _$PriceBreakdown {
     quantity: 1,
   );
 }
+
+/// Adds breakdowns that were already rounded per print.
+///
+/// One print is returned as saved. Several prints sum the money fields.
+/// The quote then has no single unit price: [PriceBreakdown.perUnitMinor] is 0.
+PriceBreakdown sumBreakdowns(List<PriceBreakdown> parts) {
+  if (parts.isEmpty) {
+    return PriceBreakdown.zero();
+  }
+  if (parts.length == 1) {
+    return parts.single;
+  }
+  var materialMinor = 0;
+  var electricityMinor = 0;
+  var machineMinor = 0;
+  var failureMinor = 0;
+  var laborMinor = 0;
+  var extrasMinor = 0;
+  var costMinor = 0;
+  var markupMinor = 0;
+  var netMinor = 0;
+  var vatMinor = 0;
+  var totalMinor = 0;
+  for (final part in parts) {
+    materialMinor += part.materialMinor;
+    electricityMinor += part.electricityMinor;
+    machineMinor += part.machineMinor;
+    failureMinor += part.failureMinor;
+    laborMinor += part.laborMinor;
+    extrasMinor += part.extrasMinor;
+    costMinor += part.costMinor;
+    markupMinor += part.markupMinor;
+    netMinor += part.netMinor;
+    vatMinor += part.vatMinor;
+    totalMinor += part.totalMinor;
+  }
+  return PriceBreakdown(
+    materialMinor: materialMinor,
+    electricityMinor: electricityMinor,
+    machineMinor: machineMinor,
+    failureMinor: failureMinor,
+    laborMinor: laborMinor,
+    extrasMinor: extrasMinor,
+    costMinor: costMinor,
+    markupMinor: markupMinor,
+    netMinor: netMinor,
+    vatMinor: vatMinor,
+    totalMinor: totalMinor,
+    perUnitMinor: 0,
+    quantity: 1,
+  );
+}

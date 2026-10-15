@@ -30,6 +30,51 @@ _ExtraCost _$ExtraCostFromJson(Map<String, dynamic> json) => _ExtraCost(
 Map<String, dynamic> _$ExtraCostToJson(_ExtraCost instance) =>
     <String, dynamic>{'name': instance.name, 'costMinor': instance.costMinor};
 
+_QuoteLine _$QuoteLineFromJson(Map<String, dynamic> json) => _QuoteLine(
+  id: json['id'] as String,
+  title: json['title'] as String,
+  quantity: (json['quantity'] as num).toInt(),
+  printerId: json['printerId'] as String? ?? '',
+  printTimeSeconds: (json['printTimeSeconds'] as num).toInt(),
+  filaments: (json['filaments'] as List<dynamic>)
+      .map((e) => FilamentUsage.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  prepMinutes: (json['prepMinutes'] as num?)?.toInt() ?? 0,
+  postMinutes: (json['postMinutes'] as num?)?.toInt() ?? 0,
+  extras:
+      (json['extras'] as List<dynamic>?)
+          ?.map((e) => ExtraCost.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
+  markupBasisPoints: (json['markupBasisPoints'] as num).toInt(),
+  failureBasisPoints: (json['failureBasisPoints'] as num).toInt(),
+  vatBasisPoints: (json['vatBasisPoints'] as num).toInt(),
+  breakdown: PriceBreakdown.fromJson(json['breakdown'] as Map<String, dynamic>),
+  sourceUrl: json['sourceUrl'] as String? ?? '',
+  sourceModelTitle: json['sourceModelTitle'] as String? ?? '',
+  sourceProfileTitle: json['sourceProfileTitle'] as String? ?? '',
+);
+
+Map<String, dynamic> _$QuoteLineToJson(_QuoteLine instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'title': instance.title,
+      'quantity': instance.quantity,
+      'printerId': instance.printerId,
+      'printTimeSeconds': instance.printTimeSeconds,
+      'filaments': instance.filaments.map((e) => e.toJson()).toList(),
+      'prepMinutes': instance.prepMinutes,
+      'postMinutes': instance.postMinutes,
+      'extras': instance.extras.map((e) => e.toJson()).toList(),
+      'markupBasisPoints': instance.markupBasisPoints,
+      'failureBasisPoints': instance.failureBasisPoints,
+      'vatBasisPoints': instance.vatBasisPoints,
+      'breakdown': instance.breakdown.toJson(),
+      'sourceUrl': instance.sourceUrl,
+      'sourceModelTitle': instance.sourceModelTitle,
+      'sourceProfileTitle': instance.sourceProfileTitle,
+    };
+
 _PrintOrder _$PrintOrderFromJson(Map<String, dynamic> json) => _PrintOrder(
   id: json['id'] as String,
   quoteNumber: (json['quoteNumber'] as num).toInt(),
@@ -65,6 +110,11 @@ _PrintOrder _$PrintOrderFromJson(Map<String, dynamic> json) => _PrintOrder(
   sourceUrl: json['sourceUrl'] as String? ?? '',
   sourceModelTitle: json['sourceModelTitle'] as String? ?? '',
   sourceProfileTitle: json['sourceProfileTitle'] as String? ?? '',
+  lines:
+      (json['lines'] as List<dynamic>?)
+          ?.map((e) => QuoteLine.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
   createdAt: json['createdAt'] as String,
   updatedAt: json['updatedAt'] as String,
 );
@@ -95,6 +145,7 @@ Map<String, dynamic> _$PrintOrderToJson(_PrintOrder instance) =>
       'sourceUrl': instance.sourceUrl,
       'sourceModelTitle': instance.sourceModelTitle,
       'sourceProfileTitle': instance.sourceProfileTitle,
+      'lines': instance.lines.map((e) => e.toJson()).toList(),
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,
     };

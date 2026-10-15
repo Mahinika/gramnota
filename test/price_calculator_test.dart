@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gramnota/features/pricing/domain/price_breakdown.dart';
 import 'package:gramnota/features/pricing/domain/price_calculator.dart';
 
 void main() {
@@ -92,5 +93,70 @@ void main() {
     );
 
     expect(breakdown.machineMinor, 100);
+  });
+
+  test('sums stored line totals without recalculating them', () {
+    final stand = calculator.calculate(
+      const PriceInput(
+        materials: [MaterialUse(grams: 100, pricePerKgMinor: 20000)],
+        powerWatts: 100,
+        printTimeSeconds: 3600,
+        electricityMinorPerKwh: 200,
+        purchasePriceMinor: 1000000,
+        lifetimeHours: 10000,
+        maintenanceMinorPerHour: 0,
+        failureBasisPoints: 1000,
+        prepMinutes: 0,
+        postMinutes: 30,
+        laborMinorPerHour: 60000,
+        extraMinors: [500],
+        markupBasisPoints: 5000,
+        vatBasisPoints: 2500,
+        quantity: 1,
+      ),
+    );
+    final clip = calculator.calculate(
+      const PriceInput(
+        materials: [MaterialUse(grams: 10, pricePerKgMinor: 10000)],
+        powerWatts: 0,
+        printTimeSeconds: 0,
+        electricityMinorPerKwh: 0,
+        purchasePriceMinor: 0,
+        lifetimeHours: 1,
+        maintenanceMinorPerHour: 0,
+        failureBasisPoints: 0,
+        prepMinutes: 0,
+        postMinutes: 0,
+        laborMinorPerHour: 0,
+        extraMinors: [100],
+        markupBasisPoints: 0,
+        vatBasisPoints: 0,
+        quantity: 3,
+      ),
+    );
+
+    expect(stand.totalMinor, 61560);
+    expect(clip.materialMinor, 300);
+    expect(clip.extrasMinor, 100);
+    expect(clip.totalMinor, 400);
+    expect(clip.perUnitMinor, 133);
+
+    final quote = sumBreakdowns([stand, clip]);
+    expect(quote.materialMinor, 2300);
+    expect(quote.electricityMinor, 20);
+    expect(quote.machineMinor, 100);
+    expect(quote.failureMinor, 212);
+    expect(quote.laborMinor, 30000);
+    expect(quote.extrasMinor, 600);
+    expect(quote.costMinor, 33232);
+    expect(quote.markupMinor, 16416);
+    expect(quote.netMinor, 49648);
+    expect(quote.vatMinor, 12312);
+    expect(quote.totalMinor, 61960);
+    expect(quote.totalMinor, stand.totalMinor + clip.totalMinor);
+    expect(quote.perUnitMinor, 0);
+    expect(quote.quantity, 1);
+    expect(sumBreakdowns([stand]).perUnitMinor, 61560);
+    expect(sumBreakdowns([stand]).quantity, 1);
   });
 }

@@ -177,6 +177,16 @@ class InboxScreen extends ConsumerWidget {
               for (final usage in order.filaments)
                 usage.copyWith(filamentId: ''),
             ],
+            lines: [
+              for (final line in order.lines)
+                line.copyWith(
+                  printerId: '',
+                  filaments: [
+                    for (final usage in line.filaments)
+                      usage.copyWith(filamentId: ''),
+                  ],
+                ),
+            ],
             status: OrderStatus.quote,
             stockDeducted: false,
             deductedGrams: const {},

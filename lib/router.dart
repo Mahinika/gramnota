@@ -52,7 +52,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/calculator',
-                builder: (_, _) => const CalculatorScreen(),
+                builder: (_, state) => CalculatorScreen(
+                  orderId: state.uri.queryParameters['orderId'],
+                  lineId: state.uri.queryParameters['lineId'],
+                ),
               ),
             ],
           ),

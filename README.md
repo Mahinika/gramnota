@@ -2,7 +2,7 @@
 
 Gramnota works out a sale price for a 3D print. It runs as an Android app and as a Windows desktop app from the same Flutter project.
 
-A quote can include filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT. Customers, filament spools, and printers stay with the signed-in user. Marking an order printed takes filament out of stock. A PDF quote can be shared from the order.
+A quote can include filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT. One quote can hold several different prints, with one total and one stock deduction. Customers, filament spools, and printers stay with the signed-in user. Marking an order printed takes filament out of stock. A PDF quote can be shared from the order.
 
 ## Firebase
 
@@ -35,4 +35,4 @@ Paste a link, or on Android share it into the app.
 
 ## Later
 
-G-code import, duplicating an order as a new quote, a saved product catalog, and quotes with several different prints are not in this version.
+G-code import, duplicating an order as a new quote, and a saved product catalog are not in this version.

@@ -31,6 +31,8 @@ Parse typed amounts with `parseMinor` and `parseBasisPoints` in `lib/core/money.
 
 `PriceCalculator` is pure. Quantity scales material, electricity, machine wear, the failure buffer, and labor. Extras stay a flat amount. Failure is a percent of material + electricity + machine. Markup applies to full cost. VAT applies to net (cost + markup). Filament price per kilogram is derived from spool price and spool weight (`FilamentSpool.pricePerKgMinor`); it is not stored.
 
+A quote stores each print as a `QuoteLine`. `PriceCalculator` prices one line. `sumBreakdowns` adds those saved totals. `orderPrints` treats an order with no lines as one print, so older documents still decode. Several lines leave the legacy filament fields empty. Stock sums `grams * quantity` on each line.
+
 ## Data
 
 `UserStore` is the only Firestore gateway, scoped to the signed-in uid:
@@ -70,7 +72,7 @@ Add or update a test when changing the calculator, stock transitions, or an impo
 
 ## Leave out of this version
 
-G-code import, duplicating an order as a new quote, a saved product catalog, and quotes that contain several different prints.
+G-code import, duplicating an order as a new quote, and a saved product catalog.
 
 ## Skills
 
