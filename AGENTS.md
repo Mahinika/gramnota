@@ -96,3 +96,4 @@ Read the matching file in `.cursor/skills/` before changing that area:
 - Keep pricing and stock rules in `PriceCalculator` and `OrderStock`, not in widgets.
 - Stay on Android and Windows unless asked to add a platform.
 - Ask before deploying Firebase, pushing, or publishing.
+- After any visible UI change (widgets, theme, assets used on screen), hot reload the running Flutter app when a debug session is attached; use hot restart if reload is not enough.
