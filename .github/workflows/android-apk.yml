@@ -35,12 +35,9 @@ jobs:
             exit 1
           fi
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
-          cat > android/key.properties <<EOF
-storePassword=$ANDROID_KEYSTORE_PASSWORD
-keyPassword=$ANDROID_KEY_PASSWORD
-keyAlias=upload
-storeFile=upload-keystore.jks
-EOF
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=upload\nstoreFile=upload-keystore.jks\n' \
+            "$ANDROID_KEYSTORE_PASSWORD" \
+            "$ANDROID_KEY_PASSWORD" > android/key.properties
 
       - name: Write google-services.json
         env:
