@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/format.dart';
 import '../../../core/money.dart';
+import '../../../core/gate_scaffold.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../orders/presentation/orders_screen.dart';
@@ -13,14 +14,35 @@ import '../../printers/domain/common_printers.dart';
 import '../../printers/domain/printer_profile.dart';
 import '../domain/workshop_settings.dart';
 
+bool setupBypassForUid({
+  required String? markedUid,
+  required String? currentUid,
+}) {
+  if (markedUid == null || currentUid == null) {
+    return false;
+  }
+  return markedUid == currentUid;
+}
+
 /// True once this session has saved the workshop setup.
 /// The Firestore snapshot can arrive after navigation, and this keeps the
 /// router from sending the user back into the guide.
 class SetupFinished extends Notifier<bool> {
-  @override
-  bool build() => false;
+  String? _markedUid;
 
-  void mark() => state = true;
+  @override
+  bool build() {
+    final currentUid = ref.watch(authUserProvider).asData?.value?.uid;
+    return setupBypassForUid(markedUid: _markedUid, currentUid: currentUid);
+  }
+
+  void mark() {
+    _markedUid = ref.read(authUserProvider).asData?.value?.uid;
+    state = setupBypassForUid(
+      markedUid: _markedUid,
+      currentUid: _markedUid,
+    );
+  }
 }
 
 final setupFinishedProvider = NotifierProvider<SetupFinished, bool>(
@@ -41,32 +63,15 @@ final setupCompletedProvider = Provider<bool?>((ref) {
   return settings.asData?.value.setupCompleted;
 });
 
-/// Where a signed-in user should go while setup is unknown, unfinished, or done.
-String? workshopRedirect({
-  required String location,
-  required bool? setupCompleted,
-  required bool finishedLocally,
-}) {
-  final done = finishedLocally || setupCompleted == true;
-  if (setupCompleted == null && !finishedLocally) {
-    return location == '/starting' ? null : '/starting';
-  }
-  if (!done) {
-    return location == '/workshop-setup' ? null : '/workshop-setup';
-  }
-  const leave = {'/workshop-setup', '/starting', '/sign-in', '/setup'};
-  if (leave.contains(location)) {
-    return '/calculator';
-  }
-  return null;
-}
-
 class StartingScreen extends StatelessWidget {
   const StartingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    return const GateScaffold(
+      title: 'Gramnota',
+      child: CircularProgressIndicator(),
+    );
   }
 }
 
@@ -337,66 +342,72 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             child: LinearProgressIndicator(value: (_step + 1) / _stepCount),
           ),
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  Text(
-                    'Step ${_step + 1} of $_stepCount',
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  if (_error != null) ...[
-                    Text(
-                      _error!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+        body: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      Text(
+                        'Step ${_step + 1} of $_stepCount',
+                        style: Theme.of(context).textTheme.labelLarge,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  ..._stepBody(nextQuote),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Row(
-                children: [
-                  if (_step == 0)
-                    TextButton(
-                      onPressed: _saving ? null : () => _save(skipped: true),
-                      child: const Text('Skip for now'),
-                    )
-                  else
-                    TextButton(
-                      onPressed: _saving
-                          ? null
-                          : () => setState(() {
-                              _error = null;
-                              _step -= 1;
-                            }),
-                      child: const Text('Back'),
-                    ),
-                  const Spacer(),
-                  FilledButton(
-                    onPressed: _saving ? null : _next,
-                    child: Text(
-                      _saving
-                          ? 'Saving…'
-                          : _step == _stepCount - 1
-                          ? 'Save and start'
-                          : _step == 0
-                          ? 'Start'
-                          : 'Next',
-                    ),
+                      const SizedBox(height: 12),
+                      if (_error != null) ...[
+                        Text(
+                          _error!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      ..._stepBody(nextQuote),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Row(
+                    children: [
+                      if (_step == 0)
+                        TextButton(
+                          onPressed: _saving ? null : () => _save(skipped: true),
+                          child: const Text('Skip for now'),
+                        )
+                      else
+                        TextButton(
+                          onPressed: _saving
+                              ? null
+                              : () => setState(() {
+                                  _error = null;
+                                  _step -= 1;
+                                }),
+                          child: const Text('Back'),
+                        ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: _saving ? null : _next,
+                        child: Text(
+                          _saving
+                              ? 'Saving…'
+                              : _step == _stepCount - 1
+                              ? 'Save and start'
+                              : _step == 0
+                              ? 'Start'
+                              : 'Next',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

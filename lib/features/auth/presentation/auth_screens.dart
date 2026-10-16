@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/gate_scaffold.dart';
 import '../../../core/providers.dart';
 import '../../../firebase_options.dart';
 
@@ -9,16 +10,15 @@ class SetupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Gramnota setup')),
-      body: const Padding(
-        padding: EdgeInsets.all(24),
-        child: Text(
-          'Firebase is not configured yet. Create a Firebase project, enable '
-          'Google sign-in and Firestore, then run flutterfire configure. '
-          'Add the debug SHA-1 for the Android app and deploy firestore.rules. '
-          'The steps are in the README.',
-        ),
+    return const GateScaffold(
+      title: 'Gramnota',
+      subtitle: 'Setup',
+      child: Text(
+        'Firebase is not configured yet. Create a Firebase project, enable '
+        'Google sign-in and Firestore, then run flutterfire configure. '
+        'Add the debug SHA-1 for the Android app and deploy firestore.rules. '
+        'The steps are in the README.',
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -53,39 +53,23 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Gramnota',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Price your 3D prints on your phone or on this computer.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                if (!firebaseIsConfigured)
-                  const Text('Firebase is not configured. See the README.'),
-                if (_error != null) ...[
-                  Text(_error!, textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                ],
-                FilledButton(
-                  onPressed: _busy || !firebaseIsConfigured ? null : _signIn,
-                  child: Text(_busy ? 'Signing in…' : 'Sign in with Google'),
-                ),
-              ],
-            ),
+    return GateScaffold(
+      title: 'Gramnota',
+      subtitle: 'Price your 3D prints on your phone or on this computer.',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!firebaseIsConfigured)
+            const Text('Firebase is not configured. See the README.'),
+          if (_error != null) ...[
+            Text(_error!, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+          ],
+          FilledButton(
+            onPressed: _busy || !firebaseIsConfigured ? null : _signIn,
+            child: Text(_busy ? 'Signing in…' : 'Sign in with Google'),
           ),
-        ),
+        ],
       ),
     );
   }

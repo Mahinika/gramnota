@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gramnota/core/app_redirect.dart';
 import 'package:gramnota/features/settings/domain/workshop_settings.dart';
 import 'package:gramnota/features/settings/presentation/workshop_setup_screen.dart';
 
@@ -86,6 +87,138 @@ void main() {
         finishedLocally: false,
       ),
       '/calculator',
+    );
+  });
+
+  test('resolveRedirect handles config, auth, and sign-in', () {
+    expect(
+      resolveRedirect(
+        location: '/calculator',
+        firebaseConfigured: false,
+        authLoading: false,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+      ),
+      '/setup',
+    );
+    expect(
+      resolveRedirect(
+        location: '/setup',
+        firebaseConfigured: false,
+        authLoading: false,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+      ),
+      isNull,
+    );
+    expect(
+      resolveRedirect(
+        location: '/calculator',
+        firebaseConfigured: true,
+        authLoading: true,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+      ),
+      '/starting',
+    );
+    expect(
+      resolveRedirect(
+        location: '/starting',
+        firebaseConfigured: true,
+        authLoading: true,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+      ),
+      isNull,
+    );
+    expect(
+      resolveRedirect(
+        location: '/starting',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+      ),
+      '/sign-in',
+    );
+    expect(
+      resolveRedirect(
+        location: '/calculator',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+      ),
+      '/sign-in',
+    );
+    expect(
+      resolveRedirect(
+        location: '/orders/abc',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: true,
+        setupCompleted: true,
+        finishedLocally: false,
+      ),
+      isNull,
+    );
+    expect(
+      resolveRedirect(
+        location: '/sign-in',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: true,
+        setupCompleted: true,
+        finishedLocally: false,
+      ),
+      '/calculator',
+    );
+    expect(
+      resolveRedirect(
+        location: '/calculator',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: true,
+        setupCompleted: false,
+        finishedLocally: false,
+      ),
+      '/workshop-setup',
+    );
+    expect(
+      resolveRedirect(
+        location: '/calculator',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: true,
+        setupCompleted: null,
+        finishedLocally: false,
+      ),
+      '/starting',
+    );
+  });
+
+  test('setupBypassForUid only matches the same uid', () {
+    expect(
+      setupBypassForUid(markedUid: 'a', currentUid: 'a'),
+      isTrue,
+    );
+    expect(
+      setupBypassForUid(markedUid: 'a', currentUid: 'b'),
+      isFalse,
+    );
+    expect(
+      setupBypassForUid(markedUid: 'a', currentUid: null),
+      isFalse,
+    );
+    expect(
+      setupBypassForUid(markedUid: null, currentUid: 'a'),
+      isFalse,
     );
   });
 }

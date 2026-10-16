@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/app_redirect.dart';
 import 'core/providers.dart';
 import 'core/shell.dart';
 import 'features/auth/presentation/auth_screens.dart';
@@ -22,24 +23,16 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.listen(setupFinishedProvider, (_, _) => refresh.value++);
   ref.onDispose(refresh.dispose);
   return GoRouter(
-    initialLocation: '/calculator',
+    initialLocation: '/starting',
     refreshListenable: refresh,
     redirect: (context, state) {
       final location = state.matchedLocation;
-      if (!firebaseIsConfigured) {
-        return location == '/setup' ? null : '/setup';
-      }
       final auth = ref.read(authUserProvider);
-      if (auth.isLoading) {
-        return null;
-      }
-      final signedIn = auth.asData?.value != null;
-      final onAuth = location == '/sign-in' || location == '/setup';
-      if (!signedIn) {
-        return onAuth ? null : '/sign-in';
-      }
-      return workshopRedirect(
+      return resolveRedirect(
         location: location,
+        firebaseConfigured: firebaseIsConfigured,
+        authLoading: auth.isLoading,
+        signedIn: auth.asData?.value != null,
         setupCompleted: ref.read(setupCompletedProvider),
         finishedLocally: ref.read(setupFinishedProvider),
       );

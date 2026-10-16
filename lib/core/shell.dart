@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'gate_scaffold.dart';
+
 class AppShell extends StatelessWidget {
   const AppShell({required this.navigationShell, super.key});
 
@@ -32,6 +34,11 @@ class AppShell extends StatelessWidget {
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: _selectBranch,
               labelType: NavigationRailLabelType.all,
+              groupAlignment: -1,
+              leading: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: GramnotaBrandMark(size: 40),
+              ),
               destinations: [
                 for (final destination in destinations)
                   NavigationRailDestination(

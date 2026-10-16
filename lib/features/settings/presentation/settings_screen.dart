@@ -14,10 +14,28 @@ class MoreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName?.trim();
+    final title = displayName != null && displayName.isNotEmpty
+        ? displayName
+        : 'Signed in';
+    final email = user?.email;
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
       body: ListView(
         children: [
+          ListTile(
+            title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+            subtitle: email == null ? null : Text(email),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text(
+              'Workshop',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
           ListTile(
             leading: const Icon(Icons.print_outlined),
             title: const Text('Printers'),
@@ -28,11 +46,19 @@ class MoreScreen extends ConsumerWidget {
             title: const Text('Settings'),
             onTap: () => context.go('/more/settings'),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text(
+              'Sharing',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
           ListTile(
             leading: const Icon(Icons.inbox_outlined),
             title: const Text('Inbox'),
             onTap: () => context.go('/more/inbox'),
           ),
+          const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Sign out'),
