@@ -102,14 +102,14 @@ class InboxScreen extends ConsumerWidget {
             );
           }
           return ListView.separated(
-            padding: MenuCard.listPadding,
+            padding: TappableListCard.listPadding,
             itemCount: list.length,
-            separatorBuilder: (_, _) => MenuCard.listSeparator,
+            separatorBuilder: (_, _) => TappableListCard.listSeparator,
             itemBuilder: (context, index) {
               final item = list[index];
               final theme = Theme.of(context);
               final scheme = theme.colorScheme;
-              return MenuCard(
+              return TappableListCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

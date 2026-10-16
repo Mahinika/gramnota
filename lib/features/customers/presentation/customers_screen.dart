@@ -9,8 +9,8 @@ import '../../../core/menu_card.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
+import '../../orders/data/orders_providers.dart';
 import '../../orders/domain/print_order.dart';
-import '../../orders/presentation/orders_screen.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
 import '../domain/customer.dart';
@@ -87,9 +87,9 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         message: 'No customers match your search.',
                       )
                     : ListView.separated(
-                        padding: MenuCard.listPadding,
+                        padding: TappableListCard.listPadding,
                         itemCount: visible.length,
-                        separatorBuilder: (_, _) => MenuCard.listSeparator,
+                        separatorBuilder: (_, _) => TappableListCard.listSeparator,
                         itemBuilder: (context, index) {
                           final customer = visible[index];
                           return _CustomerListCard(
@@ -122,16 +122,29 @@ Map<String, int> _quoteCounts(List<PrintOrder> orders) {
   return counts;
 }
 
+String _initialLetter(String word) {
+  final trimmed = word.trim();
+  if (trimmed.isEmpty) {
+    return '';
+  }
+  return trimmed.substring(0, 1).toUpperCase();
+}
+
 String _customerInitials(String name) {
-  final parts = name.trim().split(RegExp(r'\s+'));
-  if (parts.isEmpty || parts.first.isEmpty) {
+  final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
+  final list = parts.toList();
+  if (list.isEmpty) {
     return '?';
   }
-  if (parts.length == 1) {
-    return parts.first.substring(0, 1).toUpperCase();
+  if (list.length == 1) {
+    return _initialLetter(list.first).isEmpty ? '?' : _initialLetter(list.first);
   }
-  return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
-      .toUpperCase();
+  final first = _initialLetter(list.first);
+  final last = _initialLetter(list.last);
+  if (first.isEmpty && last.isEmpty) {
+    return '?';
+  }
+  return '$first$last';
 }
 
 class _CustomerListCard extends StatelessWidget {
@@ -157,7 +170,7 @@ class _CustomerListCard extends StatelessWidget {
         : email.isNotEmpty
             ? email
             : phone;
-    return MenuCard(
+    return TappableListCard(
       onTap: onTap,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,7 +374,7 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
           if (!isNew && _name.text.trim().isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: MenuCard(
+              child: TappableListCard(
                 child: Row(
                   children: [
                     CircleAvatar(
@@ -593,7 +606,7 @@ class _CustomerOrderCard extends StatelessWidget {
       OrderStatus.delivered => scheme.primary,
       OrderStatus.cancelled => scheme.error,
     };
-    return MenuCard(
+    return TappableListCard(
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

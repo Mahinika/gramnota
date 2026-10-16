@@ -18,6 +18,7 @@ import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
 import '../../pricing/presentation/breakdown_card.dart';
 import '../data/order_stock.dart';
+import '../data/orders_providers.dart';
 import '../domain/print_order.dart';
 import 'quote_pdf.dart';
 
@@ -213,9 +214,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                         message: 'No orders match your search or filter.',
                       )
                     : ListView.separated(
-                        padding: MenuCard.listPadding,
+                        padding: TappableListCard.listPadding,
                         itemCount: visible.length,
-                        separatorBuilder: (_, _) => MenuCard.listSeparator,
+                        separatorBuilder: (_, _) => TappableListCard.listSeparator,
                         itemBuilder: (context, index) {
                           final order = visible[index];
                           return _OrderListCard(
@@ -255,7 +256,7 @@ class _OrderListCard extends StatelessWidget {
     final note = order.note.trim();
     final prints = orderPrints(order);
     final updated = _formatOrderUpdated(order.updatedAt);
-    return MenuCard(
+    return TappableListCard(
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,7 +421,7 @@ class OrderDetailScreen extends ConsumerWidget {
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              MenuCard(
+              TappableListCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -498,9 +499,9 @@ class OrderDetailScreen extends ConsumerWidget {
               ],
               const SizedBox(height: 12),
               if (customer == null)
-                const MenuCard(child: Text('No customer linked'))
+                const TappableListCard(child: Text('No customer linked'))
               else
-                MenuCard(
+                TappableListCard(
                   onTap: () => context.go('/customers/${customer.id}'),
                   child: Row(
                     children: [
@@ -757,7 +758,7 @@ class _PrintLineTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: MenuCard(
+      child: TappableListCard(
         onTap: locked ? null : () => context.go(calculationRoute),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -932,14 +933,3 @@ String _filamentLine(FilamentUsage usage, List<FilamentSpool> spools) {
   return '${formatGrams(usage.grams)} $name';
 }
 
-final ordersProvider = StreamProvider.family<List<PrintOrder>, UserStore>(
-  (ref, store) => store.watchOrders(),
-);
-
-final settingsProvider = StreamProvider.family<WorkshopSettings, UserStore>(
-  (ref, store) => store.watchSettings(),
-);
-
-final customersProvider = StreamProvider.family<List<Customer>, UserStore>(
-  (ref, store) => store.watchCustomers(),
-);

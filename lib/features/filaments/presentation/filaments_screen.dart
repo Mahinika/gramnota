@@ -42,9 +42,9 @@ class FilamentsScreen extends ConsumerWidget {
             );
           }
           return ListView.separated(
-            padding: MenuCard.listPadding,
+            padding: TappableListCard.listPadding,
             itemCount: list.length + 1,
-            separatorBuilder: (_, _) => MenuCard.listSeparator,
+            separatorBuilder: (_, _) => TappableListCard.listSeparator,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Column(
@@ -71,7 +71,7 @@ class FilamentsScreen extends ConsumerWidget {
                       0.0,
                       1.0,
                     );
-              return MenuCard(
+              return TappableListCard(
                 onTap: () => context.go('/filaments/${spool.id}'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

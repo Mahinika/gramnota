@@ -37,14 +37,14 @@ class PrintersScreen extends ConsumerWidget {
             return const EmptyView(message: 'Add the printer you price with.');
           }
           return ListView.separated(
-            padding: MenuCard.listPadding,
+            padding: TappableListCard.listPadding,
             itemCount: list.length,
-            separatorBuilder: (_, _) => MenuCard.listSeparator,
+            separatorBuilder: (_, _) => TappableListCard.listSeparator,
             itemBuilder: (context, index) {
               final printer = list[index];
               final theme = Theme.of(context);
               final scheme = theme.colorScheme;
-              return MenuCard(
+              return TappableListCard(
                 onTap: () => context.go('/more/printers/${printer.id}'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

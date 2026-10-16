@@ -7,7 +7,7 @@ import '../../../core/menu_card.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
-import '../../orders/presentation/orders_screen.dart';
+import '../../orders/data/orders_providers.dart';
 import '../domain/workshop_settings.dart';
 
 class MoreScreen extends ConsumerWidget {
@@ -40,7 +40,7 @@ class MoreScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.labelLarge,
             ),
           ),
-          MenuCard(
+          TappableListCard(
             onTap: () => context.go('/more/printers'),
             child: Row(
               children: [
@@ -51,8 +51,8 @@ class MoreScreen extends ConsumerWidget {
               ],
             ),
           ),
-          MenuCard.listSeparator,
-          MenuCard(
+          TappableListCard.listSeparator,
+          TappableListCard(
             onTap: () => context.go('/more/settings'),
             child: Row(
               children: [
@@ -71,7 +71,7 @@ class MoreScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.labelLarge,
             ),
           ),
-          MenuCard(
+          TappableListCard(
             onTap: () => context.go('/more/inbox'),
             child: Row(
               children: [

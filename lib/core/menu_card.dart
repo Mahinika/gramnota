@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Tappable list row with the same card chrome as the order list.
-class MenuCard extends StatelessWidget {
-  const MenuCard({
+class TappableListCard extends StatelessWidget {
+  const TappableListCard({
     required this.child,
     this.onTap,
     super.key,

@@ -9,7 +9,7 @@ import '../../../core/money.dart';
 import '../../../core/gate_scaffold.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
-import '../../orders/presentation/orders_screen.dart';
+import '../../orders/data/orders_providers.dart';
 import '../../printers/domain/common_printers.dart';
 import '../../printers/domain/printer_profile.dart';
 import '../domain/workshop_settings.dart';
