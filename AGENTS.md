@@ -100,6 +100,8 @@ Read the matching file in `.cursor/skills/` before changing that area:
 - `firestore-data` — `UserStore`, `OrderStock`, `firestore.rules`, inbox
 - `app-navigation` — startup gates, `app_redirect`, `GateScaffold`, `AppShell`, workshop setup routing
 - `catalog-presets` — `common_printers`, `common_spools`, quick-add and preset pickers on printer/spool screens
+- `screen-layout` — `TappableListCard`, section headings, list screens, wide calculator columns
+- `android-release` — upload keystore, GitHub APK workflow, Firebase SHA certificates for Google sign-in
 
 ## Working agreements
 
