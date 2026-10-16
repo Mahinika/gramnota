@@ -89,6 +89,7 @@ Read the matching file in `.cursor/skills/` before changing that area:
 - `link-import` — a model URL, `LinkImportService`, a new host
 - `firestore-data` — `UserStore`, `OrderStock`, `firestore.rules`, inbox
 - `app-navigation` — startup gates, `app_redirect`, `GateScaffold`, `AppShell`, workshop setup routing
+- `catalog-presets` — `common_printers`, `common_spools`, quick-add and preset pickers on printer/spool screens
 
 ## Working agreements
 
