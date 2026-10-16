@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/format.dart';
+import '../../../core/menu_card.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
@@ -15,9 +16,44 @@ import '../../printers/presentation/printers_screen.dart';
 import '../../settings/domain/workshop_settings.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
+import '../../pricing/presentation/breakdown_card.dart';
 import '../data/order_stock.dart';
 import '../domain/print_order.dart';
 import 'quote_pdf.dart';
+
+Color _orderStatusColor(OrderStatus status, ColorScheme scheme) {
+  return switch (status) {
+    OrderStatus.quote => scheme.secondary,
+    OrderStatus.accepted => scheme.primary,
+    OrderStatus.printed => scheme.tertiary,
+    OrderStatus.delivered => scheme.primary,
+    OrderStatus.cancelled => scheme.error,
+  };
+}
+
+String _formatOrderUpdated(String iso) {
+  try {
+    final updated = DateTime.parse(iso).toLocal();
+    final now = DateTime.now();
+    final day = DateTime(updated.year, updated.month, updated.day);
+    final today = DateTime(now.year, now.month, now.day);
+    final delta = today.difference(day).inDays;
+    if (delta == 0) {
+      return 'Updated today';
+    }
+    if (delta == 1) {
+      return 'Updated yesterday';
+    }
+    if (delta < 7) {
+      return 'Updated $delta days ago';
+    }
+    final month = updated.month.toString().padLeft(2, '0');
+    final dayText = updated.day.toString().padLeft(2, '0');
+    return 'Updated ${updated.year}-$month-$dayText';
+  } on FormatException {
+    return '';
+  }
+}
 
 class OrdersScreen extends ConsumerStatefulWidget {
   const OrdersScreen({super.key});
@@ -28,6 +64,7 @@ class OrdersScreen extends ConsumerStatefulWidget {
 
 class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   OrderStatus? _filter;
+  var _inProgressOnly = false;
   final _search = TextEditingController();
 
   @override
@@ -49,17 +86,32 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     };
     return Scaffold(
       appBar: AppBar(title: const Text('Orders')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.go('/calculator'),
+        tooltip: 'New quote',
+        child: const Icon(Icons.add),
+      ),
       body: orders.when(
         data: (list) {
           if (list.isEmpty) {
-            return const EmptyView(
-              message: 'No quotes yet. Save one from the calculator.',
+            return EmptyView(
+              message: 'No quotes yet. Price a print in the calculator and save.',
+              action: FilledButton(
+                onPressed: () => context.go('/calculator'),
+                child: const Text('Open calculator'),
+              ),
             );
           }
           final sorted = [...list]
             ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           final query = _search.text.trim().toLowerCase();
           final visible = sorted.where((order) {
+            if (_inProgressOnly &&
+                order.status != OrderStatus.quote &&
+                order.status != OrderStatus.accepted &&
+                order.status != OrderStatus.printed) {
+              return false;
+            }
             if (_filter != null && order.status != _filter) {
               return false;
             }
@@ -102,9 +154,26 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                       padding: const EdgeInsets.only(right: 8),
                       child: FilterChip(
                         label: const Text('All'),
-                        selected: _filter == null,
+                        selected: _filter == null && !_inProgressOnly,
                         showCheckmark: false,
-                        onSelected: (_) => setState(() => _filter = null),
+                        onSelected: (_) => setState(() {
+                          _filter = null;
+                          _inProgressOnly = false;
+                        }),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: const Text('In progress'),
+                        selected: _inProgressOnly,
+                        showCheckmark: false,
+                        onSelected: (_) => setState(() {
+                          _inProgressOnly = !_inProgressOnly;
+                          if (_inProgressOnly) {
+                            _filter = null;
+                          }
+                        }),
                       ),
                     ),
                     for (final status in OrderStatus.values)
@@ -114,21 +183,39 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                           label: Text(orderStatusLabel(status)),
                           selected: _filter == status,
                           showCheckmark: false,
-                          onSelected: (_) => setState(() => _filter = status),
+                          onSelected: (_) => setState(() {
+                            _filter = status;
+                            _inProgressOnly = false;
+                          }),
                         ),
                       ),
                   ],
                 ),
               ),
+              if (visible.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      visible.length == 1
+                          ? '1 quote'
+                          : '${visible.length} quotes',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ),
               Expanded(
                 child: visible.isEmpty
                     ? const EmptyView(
                         message: 'No orders match your search or filter.',
                       )
                     : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                        padding: MenuCard.listPadding,
                         itemCount: visible.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        separatorBuilder: (_, _) => MenuCard.listSeparator,
                         itemBuilder: (context, index) {
                           final order = visible[index];
                           return _OrderListCard(
@@ -164,90 +251,111 @@ class _OrderListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final statusColor = switch (order.status) {
-      OrderStatus.quote => scheme.secondary,
-      OrderStatus.accepted => scheme.primary,
-      OrderStatus.printed => scheme.tertiary,
-      OrderStatus.delivered => scheme.primary,
-      OrderStatus.cancelled => scheme.error,
-    };
+    final statusColor = _orderStatusColor(order.status, scheme);
     final note = order.note.trim();
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final prints = orderPrints(order);
+    final updated = _formatOrderUpdated(order.updatedAt);
+    return MenuCard(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Text(
-                    'Quote ${order.quoteNumber}',
-                    style: theme.textTheme.labelMedium?.copyWith(
+              Text(
+                'Quote ${order.quoteNumber}',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  orderStatusLabel(order.status),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: statusColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            order.title,
+            style: theme.textTheme.titleMedium,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (customerName != null && customerName!.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  size: 16,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    customerName!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      orderStatusLabel(order.status),
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: statusColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                order.title,
-                style: theme.textTheme.titleMedium,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (customerName != null && customerName!.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  customerName!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
-              if (note.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  note,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              const SizedBox(height: 8),
+            ),
+          ],
+          if (note.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              note,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
               Text(
                 formatMoney(order.breakdown.totalMinor, order.currencyCode),
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: scheme.primary,
                 ),
               ),
+              const Spacer(),
+              Text(
+                prints.length == 1 ? '1 print' : '${prints.length} prints',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
-        ),
+          if (updated.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              updated,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -312,75 +420,137 @@ class OrderDetailScreen extends ConsumerWidget {
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      order.title,
-                      style: Theme.of(context).textTheme.headlineSmall,
+              MenuCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            order.title,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Edit title',
+                          onPressed: () => _renameQuote(context, store, order),
+                          icon: const Icon(Icons.edit_outlined),
+                        ),
+                      ],
                     ),
-                  ),
-                  IconButton(
-                    tooltip: 'Edit title',
-                    onPressed: () => _renameQuote(context, store, order),
-                    icon: const Icon(Icons.edit_outlined),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _StatusChip(
+                          status: order.status,
+                          scheme: Theme.of(context).colorScheme,
+                        ),
+                        const Spacer(),
+                        Text(
+                          formatMoney(
+                            order.breakdown.totalMinor,
+                            order.currencyCode,
+                          ),
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ],
+                    ),
+                    if (order.validUntil.length >= 10) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Valid until ${order.validUntil.substring(0, 10)}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                    if (_formatOrderUpdated(order.updatedAt).isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatOrderUpdated(order.updatedAt),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              Text(orderStatusLabel(order.status)),
-              if (order.stockWarning.isNotEmpty)
-                Text(order.stockWarning),
+              if (order.stockWarning.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                MaterialBanner(
+                  content: Text(order.stockWarning),
+                  leading: const Icon(Icons.warning_amber_outlined),
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .errorContainer
+                      .withValues(alpha: 0.5),
+                  actions: const [SizedBox.shrink()],
+                ),
+              ],
               const SizedBox(height: 12),
               if (customer == null)
-                const Text('No customer')
+                const MenuCard(child: Text('No customer linked'))
               else
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(customer.name),
-                  subtitle: Text(
-                    customer.addressLine.isEmpty
-                        ? 'Customer'
-                        : customer.addressLine,
-                  ),
+                MenuCard(
                   onTap: () => context.go('/customers/${customer.id}'),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.person_outline,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              customer.name,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text(
+                              customer.addressLine.isEmpty
+                                  ? 'View customer'
+                                  : customer.addressLine,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right),
+                    ],
+                  ),
                 ),
-              if (order.validUntil.length >= 10)
-                Text('Valid until ${order.validUntil.substring(0, 10)}'),
               const SizedBox(height: 12),
               _OrderNoteField(order: order, store: store),
-              const SizedBox(height: 12),
-              Text('Prints', style: Theme.of(context).textTheme.titleMedium),
-              for (final line in prints)
-                _PrintLineTile(
-                  order: order,
-                  line: line,
-                  spools: spools,
-                  printers: printerList,
-                  locked: locked,
-                  store: store,
-                ),
-              if (locked)
-                const Text(
-                  'Move the order back to Accepted before changing prints.',
-                )
-              else
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () => context.go(
-                      '/calculator?orderId=${order.id}',
-                    ),
-                    child: const Text('Add print'),
-                  ),
-                ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
+              Text('Status', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
+                runSpacing: 8,
                 children: [
                   for (final status in OrderStatus.values)
-                    ChoiceChip(
+                    FilterChip(
                       label: Text(orderStatusLabel(status)),
                       selected: order.status == status,
+                      showCheckmark: false,
                       onSelected: (_) async {
                         final change = await OrderStock(store).setStatus(
                           order: order,
@@ -395,25 +565,83 @@ class OrderDetailScreen extends ConsumerWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(formatMoney(order.breakdown.totalMinor, order.currencyCode)),
-              if (prints.length == 1)
-                Text(
-                  'Per unit ${formatMoney(prints.single.breakdown.perUnitMinor, order.currencyCode)}',
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Prints',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  if (!locked)
+                    TextButton.icon(
+                      onPressed: () => context.go(
+                        '/calculator?orderId=${order.id}',
+                      ),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add print'),
+                    ),
+                ],
+              ),
+              if (locked)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 8),
+                  child: Text(
+                    'Move the order back to Accepted before changing prints.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
                 ),
-              Text('Material ${formatMoney(order.breakdown.materialMinor, order.currencyCode)}'),
-              Text('Electricity ${formatMoney(order.breakdown.electricityMinor, order.currencyCode)}'),
-              Text('Machine ${formatMoney(order.breakdown.machineMinor, order.currencyCode)}'),
-              Text('Failure ${formatMoney(order.breakdown.failureMinor, order.currencyCode)}'),
-              Text('Labor ${formatMoney(order.breakdown.laborMinor, order.currencyCode)}'),
-              Text('Extras ${formatMoney(order.breakdown.extrasMinor, order.currencyCode)}'),
-              Text('VAT ${formatMoney(order.breakdown.vatMinor, order.currencyCode)}'),
+              for (final line in prints)
+                _PrintLineTile(
+                  order: order,
+                  line: line,
+                  spools: spools,
+                  printers: printerList,
+                  locked: locked,
+                  store: store,
+                ),
+              const SizedBox(height: 16),
+              Text(
+                'Price breakdown',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              BreakdownCard(
+                breakdown: order.breakdown,
+                currencyCode: order.currencyCode,
+              ),
             ],
           ),
         );
       },
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(body: EmptyView(message: '$error')),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.status, required this.scheme});
+
+  final OrderStatus status;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _orderStatusColor(status, scheme);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        orderStatusLabel(status),
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: color),
+      ),
     );
   }
 }
@@ -526,75 +754,92 @@ class _PrintLineTile extends StatelessWidget {
     final prints = orderPrints(order);
     final calculationRoute =
         '/calculator?orderId=${order.id}&lineId=${line.id}';
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  line.title,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-              if (!locked) ...[
-                IconButton(
-                  tooltip: 'Open calculation',
-                  onPressed: () => context.go(calculationRoute),
-                  icon: const Icon(Icons.edit_outlined),
-                ),
-                if (prints.length > 1)
-                  IconButton(
-                    tooltip: 'Remove print',
-                    onPressed: () => _removePrint(context, store, order, line),
-                    icon: const Icon(Icons.delete_outline),
-                  ),
-              ],
-            ],
-          ),
-          Text(
-            'Quantity ${line.quantity} · ${formatDuration(line.printTimeSeconds)} · ${formatMoney(line.breakdown.totalMinor, order.currencyCode)}',
-          ),
-          if (printer != null) Text(printer.name),
-          if (line.filaments.isEmpty)
-            const Text('No filament')
-          else
-            for (final usage in line.filaments)
-              Text(_filamentLine(usage, spools)),
-          if (line.sourceProfileTitle.isNotEmpty)
-            Text(line.sourceProfileTitle),
-          if (source != null && source.hasScheme) ...[
-            Text(
-              line.sourceUrl,
-              style: Theme.of(context).textTheme.bodySmall,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Wrap(
-              spacing: 8,
+      child: MenuCard(
+        onTap: locked ? null : () => context.go(calculationRoute),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                TextButton(
-                  onPressed: () => launchUrl(source, mode: LaunchMode.externalApplication),
-                  child: const Text('Open model'),
-                ),
-                if (!locked)
-                  TextButton(
-                    onPressed: () => context.go(calculationRoute),
-                    child: const Text('Open calculation'),
+                Expanded(
+                  child: Text(
+                    line.title,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
+                ),
+                if (!locked) ...[
+                  IconButton(
+                    tooltip: 'Open calculation',
+                    onPressed: () => context.go(calculationRoute),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                  if (prints.length > 1)
+                    IconButton(
+                      tooltip: 'Remove print',
+                      onPressed: () =>
+                          _removePrint(context, store, order, line),
+                      icon: const Icon(Icons.delete_outline),
+                    ),
+                ],
               ],
             ),
-          ] else if (!locked)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () => context.go(calculationRoute),
-                child: const Text('Open calculation'),
-              ),
+            Text(
+              'Qty ${line.quantity} · ${formatDuration(line.printTimeSeconds)}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
             ),
-        ],
+            Text(
+              formatMoney(line.breakdown.totalMinor, order.currencyCode),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: scheme.primary,
+                  ),
+            ),
+            if (printer != null) ...[
+              const SizedBox(height: 4),
+              Text(printer.name),
+            ],
+            if (line.filaments.isEmpty)
+              const Text('No filament')
+            else
+              for (final usage in line.filaments)
+                Text(
+                  _filamentLine(usage, spools),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+            if (line.sourceProfileTitle.isNotEmpty)
+              Text(
+                line.sourceProfileTitle,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            if (source != null && source.hasScheme) ...[
+              const SizedBox(height: 4),
+              Text(
+                line.sourceUrl,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: () => launchUrl(
+                      source,
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    child: const Text('Open model'),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
