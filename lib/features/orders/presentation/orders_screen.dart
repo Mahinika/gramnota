@@ -81,33 +81,41 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: TextField(
                   controller: _search,
                   decoration: const InputDecoration(
-                    labelText: 'Search',
                     hintText: 'Title, quote no., customer, or note',
                     prefixIcon: Icon(Icons.search),
+                    filled: true,
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+              SizedBox(
+                height: 56,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   children: [
-                    FilterChip(
-                      label: const Text('All'),
-                      selected: _filter == null,
-                      onSelected: (_) => setState(() => _filter = null),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: const Text('All'),
+                        selected: _filter == null,
+                        showCheckmark: false,
+                        onSelected: (_) => setState(() => _filter = null),
+                      ),
                     ),
                     for (final status in OrderStatus.values)
-                      FilterChip(
-                        label: Text(orderStatusLabel(status)),
-                        selected: _filter == status,
-                        onSelected: (_) => setState(() => _filter = status),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(orderStatusLabel(status)),
+                          selected: _filter == status,
+                          showCheckmark: false,
+                          onSelected: (_) => setState(() => _filter = status),
+                        ),
                       ),
                   ],
                 ),
@@ -117,17 +125,18 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                     ? const EmptyView(
                         message: 'No orders match your search or filter.',
                       )
-                    : ListView(
-                        children: [
-                          for (final order in visible)
-                            ListTile(
-                              title: Text(order.title),
-                              subtitle: Text(
-                                '${orderStatusLabel(order.status)} · ${formatMoney(order.breakdown.totalMinor, order.currencyCode)}',
-                              ),
-                              onTap: () => context.go('/orders/${order.id}'),
-                            ),
-                        ],
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                        itemCount: visible.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final order = visible[index];
+                          return _OrderListCard(
+                            order: order,
+                            customerName: customerNames[order.customerId],
+                            onTap: () => context.go('/orders/${order.id}'),
+                          );
+                        },
                       ),
               ),
             ],
@@ -135,6 +144,110 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => EmptyView(message: '$error'),
+      ),
+    );
+  }
+}
+
+class _OrderListCard extends StatelessWidget {
+  const _OrderListCard({
+    required this.order,
+    required this.onTap,
+    this.customerName,
+  });
+
+  final PrintOrder order;
+  final String? customerName;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final statusColor = switch (order.status) {
+      OrderStatus.quote => scheme.secondary,
+      OrderStatus.accepted => scheme.primary,
+      OrderStatus.printed => scheme.tertiary,
+      OrderStatus.delivered => scheme.primary,
+      OrderStatus.cancelled => scheme.error,
+    };
+    final note = order.note.trim();
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Quote ${order.quoteNumber}',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      orderStatusLabel(order.status),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                order.title,
+                style: theme.textTheme.titleMedium,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (customerName != null && customerName!.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  customerName!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              if (note.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  note,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                formatMoney(order.breakdown.totalMinor, order.currencyCode),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: scheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
