@@ -15,13 +15,17 @@ Flutter app that quotes a sale price for a 3D print. Package name `gramnota`. Sa
 ```
 lib/
   main.dart, app.dart, router.dart, firebase_options.dart
-  core/          theme, money, format, UserStore, providers, shell
+  core/          theme, money, format, UserStore, providers, shell, app_redirect, gate_scaffold
   features/<name>/domain|data|presentation
 ```
 
 Features: `pricing`, `orders`, `customers`, `filaments`, `printers`, `settings`, `auth`, `import`, `sharing`.
 
-Navigation is a `StatefulShellRoute` in `router.dart`: Calculator, Orders, Customers, Filament, More (printers, settings, inbox). `AppShell` uses a navigation rail at width >= 840 and a bottom bar otherwise. Auth redirects live in the router.
+Navigation is a `StatefulShellRoute` in `router.dart`: Calculator, Orders, Customers, Filament, More (printers, settings, inbox). `AppShell` uses a navigation rail at width >= 840 and a bottom bar otherwise.
+
+Startup gates run before the shell: `initialLocation` `/starting`, then `resolveRedirect` and `workshopRedirect` in `lib/core/app_redirect.dart`. Unsigned users go to `/sign-in`; unconfigured Firebase to `/setup`; unknown or unfinished workshop setup to `/starting` or `/workshop-setup`. Pre-app screens use `GateScaffold`. `SetupFinished` bypasses setup only for the uid that just saved, via `setupBypassForUid`.
+
+Calculator deep links: `?orderId=` and optional `&lineId=` reload a saved print. Each `QuoteLine` stores `sourceUrl` for the model link. New calculator forms default prep and post to 15 minutes (`defaultPrepPostMinutes`).
 
 ## Money and pricing
 
@@ -69,7 +73,7 @@ Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProv
 - `test/order_stock_test.dart` — quote numbers and stock, via `fake_cloud_firestore`
 - `test/link_import_test.dart` — importers with a fake fetcher
 - `test/widget_test.dart` — breakdown card
-- `test/workshop_setup_test.dart` — setup flag on old settings, and the setup redirect
+- `test/workshop_setup_test.dart` — setup flag on old settings, `resolveRedirect`, and `setupBypassForUid`
 
 Add or update a test when changing the calculator, stock transitions, or an importer.
 
@@ -81,9 +85,10 @@ G-code import, duplicating an order as a new quote, and a saved product catalog.
 
 Read the matching file in `.cursor/skills/` before changing that area:
 
-- `quote-pricing` — `PriceCalculator`, minor units, basis points
+- `quote-pricing` — `PriceCalculator`, minor units, basis points, calculator prep/post and `sourceUrl`
 - `link-import` — a model URL, `LinkImportService`, a new host
 - `firestore-data` — `UserStore`, `OrderStock`, `firestore.rules`, inbox
+- `app-navigation` — startup gates, `app_redirect`, `GateScaffold`, `AppShell`, workshop setup routing
 
 ## Working agreements
 

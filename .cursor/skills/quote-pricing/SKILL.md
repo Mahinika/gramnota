@@ -36,6 +36,12 @@ dart run build_runner build --delete-conflicting-outputs
 
 Every `PriceBreakdown(...)` constructor must still compile, including `test/order_stock_test.dart` and `test/widget_test.dart`. Update `breakdown_card.dart` and `quote_pdf.dart` if the new line is shown to the user.
 
+## Calculator defaults (not workshop settings)
+
+`CalculatorScreen` uses `defaultPrepPostMinutes` (15) for prep and post on a new form and after `_clearForm`. Saved `QuoteLine` values are loaded as-is when editing.
+
+Model URLs are stored on each `QuoteLine` as `sourceUrl`. On save, use the typed link field when it is `http://` or `https://`, not only the value set by link import. Order detail opens the same inputs via **Open calculation** (`orderId` + `lineId` query params).
+
 ## Tests
 
 Add a case in `test/price_calculator_test.dart` with the expected integers written out. Run `flutter test test/price_calculator_test.dart` and, if the card changed, `flutter test test/widget_test.dart`.
