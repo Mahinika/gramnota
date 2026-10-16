@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/menu_card.dart';
+import '../../../core/section_layout.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
@@ -33,13 +34,7 @@ class MoreScreen extends ConsumerWidget {
             subtitle: email == null ? null : Text(email),
           ),
           const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(
-              'Workshop',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-          ),
+          const SectionHeading('Workshop'),
           TappableListCard(
             onTap: () => context.go('/more/printers'),
             child: Row(
@@ -64,13 +59,7 @@ class MoreScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(
-              'Sharing',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-          ),
+          const SectionHeading('Sharing'),
           TappableListCard(
             onTap: () => context.go('/more/inbox'),
             child: Row(

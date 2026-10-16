@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/format.dart';
+import '../../../core/section_layout.dart';
 import '../domain/price_breakdown.dart';
 
 class BreakdownCard extends StatelessWidget {
@@ -34,14 +35,9 @@ class BreakdownCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (final row in rows)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(row.$1)),
-                    Text(formatMoney(row.$2, currencyCode)),
-                  ],
-                ),
+              DetailRow(
+                label: row.$1,
+                value: formatMoney(row.$2, currencyCode),
               ),
             const Divider(),
             Row(

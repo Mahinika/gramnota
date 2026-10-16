@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
+import '../../../core/section_layout.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
@@ -564,14 +565,12 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
               child: const Text('Delete customer'),
             ),
           if (customerOrders.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            Text(
+            const SectionRule(),
+            SectionHeading(
               customerOrders.length == 1
                   ? '1 quote'
                   : '${customerOrders.length} quotes',
-              style: theme.textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
             for (final order in customerOrders) ...[
               _CustomerOrderCard(
                 order: order,

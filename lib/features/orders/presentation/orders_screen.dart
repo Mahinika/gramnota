@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
+import '../../../core/section_layout.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
@@ -538,11 +539,10 @@ class OrderDetailScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-              const SizedBox(height: 12),
+              const SectionRule(),
               _OrderNoteField(order: order, store: store),
-              const SizedBox(height: 16),
-              Text('Status', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
+              const SectionRule(),
+              const SectionHeading('Status'),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -566,15 +566,10 @@ class OrderDetailScreen extends ConsumerWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SectionRule(),
               Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      'Prints',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
+                  const Expanded(child: SectionHeading('Prints')),
                   if (!locked)
                     TextButton.icon(
                       onPressed: () => context.go(
@@ -604,12 +599,8 @@ class OrderDetailScreen extends ConsumerWidget {
                   locked: locked,
                   store: store,
                 ),
-              const SizedBox(height: 16),
-              Text(
-                'Price breakdown',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
+              const SectionRule(),
+              const SectionHeading('Price breakdown'),
               BreakdownCard(
                 breakdown: order.breakdown,
                 currencyCode: order.currencyCode,

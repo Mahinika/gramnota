@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/format.dart';
+import '../../../core/section_layout.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
@@ -751,9 +752,24 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               : 'Calculator',
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 840;
+          final summary = [
+            const SectionHeading('Price'),
+            BreakdownCard(
+              breakdown: breakdown,
+              currencyCode: activeSettings.currencyCode,
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: _saving || locked
+                  ? null
+                  : () => _save(store, activeSettings, input, spools, target),
+              child: Text(_saving ? 'Saving…' : saveLabel),
+            ),
+          ];
+          final fields = <Widget>[
           if (target != null) ...[
             Text(
               widget.lineId == null
@@ -935,22 +951,45 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               child: const Text('Add extra cost'),
             ),
           ),
-          Text(
-            'Print time ${formatDuration(_seconds())}',
-          ),
-          const SizedBox(height: 8),
-          BreakdownCard(
-            breakdown: breakdown,
-            currencyCode: activeSettings.currencyCode,
-          ),
-          const SizedBox(height: 12),
-          FilledButton(
-            onPressed: _saving || locked
-                ? null
-                : () => _save(store, activeSettings, input, spools, target),
-            child: Text(_saving ? 'Saving…' : saveLabel),
-          ),
-        ],
+            DetailRow(
+              label: 'Print time',
+              value: formatDuration(_seconds()),
+            ),
+          ];
+          if (!wide) {
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [...fields, const SectionRule(), ...summary],
+            );
+          }
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: fields,
+                      ),
+                    ),
+                    const VerticalDivider(width: 1),
+                    Expanded(
+                      flex: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: summary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
