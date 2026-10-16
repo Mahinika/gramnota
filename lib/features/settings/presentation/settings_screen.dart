@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/menu_card.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
@@ -20,46 +21,70 @@ class MoreScreen extends ConsumerWidget {
         ? displayName
         : 'Signed in';
     final email = user?.email;
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         children: [
           ListTile(
+            contentPadding: EdgeInsets.zero,
             title: Text(title, style: Theme.of(context).textTheme.titleMedium),
             subtitle: email == null ? null : Text(email),
           ),
-          const Divider(height: 1),
+          const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            padding: const EdgeInsets.only(bottom: 4),
             child: Text(
               'Workshop',
               style: Theme.of(context).textTheme.labelLarge,
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.print_outlined),
-            title: const Text('Printers'),
+          MenuCard(
             onTap: () => context.go('/more/printers'),
+            child: Row(
+              children: [
+                Icon(Icons.print_outlined, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 16),
+                const Expanded(child: Text('Printers')),
+                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              ],
+            ),
           ),
-          ListTile(
-            leading: const Icon(Icons.tune),
-            title: const Text('Settings'),
+          MenuCard.listSeparator,
+          MenuCard(
             onTap: () => context.go('/more/settings'),
+            child: Row(
+              children: [
+                Icon(Icons.tune, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 16),
+                const Expanded(child: Text('Settings')),
+                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              ],
+            ),
           ),
+          const SizedBox(height: 16),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            padding: const EdgeInsets.only(bottom: 4),
             child: Text(
               'Sharing',
               style: Theme.of(context).textTheme.labelLarge,
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.inbox_outlined),
-            title: const Text('Inbox'),
+          MenuCard(
             onTap: () => context.go('/more/inbox'),
+            child: Row(
+              children: [
+                Icon(Icons.inbox_outlined, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 16),
+                const Expanded(child: Text('Inbox')),
+                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              ],
+            ),
           ),
           const Divider(height: 1),
           ListTile(
+            contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.logout),
             title: const Text('Sign out'),
             onTap: signOut,

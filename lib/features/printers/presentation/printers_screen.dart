@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/menu_card.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
@@ -35,15 +36,31 @@ class PrintersScreen extends ConsumerWidget {
           if (list.isEmpty) {
             return const EmptyView(message: 'Add the printer you price with.');
           }
-          return ListView(
-            children: [
-              for (final printer in list)
-                ListTile(
-                  title: Text(printer.name),
-                  subtitle: Text('${printer.powerWatts} W'),
-                  onTap: () => context.go('/more/printers/${printer.id}'),
+          return ListView.separated(
+            padding: MenuCard.listPadding,
+            itemCount: list.length,
+            separatorBuilder: (_, _) => MenuCard.listSeparator,
+            itemBuilder: (context, index) {
+              final printer = list[index];
+              final theme = Theme.of(context);
+              final scheme = theme.colorScheme;
+              return MenuCard(
+                onTap: () => context.go('/more/printers/${printer.id}'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(printer.name, style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${printer.powerWatts} W',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-            ],
+              );
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),

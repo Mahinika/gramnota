@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/menu_card.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
@@ -53,12 +54,13 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: TextField(
                   controller: _search,
                   decoration: const InputDecoration(
-                    labelText: 'Search',
+                    hintText: 'Name, city, or phone',
                     prefixIcon: Icon(Icons.search),
+                    filled: true,
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
@@ -67,15 +69,47 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 const Expanded(child: EmptyView(message: 'No customers yet.')),
               if (visible.isNotEmpty)
                 Expanded(
-                  child: ListView(
-                    children: [
-                      for (final customer in visible)
-                        ListTile(
-                          title: Text(customer.name),
-                          subtitle: Text(customer.addressLine),
-                          onTap: () => context.go('/customers/${customer.id}'),
+                  child: ListView.separated(
+                    padding: MenuCard.listPadding,
+                    itemCount: visible.length,
+                    separatorBuilder: (_, _) => MenuCard.listSeparator,
+                    itemBuilder: (context, index) {
+                      final customer = visible[index];
+                      final theme = Theme.of(context);
+                      final scheme = theme.colorScheme;
+                      final address = customer.addressLine.trim();
+                      final phone = customer.phone.trim();
+                      return MenuCard(
+                        onTap: () => context.go('/customers/${customer.id}'),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              customer.name,
+                              style: theme.textTheme.titleMedium,
+                            ),
+                            if (address.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                address,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                            if (phone.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                phone,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                    ],
+                      );
+                    },
                   ),
                 ),
             ],

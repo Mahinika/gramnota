@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/menu_card.dart';
 import '../../../core/providers.dart';
+import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../customers/domain/customer.dart';
 import '../../filaments/domain/filament_spool.dart';
@@ -85,7 +87,9 @@ class InboxScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(body: Center(child: Text('Sign in to see inbox.')));
+      return const Scaffold(
+        body: EmptyView(message: 'Sign in to see inbox.'),
+      );
     }
     final items = ref.watch(_inboxProvider(store));
     return Scaffold(
@@ -93,33 +97,55 @@ class InboxScreen extends ConsumerWidget {
       body: items.when(
         data: (list) {
           if (list.isEmpty) {
-            return const Center(child: Text('Nothing shared with you yet.'));
+            return const EmptyView(
+              message: 'Nothing shared with you yet.',
+            );
           }
-          return ListView(
-            children: [
-              for (final item in list)
-                ListTile(
-                  title: Text('${item.senderName} sent a ${item.type.name}'),
-                  subtitle: Text(item.senderEmail),
-                  trailing: Wrap(
-                    spacing: 8,
-                    children: [
-                      TextButton(
-                        onPressed: () => _decline(store, item),
-                        child: const Text('Decline'),
+          return ListView.separated(
+            padding: MenuCard.listPadding,
+            itemCount: list.length,
+            separatorBuilder: (_, _) => MenuCard.listSeparator,
+            itemBuilder: (context, index) {
+              final item = list[index];
+              final theme = Theme.of(context);
+              final scheme = theme.colorScheme;
+              return MenuCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${item.senderName} sent a ${item.type.name}',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.senderEmail,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
-                      FilledButton(
-                        onPressed: () => _accept(context, store, item),
-                        child: const Text('Accept'),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () => _decline(store, item),
+                          child: const Text('Decline'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: () => _accept(context, store, item),
+                          child: const Text('Accept'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-            ],
+              );
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('$error')),
+        error: (error, _) => EmptyView(message: '$error'),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/format.dart';
+import '../../../core/menu_card.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
@@ -33,28 +34,64 @@ class FilamentsScreen extends ConsumerWidget {
           if (list.isEmpty) {
             return const EmptyView(message: 'No spools yet.');
           }
-          return ListView(
-            children: [
-              for (final spool in list)
-                ListTile(
-                  leading: CircleAvatar(backgroundColor: _color(spool.colorHex)),
-                  title: Text('${spool.brand} ${spool.material}'),
-                  subtitle: Text(
-                    '${formatGrams(spool.remainingGrams)} left'
-                    '${spool.isLowStock ? ' · low stock' : ''}',
-                  ),
-                  trailing: SizedBox(
-                    width: 80,
-                    child: LinearProgressIndicator(
-                      value: spool.spoolWeightGrams <= 0
-                          ? 0
-                          : (spool.remainingGrams / spool.spoolWeightGrams)
-                                .clamp(0, 1),
+          return ListView.separated(
+            padding: MenuCard.listPadding,
+            itemCount: list.length,
+            separatorBuilder: (_, _) => MenuCard.listSeparator,
+            itemBuilder: (context, index) {
+              final spool = list[index];
+              final theme = Theme.of(context);
+              final scheme = theme.colorScheme;
+              final progress = spool.spoolWeightGrams <= 0
+                  ? 0.0
+                  : (spool.remainingGrams / spool.spoolWeightGrams).clamp(
+                      0.0,
+                      1.0,
+                    );
+              return MenuCard(
+                onTap: () => context.go('/filaments/${spool.id}'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: _color(spool.colorHex),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${spool.brand} ${spool.material}',
+                                style: theme.textTheme.titleMedium,
+                              ),
+                              Text(
+                                '${formatGrams(spool.remainingGrams)} left',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (spool.isLowStock)
+                          Text(
+                            'Low stock',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: scheme.error,
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                  onTap: () => context.go('/filaments/${spool.id}'),
+                    const SizedBox(height: 10),
+                    LinearProgressIndicator(value: progress),
+                  ],
                 ),
-            ],
+              );
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
