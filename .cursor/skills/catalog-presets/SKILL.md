@@ -22,7 +22,7 @@ Starting inventory uses static catalogs in domain code, not Firestore. UI copy i
 
 - `CommonSpool`: `brand`, `material`, `colorLabel`, `colorHex`, `spoolWeightGrams` (default 1000), `pricePerSpoolMinor` (indicative shop price; `0` means user must set price).
 - `label` is `brand material · colorLabel`. Filter with `matchingCommonSpools(query)`.
-- **List screen** (`filaments_screen.dart`): `_StandardSpoolPicker` ActionChips call `_addStandardSpool` — full spool saved immediately with `remainingGrams == spoolWeightGrams`. Snackbar **Edit price** opens `/filaments/{id}`.
+- **List screen** (`filaments_screen.dart`): search and a Low stock filter. App bar and empty state open `_StandardSpoolSheet`; a tap calls `_addStandardSpool` and saves a full spool (`remainingGrams == spoolWeightGrams`). Snackbar **Edit price** opens `/filaments/{id}`.
 - **New spool** (`id == 'new'`): search field + dropdown applies `_applyPreset` to manual fields; user can still edit before save.
 - Do not store `pricePerKgMinor`; pricing uses `FilamentSpool.pricePerKgMinor` at quote time.
 

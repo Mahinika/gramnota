@@ -7,26 +7,54 @@ import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
+import '../../../core/section_layout.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
+import '../../orders/data/orders_providers.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
 import '../domain/common_spools.dart';
 import '../domain/filament_spool.dart';
 
-class FilamentsScreen extends ConsumerWidget {
+class FilamentsScreen extends ConsumerStatefulWidget {
   const FilamentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FilamentsScreen> createState() => _FilamentsScreenState();
+}
+
+class _FilamentsScreenState extends ConsumerState<FilamentsScreen> {
+  final _search = TextEditingController();
+  var _lowStockOnly = false;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
       return const Scaffold(body: EmptyView(message: 'Sign in to see filament.'));
     }
     final spools = ref.watch(filamentsProvider(store));
+    final currency =
+        ref.watch(settingsProvider(store)).asData?.value.currencyCode ?? 'SEK';
     return Scaffold(
-      appBar: AppBar(title: const Text('Filament')),
+      appBar: AppBar(
+        title: const Text('Filament'),
+        actions: [
+          IconButton(
+            tooltip: 'Add standard spool',
+            onPressed: () => _showStandardSpools(context, store),
+            icon: const Icon(Icons.library_add_outlined),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
+        tooltip: 'Custom spool',
         onPressed: () => context.go('/filaments/new'),
         child: const Icon(Icons.add),
       ),
@@ -34,87 +62,108 @@ class FilamentsScreen extends ConsumerWidget {
         data: (list) {
           if (list.isEmpty) {
             return EmptyView(
-              message: 'No spools yet. Pick a standard spool or add your own.',
-              action: _StandardSpoolPicker(
-                onCustom: () => context.go('/filaments/new'),
-                onAdd: (preset) => _addStandardSpool(context, store, preset),
+              message: 'No spools yet.',
+              action: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FilledButton(
+                    onPressed: () => _showStandardSpools(context, store),
+                    child: const Text('Add standard spool'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => context.go('/filaments/new'),
+                    child: const Text('Custom spool'),
+                  ),
+                ],
               ),
             );
           }
-          return ListView.separated(
-            padding: TappableListCard.listPadding,
-            itemCount: list.length + 1,
-            separatorBuilder: (_, _) => TappableListCard.listSeparator,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Standard spools',
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    _StandardSpoolPicker(
-                      onCustom: () => context.go('/filaments/new'),
-                      onAdd: (preset) => _addStandardSpool(context, store, preset),
-                    ),
-                  ],
-                );
+          final query = _search.text.trim().toLowerCase();
+          final visible = [
+            for (final spool in list)
+              if ((!_lowStockOnly || spool.isLowStock) &&
+                  (query.isEmpty ||
+                      '${spool.brand} ${spool.material} ${spool.notes}'
+                          .toLowerCase()
+                          .contains(query)))
+                spool,
+          ]..sort((a, b) {
+              final brand = a.brand.toLowerCase().compareTo(b.brand.toLowerCase());
+              if (brand != 0) {
+                return brand;
               }
-              final spool = list[index - 1];
-              final theme = Theme.of(context);
-              final scheme = theme.colorScheme;
-              final progress = spool.spoolWeightGrams <= 0
-                  ? 0.0
-                  : (spool.remainingGrams / spool.spoolWeightGrams).clamp(
-                      0.0,
-                      1.0,
-                    );
-              return TappableListCard(
-                onTap: () => context.go('/filaments/${spool.id}'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              return a.material.toLowerCase().compareTo(b.material.toLowerCase());
+            });
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: TextField(
+                  controller: _search,
+                  decoration: const InputDecoration(
+                    hintText: 'Brand, material, or notes',
+                    prefixIcon: Icon(Icons.search),
+                    filled: true,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              SizedBox(
+                height: 56,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: _color(spool.colorHex),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${spool.brand} ${spool.material}',
-                                style: theme.textTheme.titleMedium,
-                              ),
-                              Text(
-                                '${formatGrams(spool.remainingGrams)} left',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (spool.isLowStock)
-                          Text(
-                            'Low stock',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: scheme.error,
-                            ),
-                          ),
-                      ],
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: const Text('All'),
+                        selected: !_lowStockOnly,
+                        showCheckmark: false,
+                        onSelected: (_) => setState(() => _lowStockOnly = false),
+                      ),
                     ),
-                    const SizedBox(height: 10),
-                    LinearProgressIndicator(value: progress),
+                    FilterChip(
+                      label: const Text('Low stock'),
+                      selected: _lowStockOnly,
+                      showCheckmark: false,
+                      onSelected: (_) => setState(() => _lowStockOnly = true),
+                    ),
                   ],
                 ),
-              );
-            },
+              ),
+              if (visible.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      visible.length == 1 ? '1 spool' : '${visible.length} spools',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: visible.isEmpty
+                    ? const EmptyView(message: 'No spools match your search.')
+                    : ListView.separated(
+                        padding: TappableListCard.listPadding,
+                        itemCount: visible.length,
+                        separatorBuilder: (_, _) => TappableListCard.listSeparator,
+                        itemBuilder: (context, index) {
+                          final spool = visible[index];
+                          return _SpoolListCard(
+                            spool: spool,
+                            currencyCode: currency,
+                            onTap: () => context.go('/filaments/${spool.id}'),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -124,44 +173,166 @@ class FilamentsScreen extends ConsumerWidget {
   }
 }
 
-class _StandardSpoolPicker extends StatelessWidget {
-  const _StandardSpoolPicker({
-    required this.onAdd,
-    required this.onCustom,
+class _SpoolListCard extends StatelessWidget {
+  const _SpoolListCard({
+    required this.spool,
+    required this.currencyCode,
+    required this.onTap,
   });
 
-  final void Function(CommonSpool preset) onAdd;
-  final VoidCallback onCustom;
+  final FilamentSpool spool;
+  final String currencyCode;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final preset in commonSpools)
-              ActionChip(
-                avatar: CircleAvatar(
-                  radius: 8,
-                  backgroundColor: _color(preset.colorHex),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final progress = spool.spoolWeightGrams <= 0
+        ? 0.0
+        : (spool.remainingGrams / spool.spoolWeightGrams).clamp(0.0, 1.0);
+    final barColor = spool.isLowStock ? scheme.error : scheme.primary;
+    return TappableListCard(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _ColorSwatch(hex: spool.colorHex),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${spool.brand} ${spool.material}',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    Text(
+                      '${formatGrams(spool.remainingGrams)} of ${formatGrams(spool.spoolWeightGrams)}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                label: Text(preset.label),
-                onPressed: () => onAdd(preset),
               ),
+              if (spool.isLowStock)
+                Text(
+                  'Low',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.error,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              color: barColor,
+              backgroundColor: scheme.surfaceContainerHighest,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${formatMoney(spool.pricePerSpoolMinor, currencyCode)} · ${formatMoney(spool.pricePerKgMinor, currencyCode)}/kg',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _showStandardSpools(BuildContext context, UserStore store) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (sheetContext) => _StandardSpoolSheet(
+      onAdd: (preset) async {
+        Navigator.pop(sheetContext);
+        await _addStandardSpool(context, store, preset);
+      },
+    ),
+  );
+}
+
+class _StandardSpoolSheet extends StatefulWidget {
+  const _StandardSpoolSheet({required this.onAdd});
+
+  final Future<void> Function(CommonSpool preset) onAdd;
+
+  @override
+  State<_StandardSpoolSheet> createState() => _StandardSpoolSheetState();
+}
+
+class _StandardSpoolSheetState extends State<_StandardSpoolSheet> {
+  final _query = TextEditingController();
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final matches = matchingCommonSpools(_query.text);
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottom),
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.55,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Standard spools',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _query,
+              decoration: const InputDecoration(
+                hintText: 'Brand or material',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: matches.isEmpty
+                  ? const EmptyView(message: 'No standard spool with that name.')
+                  : ListView.separated(
+                      itemCount: matches.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final preset = matches[index];
+                        final price = preset.pricePerSpoolMinor == 0
+                            ? 'Set price after adding'
+                            : formatMoney(preset.pricePerSpoolMinor, 'SEK');
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: _ColorSwatch(hex: preset.colorHex),
+                          title: Text(preset.label),
+                          subtitle: Text(
+                            '${preset.spoolWeightGrams.round()} g · $price',
+                          ),
+                          onTap: () => widget.onAdd(preset),
+                        );
+                      },
+                    ),
+            ),
           ],
         ),
-        const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(
-            onPressed: onCustom,
-            child: const Text('Custom spool'),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -326,8 +497,15 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if (_error != null) Text(_error!),
+          if (_error != null) ...[
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            const SizedBox(height: 8),
+          ],
           if (widget.id == 'new') ...[
+            const SectionHeading('Standard spool'),
             TextField(
               controller: _presetQuery,
               decoration: const InputDecoration(
@@ -359,19 +537,97 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
                   setState(() => _applyPreset(preset));
                 },
               ),
-            const SizedBox(height: 12),
+            const SectionRule(),
           ],
-          TextField(controller: _brand, decoration: const InputDecoration(labelText: 'Brand'), onChanged: (_) => setState(() {})),
-          TextField(controller: _material, decoration: const InputDecoration(labelText: 'Material'), onChanged: (_) => setState(() {})),
-          TextField(controller: _color, decoration: const InputDecoration(labelText: 'Color hex'), onChanged: (_) => setState(() {})),
-          TextField(controller: _diameter, decoration: const InputDecoration(labelText: 'Diameter mm'), keyboardType: TextInputType.number, onChanged: (_) => setState(() {})),
-          TextField(controller: _spoolWeight, decoration: const InputDecoration(labelText: 'Spool weight g'), keyboardType: TextInputType.number, onChanged: (_) => setState(() {})),
-          TextField(controller: _remaining, decoration: const InputDecoration(labelText: 'Remaining g'), keyboardType: TextInputType.number, onChanged: (_) => setState(() {})),
-          TextField(controller: _price, decoration: const InputDecoration(labelText: 'Price per spool'), keyboardType: const TextInputType.numberWithOptions(decimal: true), onChanged: (_) => setState(() {})),
-          if (draft != null)
-            Text('Price per kg ${formatMoney(draft.pricePerKgMinor, 'SEK')}'),
-          TextField(controller: _low, decoration: const InputDecoration(labelText: 'Low stock threshold g'), keyboardType: TextInputType.number),
-          TextField(controller: _notes, decoration: const InputDecoration(labelText: 'Notes')),
+          const SectionHeading('Spool'),
+          Row(
+            children: [
+              _ColorSwatch(hex: _color.text, size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _color,
+                  decoration: const InputDecoration(labelText: 'Color hex'),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ],
+          ),
+          TextField(
+            controller: _brand,
+            decoration: const InputDecoration(labelText: 'Brand'),
+            textCapitalization: TextCapitalization.words,
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _material,
+            decoration: const InputDecoration(labelText: 'Material'),
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _diameter,
+            decoration: const InputDecoration(labelText: 'Diameter mm'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SectionRule(),
+          const SectionHeading('Stock'),
+          TextField(
+            controller: _spoolWeight,
+            decoration: const InputDecoration(labelText: 'Spool weight g'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _remaining,
+            decoration: const InputDecoration(labelText: 'Remaining g'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _low,
+            decoration: const InputDecoration(labelText: 'Low stock threshold g'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          if (widget.id != 'new')
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () {
+                  setState(() => _remaining.text = _spoolWeight.text);
+                },
+                child: const Text('Refill to full'),
+              ),
+            ),
+          const SectionRule(),
+          const SectionHeading('Price'),
+          TextField(
+            controller: _price,
+            decoration: InputDecoration(
+              labelText:
+                  'Price per spool (${ref.watch(settingsProvider(store)).asData?.value.currencyCode ?? 'SEK'})',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) => setState(() {}),
+          ),
+          if (draft != null) ...[
+            const SizedBox(height: 8),
+            DetailRow(
+              label: 'Price per kg',
+              value: formatMoney(
+                draft.pricePerKgMinor,
+                ref.watch(settingsProvider(store)).asData?.value.currencyCode ??
+                    'SEK',
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          TextField(
+            controller: _notes,
+            decoration: const InputDecoration(labelText: 'Notes'),
+            minLines: 2,
+            maxLines: 4,
+          ),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: () async {
@@ -387,22 +643,6 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
             },
             child: const Text('Save'),
           ),
-          if (widget.id != 'new')
-            TextButton(
-              onPressed: () async {
-                final next = parseNonNegativeDouble(_remaining.text);
-                if (next == null || draft == null) {
-                  return;
-                }
-                await store.saveFilament(draft.copyWith(remainingGrams: next));
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Remaining weight updated.')),
-                  );
-                }
-              },
-              child: const Text('Adjust remaining'),
-            ),
           if (widget.id != 'new')
             TextButton(
               style: TextButton.styleFrom(
@@ -434,6 +674,26 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
 final filamentsProvider = StreamProvider.family<List<FilamentSpool>, UserStore>(
   (ref, store) => store.watchFilaments(),
 );
+
+class _ColorSwatch extends StatelessWidget {
+  const _ColorSwatch({required this.hex, this.size = 32});
+
+  final String hex;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: _color(hex),
+        shape: BoxShape.circle,
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+    );
+  }
+}
 
 Color _color(String hex) {
   var value = hex.replaceAll('#', '');
