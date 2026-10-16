@@ -33,7 +33,7 @@ Money is integer minor units (öre). `100` minor is one currency unit. Percents 
 
 Parse typed amounts with `parseMinor` and `parseBasisPoints` in `lib/core/money.dart`. Display with `formatMoney` and `formatPercent` in `lib/core/format.dart`.
 
-`PriceCalculator` is pure. Quantity scales material, electricity, machine wear, the failure buffer, and labor. Extras stay a flat amount. Failure is a percent of material + electricity + machine. Markup applies to full cost. VAT applies to net (cost + markup). Filament price per kilogram is derived from spool price and spool weight (`FilamentSpool.pricePerKgMinor`); it is not stored.
+`PriceCalculator` is pure. Quantity scales material, electricity, machine wear, the failure buffer, and production labor. Prep labor is charged once. Post labor is charged per unit. Extras stay a flat amount. Failure is a percent of material + electricity + machine. Markup applies to full cost. VAT applies to net (cost + markup). Filament price per kilogram is derived from spool price and spool weight (`FilamentSpool.pricePerKgMinor`); it is not stored.
 
 A quote stores each print as a `QuoteLine`. `PriceCalculator` prices one line. `sumBreakdowns` adds those saved totals. `orderPrints` treats an order with no lines as one print, so older documents still decode. Several lines leave the legacy filament fields empty. Stock sums `grams * quantity` on each line.
 
@@ -53,7 +53,11 @@ Inbox is the only cross-user write. The payload is a JSON string (`payloadJson`)
 
 ## Auth and platforms
 
-`firebaseIsConfigured` is false while an API key starts with `REPLACE`. An unconfigured build shows `SetupScreen` and does not touch Firebase. Android sign-in uses `google_sign_in`. Windows sign-in uses Firebase Auth in the browser; Windows is registered as a Firebase web app. `android/app/google-services.json` is gitignored. Do not commit secrets.
+`firebaseIsConfigured` is false while an API key starts with `REPLACE`. An unconfigured build shows `SetupScreen` and does not touch Firebase. Android sign-in uses `google_sign_in`. Windows sign-in uses Firebase Auth in the browser; Windows is registered as a Firebase web app. `android/app/google-services.json` is gitignored. Do not commit secrets, `android/key.properties`, or `*.jks`.
+
+Release APKs are signed with the upload keystore in `android/app/upload-keystore.jks` when `android/key.properties` exists. Debug builds keep the debug keystore. Google sign-in on Android accepts only SHA-1 fingerprints registered on the Firebase Android app (`se.gramnota.app`). Both the local debug certificate and the upload certificate must stay registered, and `google-services.json` must list both OAuth Android clients.
+
+GitHub Actions (`.github/workflows/android-apk.yml`) builds a release APK on every push to `master` and replaces the `android` release asset `app-release.apk` on the private repo `Mahinika/gramnota`. The workflow needs the secrets `GOOGLE_SERVICES_JSON`, `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD`. A new signing key means the installed app must be uninstalled before the new APK can replace it.
 
 A signed-in user with no settings document, or with `setupCompleted` false, goes to `/workshop-setup` and walks through the workshop profile and one printer. A saved document that has no `setupCompleted` field counts as already set up.
 
@@ -65,7 +69,11 @@ Share-into-app (`receive_sharing_intent`) is Android only. The URL lands in `pen
 
 ## UI
 
-Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProvider`. Confirm deletes with `confirmDelete`. Empty lists use `EmptyView`. Theme is `buildGramnotaTheme()`. Quote PDFs go through `shareQuotePdf` and the Noto Sans files in `assets/fonts/`.
+Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProvider`. Confirm deletes with `confirmDelete`. Empty lists use `EmptyView`. Theme is `buildGramnotaTheme()`. Quote PDFs go through `shareQuotePdf` and the Noto Sans files in `assets/fonts/`. Customer PDFs omit internal cost lines (`customer_quote_view.dart`).
+
+List rows use `TappableListCard` (`lib/core/menu_card.dart`). Section titles, label/value rows, and dividers use `SectionHeading`, `DetailRow`, and `SectionRule` in `lib/core/section_layout.dart`. Shared Firestore streams for orders, customers, and settings live in `lib/features/orders/data/orders_providers.dart`. Import that file. Do not import a screen only to reach a provider.
+
+Orders list: search, status chips, and an In progress filter. Filament list: search, a Low stock filter, and standard spools in a bottom sheet (`common_spools.dart`). Customers list shows initials and quote counts. Wide calculator layouts (width >= 840) put the price breakdown in a second column.
 
 ## Tests
 
@@ -74,6 +82,8 @@ Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProv
 - `test/link_import_test.dart` — importers with a fake fetcher
 - `test/widget_test.dart` — breakdown card
 - `test/workshop_setup_test.dart` — setup flag on old settings, `resolveRedirect`, and `setupBypassForUid`
+- `test/customer_quote_view_test.dart` — customer PDF labels
+- `test/customers_menu_card_test.dart` — `TappableListCard`
 
 Add or update a test when changing the calculator, stock transitions, or an importer.
 
