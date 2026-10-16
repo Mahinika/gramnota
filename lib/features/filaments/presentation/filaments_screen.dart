@@ -429,11 +429,11 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
     _brand.text = spool.brand;
     _material.text = spool.material;
     _color.text = spool.colorHex;
-    _diameter.text = spool.diameterMm.toString();
-    _spoolWeight.text = spool.spoolWeightGrams.toString();
-    _remaining.text = spool.remainingGrams.toString();
-    _price.text = (spool.pricePerSpoolMinor / 100).toString();
-    _low.text = spool.lowStockGrams.toString();
+    _diameter.text = _plainNumber(spool.diameterMm);
+    _spoolWeight.text = _plainNumber(spool.spoolWeightGrams);
+    _remaining.text = _plainNumber(spool.remainingGrams);
+    _price.text = _plainMoney(spool.pricePerSpoolMinor);
+    _low.text = _plainNumber(spool.lowStockGrams);
     _notes.text = spool.notes;
     _loaded = true;
   }
@@ -540,30 +540,31 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
             const SectionRule(),
           ],
           const SectionHeading('Spool'),
-          Row(
-            children: [
-              _ColorSwatch(hex: _color.text, size: 40),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _color,
-                  decoration: const InputDecoration(labelText: 'Color hex'),
-                  onChanged: (_) => setState(() {}),
-                ),
+          TextField(
+            controller: _color,
+            decoration: InputDecoration(
+              labelText: 'Color hex',
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: _ColorSwatch(hex: _color.text, size: 20),
               ),
-            ],
+            ),
+            onChanged: (_) => setState(() {}),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _brand,
             decoration: const InputDecoration(labelText: 'Brand'),
             textCapitalization: TextCapitalization.words,
             onChanged: (_) => setState(() {}),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _material,
             decoration: const InputDecoration(labelText: 'Material'),
             onChanged: (_) => setState(() {}),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _diameter,
             decoration: const InputDecoration(labelText: 'Diameter mm'),
@@ -578,12 +579,14 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) => setState(() {}),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _remaining,
             decoration: const InputDecoration(labelText: 'Remaining g'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) => setState(() {}),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _low,
             decoration: const InputDecoration(labelText: 'Low stock threshold g'),
@@ -601,6 +604,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
             ),
           const SectionRule(),
           const SectionHeading('Price'),
+          const SizedBox(height: 4),
           TextField(
             controller: _price,
             decoration: InputDecoration(
@@ -693,6 +697,21 @@ class _ColorSwatch extends StatelessWidget {
       ),
     );
   }
+}
+
+String _plainNumber(double value) {
+  if (value == value.roundToDouble()) {
+    return value.round().toString();
+  }
+  return value.toString();
+}
+
+String _plainMoney(int minor) {
+  final major = minor / 100;
+  if (major == major.roundToDouble()) {
+    return major.round().toString();
+  }
+  return major.toStringAsFixed(2);
 }
 
 Color _color(String hex) {
