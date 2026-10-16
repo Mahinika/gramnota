@@ -72,11 +72,11 @@ class PriceCalculator {
     final failureMinor = (failureBase * input.failureBasisPoints / 10000)
         .round();
 
-    final laborOne =
-        (input.prepMinutes + input.postMinutes) /
-        60 *
-        input.laborMinorPerHour;
-    final laborMinor = (laborOne * quantity).round();
+    final prepLaborMinor =
+        (input.prepMinutes / 60 * input.laborMinorPerHour).round();
+    final postLaborMinor =
+        (input.postMinutes / 60 * input.laborMinorPerHour * quantity).round();
+    final laborMinor = prepLaborMinor + postLaborMinor;
 
     final extrasMinor = input.extraMinors.fold<int>(0, (sum, cost) => sum + cost);
     final costMinor =

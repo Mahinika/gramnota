@@ -28,6 +28,13 @@ class OrdersScreen extends ConsumerStatefulWidget {
 
 class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   OrderStatus? _filter;
+  final _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +43,10 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       return const Scaffold(body: EmptyView(message: 'Sign in to see orders.'));
     }
     final orders = ref.watch(ordersProvider(store));
+    final customers = ref.watch(customersProvider(store)).asData?.value ?? const [];
+    final customerNames = {
+      for (final customer in customers) customer.id: customer.name,
+    };
     return Scaffold(
       appBar: AppBar(title: const Text('Orders')),
       body: orders.when(
@@ -47,11 +58,40 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
           }
           final sorted = [...list]
             ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-          final visible = _filter == null
-              ? sorted
-              : sorted.where((order) => order.status == _filter).toList();
+          final query = _search.text.trim().toLowerCase();
+          final visible = sorted.where((order) {
+            if (_filter != null && order.status != _filter) {
+              return false;
+            }
+            if (query.isEmpty) {
+              return true;
+            }
+            if (order.title.toLowerCase().contains(query)) {
+              return true;
+            }
+            if ('${order.quoteNumber}'.contains(query)) {
+              return true;
+            }
+            if (order.note.toLowerCase().contains(query)) {
+              return true;
+            }
+            final name = customerNames[order.customerId];
+            return name != null && name.toLowerCase().contains(query);
+          }).toList();
           return Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: TextField(
+                  controller: _search,
+                  decoration: const InputDecoration(
+                    labelText: 'Search',
+                    hintText: 'Title, quote no., customer, or note',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                 child: Wrap(
@@ -74,7 +114,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               ),
               Expanded(
                 child: visible.isEmpty
-                    ? const EmptyView(message: 'No orders with that status.')
+                    ? const EmptyView(
+                        message: 'No orders match your search or filter.',
+                      )
                     : ListView(
                         children: [
                           for (final order in visible)
@@ -192,6 +234,8 @@ class OrderDetailScreen extends ConsumerWidget {
               if (order.validUntil.length >= 10)
                 Text('Valid until ${order.validUntil.substring(0, 10)}'),
               const SizedBox(height: 12),
+              _OrderNoteField(order: order, store: store),
+              const SizedBox(height: 12),
               Text('Prints', style: Theme.of(context).textTheme.titleMedium),
               for (final line in prints)
                 _PrintLineTile(
@@ -257,6 +301,88 @@ class OrderDetailScreen extends ConsumerWidget {
       },
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(body: EmptyView(message: '$error')),
+    );
+  }
+}
+
+class _OrderNoteField extends StatefulWidget {
+  const _OrderNoteField({required this.order, required this.store});
+
+  final PrintOrder order;
+  final UserStore store;
+
+  @override
+  State<_OrderNoteField> createState() => _OrderNoteFieldState();
+}
+
+class _OrderNoteFieldState extends State<_OrderNoteField> {
+  late final TextEditingController _note;
+  var _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _note = TextEditingController(text: widget.order.note);
+  }
+
+  @override
+  void didUpdateWidget(covariant _OrderNoteField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.order.id != widget.order.id ||
+        oldWidget.order.note != widget.order.note) {
+      _note.text = widget.order.note;
+    }
+  }
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final next = _note.text.trim();
+    if (next == widget.order.note || _saving) {
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      final now = DateTime.now().toUtc().toIso8601String();
+      await widget.store.saveOrder(
+        widget.order.copyWith(note: next, updatedAt: now),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _note,
+      decoration: InputDecoration(
+        labelText: 'Note',
+        hintText: 'Internal reminder for this quote',
+        suffixIcon: _saving
+            ? const Padding(
+                padding: EdgeInsets.all(12),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            : IconButton(
+                tooltip: 'Save note',
+                onPressed: _save,
+                icon: const Icon(Icons.check),
+              ),
+      ),
+      minLines: 1,
+      maxLines: 3,
+      onSubmitted: (_) => _save(),
     );
   }
 }

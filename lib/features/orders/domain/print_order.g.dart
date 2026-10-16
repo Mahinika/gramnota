@@ -110,6 +110,7 @@ _PrintOrder _$PrintOrderFromJson(Map<String, dynamic> json) => _PrintOrder(
   sourceUrl: json['sourceUrl'] as String? ?? '',
   sourceModelTitle: json['sourceModelTitle'] as String? ?? '',
   sourceProfileTitle: json['sourceProfileTitle'] as String? ?? '',
+  note: json['note'] as String? ?? '',
   lines:
       (json['lines'] as List<dynamic>?)
           ?.map((e) => QuoteLine.fromJson(e as Map<String, dynamic>))
@@ -145,6 +146,7 @@ Map<String, dynamic> _$PrintOrderToJson(_PrintOrder instance) =>
       'sourceUrl': instance.sourceUrl,
       'sourceModelTitle': instance.sourceModelTitle,
       'sourceProfileTitle': instance.sourceProfileTitle,
+      'note': instance.note,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,

@@ -89,6 +89,7 @@ abstract class PrintOrder with _$PrintOrder {
     @Default('') String sourceUrl,
     @Default('') String sourceModelTitle,
     @Default('') String sourceProfileTitle,
+    @Default('') String note,
     @Default([]) List<QuoteLine> lines,
     required String createdAt,
     required String updatedAt,

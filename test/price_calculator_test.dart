@@ -40,7 +40,31 @@ void main() {
     expect(breakdown.perUnitMinor, 61560);
   });
 
-  test('scales production and labor with quantity and leaves extras flat', () {
+  test('charges prep once and post per unit', () {
+    final breakdown = calculator.calculate(
+      const PriceInput(
+        materials: [],
+        powerWatts: 0,
+        printTimeSeconds: 0,
+        electricityMinorPerKwh: 0,
+        purchasePriceMinor: 0,
+        lifetimeHours: 1,
+        maintenanceMinorPerHour: 0,
+        failureBasisPoints: 0,
+        prepMinutes: 15,
+        postMinutes: 30,
+        laborMinorPerHour: 60000,
+        extraMinors: [],
+        markupBasisPoints: 0,
+        vatBasisPoints: 0,
+        quantity: 2,
+      ),
+    );
+
+    expect(breakdown.laborMinor, 75000);
+  });
+
+  test('scales production and post labor with quantity and leaves extras flat', () {
     final breakdown = calculator.calculate(
       const PriceInput(
         materials: [MaterialUse(grams: 100, pricePerKgMinor: 20000)],
