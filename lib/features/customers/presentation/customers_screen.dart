@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
@@ -37,6 +38,10 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       return const Scaffold(body: EmptyView(message: 'Sign in to see customers.'));
     }
     final customers = ref.watch(customersProvider(store));
+    final orders = ref.watch(ordersProvider(store));
+    final quoteCounts = orders.asData?.value == null
+        ? const <String, int>{}
+        : _quoteCounts(orders.asData!.value);
     return Scaffold(
       appBar: AppBar(title: const Text('Customers')),
       floatingActionButton: FloatingActionButton(
@@ -45,12 +50,23 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       ),
       body: customers.when(
         data: (list) {
+          if (list.isEmpty) {
+            return EmptyView(
+              message: 'No customers yet.',
+              action: FilledButton(
+                onPressed: () => context.go('/customers/new'),
+                child: const Text('Add customer'),
+              ),
+            );
+          }
           final query = _search.text.trim().toLowerCase();
           final visible = list.where((customer) {
-            final haystack = '${customer.name} ${customer.city} ${customer.phone}'
-                .toLowerCase();
+            final haystack =
+                '${customer.name} ${customer.city} ${customer.phone} ${customer.email}'
+                    .toLowerCase();
             return query.isEmpty || haystack.contains(query);
-          }).toList()..sort((a, b) => a.name.compareTo(b.name));
+          }).toList()
+            ..sort((a, b) => a.name.compareTo(b.name));
           return Column(
             children: [
               Padding(
@@ -58,65 +74,159 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 child: TextField(
                   controller: _search,
                   decoration: const InputDecoration(
-                    hintText: 'Name, city, or phone',
+                    hintText: 'Name, city, phone, or email',
                     prefixIcon: Icon(Icons.search),
                     filled: true,
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
-              if (visible.isEmpty)
-                const Expanded(child: EmptyView(message: 'No customers yet.')),
-              if (visible.isNotEmpty)
-                Expanded(
-                  child: ListView.separated(
-                    padding: MenuCard.listPadding,
-                    itemCount: visible.length,
-                    separatorBuilder: (_, _) => MenuCard.listSeparator,
-                    itemBuilder: (context, index) {
-                      final customer = visible[index];
-                      final theme = Theme.of(context);
-                      final scheme = theme.colorScheme;
-                      final address = customer.addressLine.trim();
-                      final phone = customer.phone.trim();
-                      return MenuCard(
-                        onTap: () => context.go('/customers/${customer.id}'),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              customer.name,
-                              style: theme.textTheme.titleMedium,
-                            ),
-                            if (address.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                address,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                            if (phone.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                phone,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
+              Expanded(
+                child: visible.isEmpty
+                    ? const EmptyView(
+                        message: 'No customers match your search.',
+                      )
+                    : ListView.separated(
+                        padding: MenuCard.listPadding,
+                        itemCount: visible.length,
+                        separatorBuilder: (_, _) => MenuCard.listSeparator,
+                        itemBuilder: (context, index) {
+                          final customer = visible[index];
+                          return _CustomerListCard(
+                            customer: customer,
+                            quoteCount: quoteCounts[customer.id] ?? 0,
+                            onTap: () => context.go('/customers/${customer.id}'),
+                          );
+                        },
+                      ),
+              ),
             ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => EmptyView(message: '$error'),
+      ),
+    );
+  }
+}
+
+Map<String, int> _quoteCounts(List<PrintOrder> orders) {
+  final counts = <String, int>{};
+  for (final order in orders) {
+    final id = order.customerId;
+    if (id.isEmpty) {
+      continue;
+    }
+    counts[id] = (counts[id] ?? 0) + 1;
+  }
+  return counts;
+}
+
+String _customerInitials(String name) {
+  final parts = name.trim().split(RegExp(r'\s+'));
+  if (parts.isEmpty || parts.first.isEmpty) {
+    return '?';
+  }
+  if (parts.length == 1) {
+    return parts.first.substring(0, 1).toUpperCase();
+  }
+  return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+      .toUpperCase();
+}
+
+class _CustomerListCard extends StatelessWidget {
+  const _CustomerListCard({
+    required this.customer,
+    required this.quoteCount,
+    required this.onTap,
+  });
+
+  final Customer customer;
+  final int quoteCount;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final phone = customer.phone.trim();
+    final email = customer.email.trim();
+    final city = customer.city.trim();
+    final subtitle = city.isNotEmpty
+        ? city
+        : email.isNotEmpty
+            ? email
+            : phone;
+    return MenuCard(
+      onTap: onTap,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            backgroundColor: scheme.primaryContainer,
+            foregroundColor: scheme.onPrimaryContainer,
+            child: Text(_customerInitials(customer.name)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  customer.name,
+                  style: theme.textTheme.titleMedium,
+                ),
+                if (subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+                if (customer.addressLine.trim().isNotEmpty &&
+                    city.isNotEmpty &&
+                    customer.street.trim().isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    customer.addressLine,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Text(
+                  quoteCount == 0
+                      ? 'No quotes'
+                      : quoteCount == 1
+                          ? '1 quote'
+                          : '$quoteCount quotes',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: quoteCount == 0
+                        ? scheme.onSurfaceVariant
+                        : scheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (phone.isNotEmpty)
+            IconButton(
+              tooltip: 'Call',
+              onPressed: () => launchUrl(Uri.parse('tel:$phone')),
+              icon: const Icon(Icons.phone_outlined),
+            ),
+          if (email.isNotEmpty)
+            IconButton(
+              tooltip: 'Email',
+              onPressed: () => launchUrl(Uri.parse('mailto:$email')),
+              icon: const Icon(Icons.mail_outline),
+            ),
+        ],
       ),
     );
   }
@@ -211,15 +321,17 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
         _load(match.first);
       }
     }
-    final customerOrders = orders.asData?.value
-            .where((order) => order.customerId == widget.id)
-            .toList() ??
-        const <PrintOrder>[];
+    final customerOrders = [
+      ...?orders.asData?.value.where((order) => order.customerId == widget.id),
+    ]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isNew = widget.id == 'new';
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.id == 'new' ? 'New customer' : _name.text),
+        title: Text(isNew ? 'New customer' : _name.text),
         actions: [
-          if (widget.id != 'new')
+          if (!isNew)
             IconButton(
               tooltip: 'Send to user',
               onPressed: () => sendItem(
@@ -246,25 +358,146 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           if (_error != null) Text(_error!),
-          TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
-          TextField(controller: _street, decoration: const InputDecoration(labelText: 'Street')),
-          TextField(controller: _postal, decoration: const InputDecoration(labelText: 'Postal code')),
-          TextField(controller: _city, decoration: const InputDecoration(labelText: 'City')),
-          TextField(controller: _country, decoration: const InputDecoration(labelText: 'Country')),
-          TextField(controller: _phone, decoration: const InputDecoration(labelText: 'Phone')),
-          TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email')),
-          TextField(controller: _notes, decoration: const InputDecoration(labelText: 'Notes')),
+          if (!isNew && _name.text.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: MenuCard(
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: scheme.primaryContainer,
+                      foregroundColor: scheme.onPrimaryContainer,
+                      child: Text(
+                        _customerInitials(_name.text),
+                        style: theme.textTheme.titleLarge,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _name.text.trim(),
+                            style: theme.textTheme.titleLarge,
+                          ),
+                          if (_phone.text.trim().isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              _phone.text.trim(),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                          if (_email.text.trim().isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              _email.text.trim(),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                          if ([
+                            _street.text,
+                            _postal.text,
+                            _city.text,
+                            _country.text,
+                          ].any((part) => part.trim().isNotEmpty)) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              Customer(
+                                id: widget.id,
+                                name: _name.text,
+                                street: _street.text,
+                                postalCode: _postal.text,
+                                city: _city.text,
+                                country: _country.text,
+                              ).addressLine,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          TextField(
+            controller: _name,
+            decoration: const InputDecoration(labelText: 'Name'),
+            textCapitalization: TextCapitalization.words,
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _street,
+            decoration: const InputDecoration(labelText: 'Street'),
+            textCapitalization: TextCapitalization.words,
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _postal,
+            decoration: const InputDecoration(labelText: 'Postal code'),
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _city,
+            decoration: const InputDecoration(labelText: 'City'),
+            textCapitalization: TextCapitalization.words,
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _country,
+            decoration: const InputDecoration(labelText: 'Country'),
+            textCapitalization: TextCapitalization.words,
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _phone,
+            decoration: const InputDecoration(labelText: 'Phone'),
+            keyboardType: TextInputType.phone,
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _email,
+            decoration: const InputDecoration(labelText: 'Email'),
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            onChanged: (_) => setState(() {}),
+          ),
+          TextField(
+            controller: _notes,
+            decoration: const InputDecoration(labelText: 'Notes'),
+            minLines: 2,
+            maxLines: 4,
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
+            runSpacing: 8,
             children: [
-              OutlinedButton(
+              OutlinedButton.icon(
                 onPressed: _phone.text.trim().isEmpty
                     ? null
                     : () => launchUrl(Uri.parse('tel:${_phone.text.trim()}')),
-                child: const Text('Call'),
+                icon: const Icon(Icons.phone_outlined),
+                label: const Text('Call'),
               ),
-              OutlinedButton(
+              OutlinedButton.icon(
+                onPressed: _email.text.trim().isEmpty
+                    ? null
+                    : () => launchUrl(
+                          Uri.parse('mailto:${_email.text.trim()}'),
+                        ),
+                icon: const Icon(Icons.mail_outline),
+                label: const Text('Email'),
+              ),
+              OutlinedButton.icon(
                 onPressed: [
                   _street.text,
                   _postal.text,
@@ -285,16 +518,17 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
                           ),
                         );
                       },
-                child: const Text('Map'),
+                icon: const Icon(Icons.map_outlined),
+                label: const Text('Map'),
               ),
             ],
           ),
           const SizedBox(height: 12),
           FilledButton(onPressed: () => _save(store), child: const Text('Save')),
-          if (widget.id != 'new')
+          if (!isNew)
             TextButton(
               style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: scheme.error,
               ),
               onPressed: () async {
                 final name = _name.text.trim();
@@ -318,14 +552,90 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
             ),
           if (customerOrders.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Text('Orders', style: Theme.of(context).textTheme.titleMedium),
-            for (final order in customerOrders)
-              ListTile(
-                title: Text(order.title),
-                subtitle: Text(orderStatusLabel(order.status)),
+            Text(
+              customerOrders.length == 1
+                  ? '1 quote'
+                  : '${customerOrders.length} quotes',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            for (final order in customerOrders) ...[
+              _CustomerOrderCard(
+                order: order,
                 onTap: () => context.go('/orders/${order.id}'),
               ),
+              const SizedBox(height: 8),
+            ],
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CustomerOrderCard extends StatelessWidget {
+  const _CustomerOrderCard({
+    required this.order,
+    required this.onTap,
+  });
+
+  final PrintOrder order;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final statusColor = switch (order.status) {
+      OrderStatus.quote => scheme.secondary,
+      OrderStatus.accepted => scheme.primary,
+      OrderStatus.printed => scheme.tertiary,
+      OrderStatus.delivered => scheme.primary,
+      OrderStatus.cancelled => scheme.error,
+    };
+    return MenuCard(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Quote ${order.quoteNumber}',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  orderStatusLabel(order.status),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: statusColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            order.title,
+            style: theme.textTheme.titleMedium,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            formatMoney(order.breakdown.totalMinor, order.currencyCode),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
