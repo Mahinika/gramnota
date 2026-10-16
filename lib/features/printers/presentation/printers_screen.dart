@@ -87,6 +87,19 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
     super.dispose();
   }
 
+  List<CommonPrinter> _matchingPrinters() {
+    final query = _printerQuery.text.trim().toLowerCase();
+    final matches = [
+      for (final printer in commonPrinters)
+        if (query.isEmpty || printer.name.toLowerCase().contains(query))
+          printer,
+    ];
+    matches.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+    return matches;
+  }
+
   void _load(PrinterProfile printer) {
     if (_loaded) {
       return;
@@ -151,29 +164,18 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 8),
-            if (commonPrinters
-                .where(
-                  (printer) => printer.name.toLowerCase().contains(
-                    _printerQuery.text.trim().toLowerCase(),
-                  ),
-                )
-                .isEmpty)
+            if (_matchingPrinters().isEmpty)
               const Text('No printer with that name.')
             else
               DropdownButtonFormField<String>(
                 key: ValueKey(_printerQuery.text.trim().toLowerCase()),
                 decoration: const InputDecoration(labelText: 'Common printer'),
                 items: [
-                  for (final printer in commonPrinters)
-                    if (printer.name.toLowerCase().contains(
-                      _printerQuery.text.trim().toLowerCase(),
-                    ))
-                      DropdownMenuItem(
-                        value: printer.name,
-                        child: Text(
-                          '${printer.name} · ${printer.powerWatts} W · ${printer.purchasePriceKronor} kr',
-                        ),
-                      ),
+                  for (final printer in _matchingPrinters())
+                    DropdownMenuItem(
+                      value: printer.name,
+                      child: Text('${printer.name} · ${printer.powerWatts} W'),
+                    ),
                 ],
                 onChanged: (name) {
                   if (name == null) {
