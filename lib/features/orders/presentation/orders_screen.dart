@@ -285,6 +285,8 @@ class _PrintLineTile extends StatelessWidget {
         .firstOrNull;
     final source = Uri.tryParse(line.sourceUrl);
     final prints = orderPrints(order);
+    final calculationRoute =
+        '/calculator?orderId=${order.id}&lineId=${line.id}';
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Column(
@@ -300,10 +302,8 @@ class _PrintLineTile extends StatelessWidget {
               ),
               if (!locked) ...[
                 IconButton(
-                  tooltip: 'Edit print',
-                  onPressed: () => context.go(
-                    '/calculator?orderId=${order.id}&lineId=${line.id}',
-                  ),
+                  tooltip: 'Open calculation',
+                  onPressed: () => context.go(calculationRoute),
                   icon: const Icon(Icons.edit_outlined),
                 ),
                 if (prints.length > 1)
@@ -326,12 +326,33 @@ class _PrintLineTile extends StatelessWidget {
               Text(_filamentLine(usage, spools)),
           if (line.sourceProfileTitle.isNotEmpty)
             Text(line.sourceProfileTitle),
-          if (source != null && source.hasScheme)
+          if (source != null && source.hasScheme) ...[
+            Text(
+              line.sourceUrl,
+              style: Theme.of(context).textTheme.bodySmall,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Wrap(
+              spacing: 8,
+              children: [
+                TextButton(
+                  onPressed: () => launchUrl(source, mode: LaunchMode.externalApplication),
+                  child: const Text('Open model'),
+                ),
+                if (!locked)
+                  TextButton(
+                    onPressed: () => context.go(calculationRoute),
+                    child: const Text('Open calculation'),
+                  ),
+              ],
+            ),
+          ] else if (!locked)
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
-                onPressed: () => launchUrl(source),
-                child: const Text('Open source'),
+                onPressed: () => context.go(calculationRoute),
+                child: const Text('Open calculation'),
               ),
             ),
         ],

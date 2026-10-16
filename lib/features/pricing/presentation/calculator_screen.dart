@@ -44,13 +44,15 @@ class _ExtraRow {
   final cost = TextEditingController();
 }
 
+const defaultPrepPostMinutes = 15;
+
 class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   final _title = TextEditingController();
   final _link = TextEditingController();
   final _hours = TextEditingController(text: '0');
   final _minutes = TextEditingController(text: '0');
-  final _prep = TextEditingController(text: '0');
-  final _post = TextEditingController(text: '0');
+  final _prep = TextEditingController(text: '$defaultPrepPostMinutes');
+  final _post = TextEditingController(text: '$defaultPrepPostMinutes');
   final _quantity = TextEditingController(text: '1');
   final _markup = TextEditingController();
   final _failure = TextEditingController();
@@ -123,6 +125,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final hours = parsePositiveInt(_hours.text) ?? 0;
     final minutes = parsePositiveInt(_minutes.text) ?? 0;
     return hours * 3600 + minutes * 60;
+  }
+
+  String _resolvedSourceUrl() {
+    final typed = _link.text.trim();
+    if (typed.startsWith('http://') || typed.startsWith('https://')) {
+      return typed;
+    }
+    return _sourceUrl.trim();
   }
 
   void _applyProfile(
@@ -210,6 +220,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         return;
       }
       _sourceUrl = result.sourceUrl;
+      if (result.sourceUrl.isNotEmpty) {
+        _link.text = result.sourceUrl;
+      }
       if (result.title.isNotEmpty) {
         _title.text = result.title;
       }
@@ -342,8 +355,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _link.clear();
     _hours.text = '0';
     _minutes.text = '0';
-    _prep.text = '0';
-    _post.text = '0';
+    _prep.text = '$defaultPrepPostMinutes';
+    _post.text = '$defaultPrepPostMinutes';
     _quantity.text = '1';
     _markup.text = settings == null
         ? ''
@@ -471,7 +484,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       failureBasisPoints: input.failureBasisPoints,
       vatBasisPoints: input.vatBasisPoints,
       breakdown: breakdown,
-      sourceUrl: _sourceUrl,
+      sourceUrl: _resolvedSourceUrl(),
       sourceModelTitle: _title.text.trim(),
       sourceProfileTitle: _profileTitle,
     );
