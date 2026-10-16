@@ -11,6 +11,7 @@ import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
+import '../domain/common_spools.dart';
 import '../domain/filament_spool.dart';
 
 class FilamentsScreen extends ConsumerWidget {
@@ -32,14 +33,36 @@ class FilamentsScreen extends ConsumerWidget {
       body: spools.when(
         data: (list) {
           if (list.isEmpty) {
-            return const EmptyView(message: 'No spools yet.');
+            return EmptyView(
+              message: 'No spools yet. Pick a standard spool or add your own.',
+              action: _StandardSpoolPicker(
+                onCustom: () => context.go('/filaments/new'),
+                onAdd: (preset) => _addStandardSpool(context, store, preset),
+              ),
+            );
           }
           return ListView.separated(
             padding: MenuCard.listPadding,
-            itemCount: list.length,
+            itemCount: list.length + 1,
             separatorBuilder: (_, _) => MenuCard.listSeparator,
             itemBuilder: (context, index) {
-              final spool = list[index];
+              if (index == 0) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Standard spools',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    _StandardSpoolPicker(
+                      onCustom: () => context.go('/filaments/new'),
+                      onAdd: (preset) => _addStandardSpool(context, store, preset),
+                    ),
+                  ],
+                );
+              }
+              final spool = list[index - 1];
               final theme = Theme.of(context);
               final scheme = theme.colorScheme;
               final progress = spool.spoolWeightGrams <= 0
@@ -101,6 +124,77 @@ class FilamentsScreen extends ConsumerWidget {
   }
 }
 
+class _StandardSpoolPicker extends StatelessWidget {
+  const _StandardSpoolPicker({
+    required this.onAdd,
+    required this.onCustom,
+  });
+
+  final void Function(CommonSpool preset) onAdd;
+  final VoidCallback onCustom;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final preset in commonSpools)
+              ActionChip(
+                avatar: CircleAvatar(
+                  radius: 8,
+                  backgroundColor: _color(preset.colorHex),
+                ),
+                label: Text(preset.label),
+                onPressed: () => onAdd(preset),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            onPressed: onCustom,
+            child: const Text('Custom spool'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+Future<void> _addStandardSpool(
+  BuildContext context,
+  UserStore store,
+  CommonSpool preset,
+) async {
+  final spool = FilamentSpool(
+    id: const Uuid().v4(),
+    brand: preset.brand,
+    material: preset.material,
+    colorHex: preset.colorHex,
+    spoolWeightGrams: preset.spoolWeightGrams,
+    remainingGrams: preset.spoolWeightGrams,
+    pricePerSpoolMinor: preset.pricePerSpoolMinor,
+  );
+  await store.saveFilament(spool);
+  if (!context.mounted) {
+    return;
+  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('Added ${preset.label}.'),
+      action: SnackBarAction(
+        label: 'Edit price',
+        onPressed: () => context.go('/filaments/${spool.id}'),
+      ),
+    ),
+  );
+}
+
 class FilamentEditScreen extends ConsumerStatefulWidget {
   const FilamentEditScreen({required this.id, super.key});
 
@@ -111,6 +205,7 @@ class FilamentEditScreen extends ConsumerStatefulWidget {
 }
 
 class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
+  final _presetQuery = TextEditingController();
   final _brand = TextEditingController();
   final _material = TextEditingController(text: 'PLA');
   final _color = TextEditingController(text: '#808080');
@@ -123,9 +218,24 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
   var _loaded = false;
   String? _error;
 
+  void _applyPreset(CommonSpool preset) {
+    _brand.text = preset.brand;
+    _material.text = preset.material;
+    _color.text = preset.colorHex;
+    _spoolWeight.text = preset.spoolWeightGrams.round().toString();
+    _remaining.text = preset.spoolWeightGrams.round().toString();
+    if (preset.pricePerSpoolMinor > 0) {
+      _price.text = (preset.pricePerSpoolMinor / 100).toString();
+    }
+    _error = null;
+  }
+
+  List<CommonSpool> _matchingPresets() => matchingCommonSpools(_presetQuery.text);
+
   @override
   void dispose() {
     for (final controller in [
+      _presetQuery,
       _brand,
       _material,
       _color,
@@ -217,6 +327,40 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           if (_error != null) Text(_error!),
+          if (widget.id == 'new') ...[
+            TextField(
+              controller: _presetQuery,
+              decoration: const InputDecoration(
+                labelText: 'Find a standard spool',
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 8),
+            if (_matchingPresets().isEmpty)
+              const Text('No standard spool with that name.')
+            else
+              DropdownButtonFormField<String>(
+                key: ValueKey(_presetQuery.text.trim().toLowerCase()),
+                decoration: const InputDecoration(labelText: 'Standard spool'),
+                items: [
+                  for (final preset in _matchingPresets())
+                    DropdownMenuItem(
+                      value: preset.label,
+                      child: Text(preset.label),
+                    ),
+                ],
+                onChanged: (label) {
+                  if (label == null) {
+                    return;
+                  }
+                  final preset = _matchingPresets().firstWhere(
+                    (item) => item.label == label,
+                  );
+                  setState(() => _applyPreset(preset));
+                },
+              ),
+            const SizedBox(height: 12),
+          ],
           TextField(controller: _brand, decoration: const InputDecoration(labelText: 'Brand'), onChanged: (_) => setState(() {})),
           TextField(controller: _material, decoration: const InputDecoration(labelText: 'Material'), onChanged: (_) => setState(() {})),
           TextField(controller: _color, decoration: const InputDecoration(labelText: 'Color hex'), onChanged: (_) => setState(() {})),
