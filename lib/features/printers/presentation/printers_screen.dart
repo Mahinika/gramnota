@@ -19,7 +19,9 @@ class PrintersScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(body: EmptyView(message: 'Sign in to see printers.'));
+      return const Scaffold(
+        body: EmptyView(message: 'Sign in to see printers.'),
+      );
     }
     final printers = ref.watch(printersProvider(store));
     return Scaffold(
@@ -66,12 +68,20 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
   final _price = TextEditingController();
   final _life = TextEditingController();
   final _maintenance = TextEditingController();
+  final _printerQuery = TextEditingController();
   var _loaded = false;
   String? _error;
 
   @override
   void dispose() {
-    for (final controller in [_name, _watts, _price, _life, _maintenance]) {
+    for (final controller in [
+      _name,
+      _watts,
+      _price,
+      _life,
+      _maintenance,
+      _printerQuery,
+    ]) {
       controller.dispose();
     }
     super.dispose();
@@ -93,11 +103,15 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
   Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(body: EmptyView(message: 'Sign in to edit printers.'));
+      return const Scaffold(
+        body: EmptyView(message: 'Sign in to edit printers.'),
+      );
     }
     final printers = ref.watch(printersProvider(store));
     if (widget.id != 'new') {
-      final match = printers.asData?.value.where((item) => item.id == widget.id);
+      final match = printers.asData?.value.where(
+        (item) => item.id == widget.id,
+      );
       if (match != null && match.isNotEmpty) {
         _load(match.first);
       }
@@ -131,45 +145,87 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
         children: [
           if (_error != null) Text(_error!),
           if (widget.id == 'new') ...[
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(labelText: 'Common printer'),
-              items: [
-                for (final printer in commonPrinters)
-                  DropdownMenuItem(
-                    value: printer.name,
-                    child: Text(
-                      '${printer.name} · ${printer.powerWatts} W · ${printer.purchasePriceKronor} kr',
-                    ),
-                  ),
-              ],
-              onChanged: (name) {
-                if (name == null) {
-                  return;
-                }
-                final printer = commonPrinters.firstWhere(
-                  (item) => item.name == name,
-                );
-                setState(() {
-                  _name.text = printer.name;
-                  _watts.text = printer.powerWatts.toString();
-                  _price.text = printer.purchasePriceKronor.toString();
-                  _life.text = CommonPrinter.lifetimeHours.round().toString();
-                  _maintenance.text = '0';
-                  _error = null;
-                });
-              },
+            TextField(
+              controller: _printerQuery,
+              decoration: const InputDecoration(labelText: 'Find a printer'),
+              onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 8),
+            if (commonPrinters
+                .where(
+                  (printer) => printer.name.toLowerCase().contains(
+                    _printerQuery.text.trim().toLowerCase(),
+                  ),
+                )
+                .isEmpty)
+              const Text('No printer with that name.')
+            else
+              DropdownButtonFormField<String>(
+                key: ValueKey(_printerQuery.text.trim().toLowerCase()),
+                decoration: const InputDecoration(labelText: 'Common printer'),
+                items: [
+                  for (final printer in commonPrinters)
+                    if (printer.name.toLowerCase().contains(
+                      _printerQuery.text.trim().toLowerCase(),
+                    ))
+                      DropdownMenuItem(
+                        value: printer.name,
+                        child: Text(
+                          '${printer.name} · ${printer.powerWatts} W · ${printer.purchasePriceKronor} kr',
+                        ),
+                      ),
+                ],
+                onChanged: (name) {
+                  if (name == null) {
+                    return;
+                  }
+                  final printer = commonPrinters.firstWhere(
+                    (item) => item.name == name,
+                  );
+                  setState(() {
+                    _name.text = printer.name;
+                    _watts.text = printer.powerWatts.toString();
+                    _price.text = printer.purchasePriceKronor.toString();
+                    _life.text = CommonPrinter.lifetimeHours.round().toString();
+                    _maintenance.text = '0';
+                    _error = null;
+                  });
+                },
+              ),
+            const SizedBox(height: 8),
             const Text(
-              'Power is the average while printing PLA. The price is a Swedish shop price including VAT from October 2026. Lifetime starts at 5,000 hours because makers do not publish one. Change the price to what you paid.',
+              'The first printers use a maker PLA average and a Swedish shop price. The rest use a community catalog: euro prices converted on 15 October 2026, and power estimated from the heater because the catalog lists the power supply. Lifetime starts at 5,000 hours. Change the price and watts to your machine.',
             ),
             const SizedBox(height: 12),
           ],
-          TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
-          TextField(controller: _watts, decoration: const InputDecoration(labelText: 'Power W'), keyboardType: TextInputType.number),
-          TextField(controller: _price, decoration: const InputDecoration(labelText: 'Purchase price'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-          TextField(controller: _life, decoration: const InputDecoration(labelText: 'Expected lifetime hours'), keyboardType: TextInputType.number),
-          TextField(controller: _maintenance, decoration: const InputDecoration(labelText: 'Maintenance per hour'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+          TextField(
+            controller: _name,
+            decoration: const InputDecoration(labelText: 'Name'),
+          ),
+          TextField(
+            controller: _watts,
+            decoration: const InputDecoration(labelText: 'Power W'),
+            keyboardType: TextInputType.number,
+          ),
+          TextField(
+            controller: _price,
+            decoration: const InputDecoration(labelText: 'Purchase price'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          TextField(
+            controller: _life,
+            decoration: const InputDecoration(
+              labelText: 'Expected lifetime hours',
+            ),
+            keyboardType: TextInputType.number,
+          ),
+          TextField(
+            controller: _maintenance,
+            decoration: const InputDecoration(
+              labelText: 'Maintenance per hour',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: () async {
