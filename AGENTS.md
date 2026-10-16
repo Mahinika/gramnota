@@ -51,6 +51,8 @@ Inbox is the only cross-user write. The payload is a JSON string (`payloadJson`)
 
 `firebaseIsConfigured` is false while an API key starts with `REPLACE`. An unconfigured build shows `SetupScreen` and does not touch Firebase. Android sign-in uses `google_sign_in`. Windows sign-in uses Firebase Auth in the browser; Windows is registered as a Firebase web app. `android/app/google-services.json` is gitignored. Do not commit secrets.
 
+A signed-in user with no settings document, or with `setupCompleted` false, goes to `/workshop-setup` and walks through the workshop profile and one printer. A saved document that has no `setupCompleted` field counts as already set up.
+
 Share-into-app (`receive_sharing_intent`) is Android only. The URL lands in `pendingLinkProvider` for the calculator.
 
 ## Link import
@@ -67,6 +69,7 @@ Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProv
 - `test/order_stock_test.dart` — quote numbers and stock, via `fake_cloud_firestore`
 - `test/link_import_test.dart` — importers with a fake fetcher
 - `test/widget_test.dart` — breakdown card
+- `test/workshop_setup_test.dart` — setup flag on old settings, and the setup redirect
 
 Add or update a test when changing the calculator, stock transitions, or an importer.
 

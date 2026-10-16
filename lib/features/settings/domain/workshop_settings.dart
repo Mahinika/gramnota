@@ -3,9 +3,19 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'workshop_settings.freezed.dart';
 part 'workshop_settings.g.dart';
 
+/// A settings document saved before workshop setup existed has no flag.
+/// Those workshops are already in use, so a missing value counts as done.
+Object? readSetupCompleted(Map<dynamic, dynamic> json, String key) {
+  if (!json.containsKey(key)) {
+    return true;
+  }
+  return json[key];
+}
+
 @freezed
 abstract class WorkshopSettings with _$WorkshopSettings {
   const factory WorkshopSettings({
+    @JsonKey(readValue: readSetupCompleted) @Default(false) bool setupCompleted,
     @Default('SEK') String currencyCode,
     @Default(0) int electricityMinorPerKwh,
     @Default(0) int laborMinorPerHour,

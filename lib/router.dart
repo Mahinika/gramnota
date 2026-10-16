@@ -11,12 +11,15 @@ import 'features/orders/presentation/orders_screen.dart';
 import 'features/pricing/presentation/calculator_screen.dart';
 import 'features/printers/presentation/printers_screen.dart';
 import 'features/settings/presentation/settings_screen.dart';
+import 'features/settings/presentation/workshop_setup_screen.dart';
 import 'features/sharing/presentation/inbox_screen.dart';
 import 'firebase_options.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
   ref.listen(authUserProvider, (_, _) => refresh.value++);
+  ref.listen(setupCompletedProvider, (_, _) => refresh.value++);
+  ref.listen(setupFinishedProvider, (_, _) => refresh.value++);
   ref.onDispose(refresh.dispose);
   return GoRouter(
     initialLocation: '/calculator',
@@ -35,14 +38,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!signedIn) {
         return onAuth ? null : '/sign-in';
       }
-      if (onAuth) {
-        return '/calculator';
-      }
-      return null;
+      return workshopRedirect(
+        location: location,
+        setupCompleted: ref.read(setupCompletedProvider),
+        finishedLocally: ref.read(setupFinishedProvider),
+      );
     },
     routes: [
       GoRoute(path: '/setup', builder: (_, _) => const SetupScreen()),
       GoRoute(path: '/sign-in', builder: (_, _) => const SignInScreen()),
+      GoRoute(path: '/starting', builder: (_, _) => const StartingScreen()),
+      GoRoute(
+        path: '/workshop-setup',
+        builder: (_, _) => const WorkshopSetupScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppShell(navigationShell: navigationShell);

@@ -15,11 +15,8 @@ class UserStore {
   final FirebaseFirestore db;
   final String uid;
 
-  DocumentReference<Map<String, dynamic>> get settingsDoc => db
-      .collection('users')
-      .doc(uid)
-      .collection('settings')
-      .doc('main');
+  DocumentReference<Map<String, dynamic>> get settingsDoc =>
+      db.collection('users').doc(uid).collection('settings').doc('main');
 
   CollectionReference<Map<String, dynamic>> get printers =>
       db.collection('users').doc(uid).collection('printers');
@@ -42,6 +39,7 @@ class UserStore {
   Stream<WorkshopSettings> watchSettings() {
     return settingsDoc.snapshots().map((snapshot) {
       if (!snapshot.exists || snapshot.data() == null) {
+        // No document yet, so the workshop setup still has to run.
         return const WorkshopSettings();
       }
       return WorkshopSettings.fromJson(snapshot.data()!);
@@ -52,10 +50,8 @@ class UserStore {
     return settingsDoc.set(settings.toJson());
   }
 
-  Stream<List<PrinterProfile>> watchPrinters() => _watch(
-    printers,
-    PrinterProfile.fromJson,
-  );
+  Stream<List<PrinterProfile>> watchPrinters() =>
+      _watch(printers, PrinterProfile.fromJson);
 
   Future<void> savePrinter(PrinterProfile printer) {
     return printers.doc(printer.id).set(printer.toJson());
@@ -63,10 +59,8 @@ class UserStore {
 
   Future<void> deletePrinter(String id) => printers.doc(id).delete();
 
-  Stream<List<FilamentSpool>> watchFilaments() => _watch(
-    filaments,
-    FilamentSpool.fromJson,
-  );
+  Stream<List<FilamentSpool>> watchFilaments() =>
+      _watch(filaments, FilamentSpool.fromJson);
 
   Future<void> saveFilament(FilamentSpool spool) {
     return filaments.doc(spool.id).set(spool.toJson());
@@ -74,10 +68,8 @@ class UserStore {
 
   Future<void> deleteFilament(String id) => filaments.doc(id).delete();
 
-  Stream<List<Customer>> watchCustomers() => _watch(
-    customers,
-    Customer.fromJson,
-  );
+  Stream<List<Customer>> watchCustomers() =>
+      _watch(customers, Customer.fromJson);
 
   Future<void> saveCustomer(Customer customer) {
     return customers.doc(customer.id).set(customer.toJson());

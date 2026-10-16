@@ -67,6 +67,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _email = TextEditingController();
   final _validity = TextEditingController(text: '14');
   var _loaded = false;
+  var _setupCompleted = true;
   var _nextQuote = 1;
   String? _message;
 
@@ -112,6 +113,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _email.text = settings.email;
     _validity.text = settings.quoteValidityDays.toString();
     _nextQuote = settings.nextQuoteNumber;
+    _setupCompleted = settings.setupCompleted;
     _loaded = true;
   }
 
@@ -119,7 +121,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(body: EmptyView(message: 'Sign in to edit settings.'));
+      return const Scaffold(
+        body: EmptyView(message: 'Sign in to edit settings.'),
+      );
     }
     final settings = ref.watch(settingsProvider(store));
     final current = settings.asData?.value;
@@ -132,22 +136,77 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           if (_message != null) Text(_message!),
-          TextField(controller: _currency, decoration: const InputDecoration(labelText: 'Currency')),
-          TextField(controller: _electricity, decoration: const InputDecoration(labelText: 'Electricity price per kWh'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-          TextField(controller: _labor, decoration: const InputDecoration(labelText: 'Labor per hour'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-          TextField(controller: _markup, decoration: const InputDecoration(labelText: 'Default markup %'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-          TextField(controller: _vat, decoration: const InputDecoration(labelText: 'VAT % (0 if not registered)'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-          TextField(controller: _failure, decoration: const InputDecoration(labelText: 'Default failure %'), keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-          TextField(controller: _validity, decoration: const InputDecoration(labelText: 'Quote validity days'), keyboardType: TextInputType.number),
+          TextField(
+            controller: _currency,
+            decoration: const InputDecoration(labelText: 'Currency'),
+          ),
+          TextField(
+            controller: _electricity,
+            decoration: const InputDecoration(
+              labelText: 'Electricity price per kWh',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          TextField(
+            controller: _labor,
+            decoration: const InputDecoration(labelText: 'Labor per hour'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          TextField(
+            controller: _markup,
+            decoration: const InputDecoration(labelText: 'Default markup %'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          TextField(
+            controller: _vat,
+            decoration: const InputDecoration(
+              labelText: 'VAT % (0 if not registered)',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          TextField(
+            controller: _failure,
+            decoration: const InputDecoration(labelText: 'Default failure %'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          TextField(
+            controller: _validity,
+            decoration: const InputDecoration(labelText: 'Quote validity days'),
+            keyboardType: TextInputType.number,
+          ),
           const SizedBox(height: 16),
-          Text('Business profile', style: Theme.of(context).textTheme.titleMedium),
-          TextField(controller: _business, decoration: const InputDecoration(labelText: 'Name')),
-          TextField(controller: _street, decoration: const InputDecoration(labelText: 'Street')),
-          TextField(controller: _postal, decoration: const InputDecoration(labelText: 'Postal code')),
-          TextField(controller: _city, decoration: const InputDecoration(labelText: 'City')),
-          TextField(controller: _org, decoration: const InputDecoration(labelText: 'Org. number')),
-          TextField(controller: _phone, decoration: const InputDecoration(labelText: 'Phone')),
-          TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email')),
+          Text(
+            'Business profile',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          TextField(
+            controller: _business,
+            decoration: const InputDecoration(labelText: 'Name'),
+          ),
+          TextField(
+            controller: _street,
+            decoration: const InputDecoration(labelText: 'Street'),
+          ),
+          TextField(
+            controller: _postal,
+            decoration: const InputDecoration(labelText: 'Postal code'),
+          ),
+          TextField(
+            controller: _city,
+            decoration: const InputDecoration(labelText: 'City'),
+          ),
+          TextField(
+            controller: _org,
+            decoration: const InputDecoration(labelText: 'Org. number'),
+          ),
+          TextField(
+            controller: _phone,
+            decoration: const InputDecoration(labelText: 'Phone'),
+          ),
+          TextField(
+            controller: _email,
+            decoration: const InputDecoration(labelText: 'Email'),
+          ),
           Text('Next quote number $_nextQuote'),
           const SizedBox(height: 12),
           FilledButton(
@@ -156,11 +215,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               final vat = parseBasisPoints(_vat.text);
               final failure = parseBasisPoints(_failure.text);
               if (markup == null || vat == null || failure == null) {
-                setState(() => _message = 'Markup, VAT, and failure must be numbers.');
+                setState(
+                  () => _message = 'Markup, VAT, and failure must be numbers.',
+                );
                 return;
               }
               await store.saveSettings(
                 WorkshopSettings(
+                  setupCompleted: _setupCompleted,
                   currencyCode: _currency.text.trim().isEmpty
                       ? 'SEK'
                       : _currency.text.trim().toUpperCase(),
