@@ -10,6 +10,8 @@ import '../../../core/gate_scaffold.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../orders/data/orders_providers.dart';
+import '../../filaments/domain/common_spools.dart';
+import '../../filaments/domain/filament_spool.dart';
 import '../../printers/domain/common_printers.dart';
 import '../../printers/domain/printer_profile.dart';
 import '../domain/workshop_settings.dart';
@@ -84,7 +86,7 @@ class WorkshopSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
-  static const _stepCount = 8;
+  static const _stepCount = 9;
 
   final _business = TextEditingController();
   final _street = TextEditingController();
@@ -106,7 +108,9 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
   final _price = TextEditingController();
   final _life = TextEditingController(text: '5000');
   final _maintenance = TextEditingController(text: '0');
+  final _spoolQuery = TextEditingController();
 
+  CommonSpool? _selectedSpool;
   var _step = 0;
   var _saving = false;
   String? _error;
@@ -143,11 +147,14 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
       _price,
       _life,
       _maintenance,
+      _spoolQuery,
     ]) {
       controller.dispose();
     }
     super.dispose();
   }
+
+  List<CommonSpool> _matchingSpools() => matchingCommonSpools(_spoolQuery.text);
 
   List<CommonPrinter> _matchingPrinters() {
     final query = _printerQuery.text.trim().toLowerCase();
@@ -284,6 +291,20 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             maintenanceMinorPerHour: parseMinor(_maintenance.text) ?? 0,
           ),
         );
+        final preset = _selectedSpool;
+        if (preset != null) {
+          await store.saveFilament(
+            FilamentSpool(
+              id: const Uuid().v4(),
+              brand: preset.brand,
+              material: preset.material,
+              colorHex: preset.colorHex,
+              spoolWeightGrams: preset.spoolWeightGrams,
+              remainingGrams: preset.spoolWeightGrams,
+              pricePerSpoolMinor: preset.pricePerSpoolMinor,
+            ),
+          );
+        }
       }
       ref.read(setupFinishedProvider.notifier).mark();
       if (mounted) {
@@ -308,6 +329,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
       4 => 'Markup, failure, and VAT',
       5 => 'Quotes',
       6 => 'Printer',
+      7 => 'Filament spool',
       _ => 'Review',
     };
   }
@@ -602,11 +624,65 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
         ];
+      case 7:
+        final spoolMatches = _matchingSpools();
+        final selectedLabel = _selectedSpool?.label;
+        return [
+          const Text(
+            'Pick a standard spool for pricing. You can add more spools later from the Filament tab.',
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _spoolQuery,
+            decoration: const InputDecoration(labelText: 'Find a spool'),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 8),
+          if (spoolMatches.isEmpty)
+            const Text('No standard spool with that name.')
+          else
+            DropdownButtonFormField<String>(
+              key: ValueKey(_spoolQuery.text.trim().toLowerCase()),
+              isExpanded: true,
+              initialValue: spoolMatches.any((item) => item.label == selectedLabel)
+                  ? selectedLabel
+                  : null,
+              decoration: const InputDecoration(labelText: 'Standard spool'),
+              items: [
+                for (final preset in spoolMatches)
+                  DropdownMenuItem(
+                    value: preset.label,
+                    child: Text(preset.label),
+                  ),
+              ],
+              onChanged: (label) {
+                if (label == null) {
+                  return;
+                }
+                setState(() {
+                  _selectedSpool = spoolMatches.firstWhere(
+                    (item) => item.label == label,
+                  );
+                  _error = null;
+                });
+              },
+            ),
+          if (_selectedSpool != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _selectedSpool!.pricePerSpoolMinor == 0
+                  ? 'You can set the spool price on the Filament tab after setup.'
+                  : 'Indicative price ${formatMoney(_selectedSpool!.pricePerSpoolMinor, _currency.text.trim().toUpperCase())}.',
+            ),
+          ],
+        ];
       default:
         final currency = _currency.text.trim().toUpperCase();
         return [
-          const Text(
-            'Save these answers, then add a filament spool from the Filament tab before you price a print.',
+          Text(
+            _selectedSpool == null
+                ? 'Save these answers, then add a filament spool from the Filament tab before you price a print.'
+                : 'Save these answers, then open the calculator to price your first print.',
           ),
           const SizedBox(height: 12),
           _ReviewRow('Business', _business.text.trim()),
@@ -649,6 +725,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             'Maintenance',
             formatMoney(parseMinor(_maintenance.text) ?? 0, currency),
           ),
+          _ReviewRow('Filament', _selectedSpool?.label ?? ''),
         ];
     }
   }

@@ -59,7 +59,7 @@ Release APKs are signed with the upload keystore in `android/app/upload-keystore
 
 GitHub Actions (`.github/workflows/android-apk.yml`) builds a release APK on every push to `master` and replaces the `android` release asset `app-release.apk` on the private repo `Mahinika/gramnota`. The workflow needs the secrets `GOOGLE_SERVICES_JSON`, `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD`. A new signing key means the installed app must be uninstalled before the new APK can replace it.
 
-A signed-in user with no settings document, or with `setupCompleted` false, goes to `/workshop-setup` and walks through the workshop profile and one printer. A saved document that has no `setupCompleted` field counts as already set up.
+A signed-in user with no settings document, or with `setupCompleted` false, goes to `/workshop-setup` and walks through the workshop profile, one printer, and an optional standard filament spool. A saved document that has no `setupCompleted` field counts as already set up.
 
 Share-into-app (`receive_sharing_intent`) is Android only. The URL lands in `pendingLinkProvider` for the calculator.
 

@@ -510,27 +510,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (!mounted) {
       return;
     }
-    final customerId = await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Save as quote'),
-        children: [
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, ''),
-            child: const Text('No customer'),
-          ),
-          for (final customer in customers)
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, customer.id),
-              child: Text(customer.name),
-            ),
-          SimpleDialogOption(
-            onPressed: () => Navigator.pop(context, 'new'),
-            child: const Text('New customer'),
-          ),
-        ],
-      ),
-    );
+    final customerId = await _pickCustomerForQuote(customers);
     if (customerId == null || !mounted) {
       return;
     }
@@ -654,6 +634,19 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       }
     }
     return null;
+  }
+
+  Future<String?> _pickCustomerForQuote(List<Customer> customers) {
+    return showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => _CustomerQuotePicker(
+        customers: customers,
+        onNew: () => Navigator.pop(sheetContext, 'new'),
+        onNone: () => Navigator.pop(sheetContext, ''),
+      ),
+    );
   }
 
   Future<Customer?> _createCustomer(UserStore store) async {
@@ -996,43 +989,167 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
 
   Widget _filamentEditor(int index, List<FilamentSpool> spools) {
     final row = _rows[index];
+    final spool = _spool(spools, row.filamentId);
+    final grams = parseNonNegativeDouble(row.grams.text);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: DropdownButtonFormField<String>(
-              key: ValueKey('${row.filamentId}-$index'),
-              initialValue: spools.any((spool) => spool.id == row.filamentId)
-                  ? row.filamentId
-                  : null,
-              decoration: InputDecoration(
-                labelText: row.material.isEmpty
-                    ? 'Spool'
-                    : 'Spool (${row.material})',
-              ),
-              items: [
-                for (final spool in spools)
-                  DropdownMenuItem(
-                    value: spool.id,
-                    child: Text('${spool.brand} ${spool.material}'),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: DropdownButtonFormField<String>(
+                  key: ValueKey('${row.filamentId}-$index'),
+                  initialValue: spools.any((item) => item.id == row.filamentId)
+                      ? row.filamentId
+                      : null,
+                  decoration: InputDecoration(
+                    labelText: row.material.isEmpty
+                        ? 'Spool'
+                        : 'Spool (${row.material})',
                   ),
-              ],
-              onChanged: (value) => setState(() => row.filamentId = value),
-            ),
+                  items: [
+                    for (final item in spools)
+                      DropdownMenuItem(
+                        value: item.id,
+                        child: Text(
+                          item.isLowStock
+                              ? '${item.brand} ${item.material} · low'
+                              : '${item.brand} ${item.material}',
+                        ),
+                      ),
+                  ],
+                  onChanged: (value) => setState(() => row.filamentId = value),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: row.grams,
+                  decoration: const InputDecoration(labelText: 'Grams'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: row.grams,
-              decoration: const InputDecoration(labelText: 'Grams'),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+          if (spool != null && spool.isLowStock) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Low stock: ${formatGrams(spool.remainingGrams)} left on this spool.',
+              style: theme.textTheme.bodySmall?.copyWith(color: scheme.error),
+            ),
+          ],
+          if (spool != null &&
+              grams != null &&
+              grams > spool.remainingGrams) ...[
+            const SizedBox(height: 4),
+            Text(
+              'This line uses ${formatGrams(grams)} but only ${formatGrams(spool.remainingGrams)} remains.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.tertiary,
               ),
             ),
-          ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _CustomerQuotePicker extends StatefulWidget {
+  const _CustomerQuotePicker({
+    required this.customers,
+    required this.onNew,
+    required this.onNone,
+  });
+
+  final List<Customer> customers;
+  final VoidCallback onNew;
+  final VoidCallback onNone;
+
+  @override
+  State<_CustomerQuotePicker> createState() => _CustomerQuotePickerState();
+}
+
+class _CustomerQuotePickerState extends State<_CustomerQuotePicker> {
+  final _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _search.text.trim().toLowerCase();
+    final visible = [
+      for (final customer in widget.customers)
+        if (query.isEmpty || customer.name.toLowerCase().contains(query))
+          customer,
+    ]..sort((a, b) => a.name.compareTo(b.name));
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottom),
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.55,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Save as quote',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _search,
+              decoration: const InputDecoration(
+                hintText: 'Customer name',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('No customer'),
+              onTap: widget.onNone,
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.person_add_outlined),
+              title: const Text('New customer'),
+              onTap: widget.onNew,
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: visible.isEmpty
+                  ? const Center(child: Text('No customer with that name.'))
+                  : ListView.separated(
+                      itemCount: visible.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final customer = visible[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(customer.name),
+                          subtitle: customer.city.trim().isEmpty
+                              ? null
+                              : Text(customer.city),
+                          onTap: () => Navigator.pop(context, customer.id),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

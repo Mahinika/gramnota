@@ -15,7 +15,7 @@ Starting inventory uses static catalogs in domain code, not Firestore. UI copy i
 
 - `CommonPrinter`: `name`, `powerWatts`, `purchasePriceMinor`. Shared `CommonPrinter.lifetimeHours` (5000) for wear math in quotes.
 - `commonPrinters` is the full list. Document price sources in file comments when adding rows (shop / ECB / catalog rules already described there).
-- **Workshop setup** (`workshop_setup_screen.dart`): printer step picks from `commonPrinters` (search + dropdown), same as **new printer** in `printers_screen.dart`.
+- **Workshop setup** (`workshop_setup_screen.dart`): printer step picks from `commonPrinters` (search + dropdown). The next step optionally saves one `commonSpools` preset. Same search + dropdown pattern as **new printer** in `printers_screen.dart`.
 - Saving a printer still goes through `UserStore.savePrinter`; presets only prefill the form.
 
 ## Filament spools — `lib/features/filaments/domain/common_spools.dart`

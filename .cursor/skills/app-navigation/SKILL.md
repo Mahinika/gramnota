@@ -35,7 +35,7 @@ Do not return `null` from redirect while auth is still loading. That would build
 | `/setup` | Firebase not configured |
 | `/starting` | Spinner gate |
 | `/sign-in` | Google sign-in |
-| `/workshop-setup` | Eight-step workshop guide (outside shell) |
+| `/workshop-setup` | Nine-step workshop guide (outside shell) |
 | `/calculator`, `/orders`, … | `StatefulShellRoute` branches in `AppShell` |
 
 Pre-app screens use `GateScaffold` and `GramnotaBrandMark` (`lib/core/gate_scaffold.dart`). Brand assets are under `assets/brand/`.
