@@ -20,7 +20,7 @@ UI copy is English. List chrome lives in two core widgets. Do not invent a secon
 - `DetailRow` — label on the left, value on the right. `BreakdownCard` uses it.
 - `SectionRule` — horizontal divider between major blocks.
 
-On a form, leave space between outlined fields so the borders do not touch. Put a color swatch inside the color field, not beside it overlapping the outline.
+On a form, leave space between filled fields so they do not touch. Put a color swatch inside the color field, not beside it overlapping the outline. Tab and More icons are `GramnotaSvgIcon` assets, not a second set of Material symbols.
 
 ## Screen habits
 

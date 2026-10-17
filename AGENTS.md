@@ -69,7 +69,7 @@ Share-into-app (`receive_sharing_intent`) is Android only. The URL lands in `pen
 
 ## UI
 
-Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProvider`. Confirm deletes with `confirmDelete`. Empty lists use `EmptyView`. Theme is `buildGramnotaTheme()`; the brand green is `#0F6E56`.
+Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProvider`. Confirm deletes with `confirmDelete`. Empty lists use `EmptyView`. Theme is `buildGramnotaTheme()`; the brand green is `#0F6E56`. New surfaces use that theme (paper background, white cards, filled fields). Do not invent a second card color. Tab and More icons are the SVG files in `assets/icons/`, drawn through `GramnotaSvgIcon`. The Gramnota mark in `assets/brand/` stays the empty-state and sign-in mark.
 
 List rows use `TappableListCard` (`lib/core/menu_card.dart`). Section titles, label/value rows, and dividers use `SectionHeading`, `DetailRow`, and `SectionRule` in `lib/core/section_layout.dart`. Shared Firestore streams for orders, customers, and settings live in `lib/features/orders/data/orders_providers.dart`. Import that file. Do not import a screen only to reach a provider.
 
