@@ -50,9 +50,7 @@ Future<void> _assignOrderCustomer(
     return;
   }
   final now = DateTime.now().toUtc().toIso8601String();
-  await store.saveOrder(
-    order.copyWith(customerId: id, updatedAt: now),
-  );
+  await store.saveOrder(order.copyWith(customerId: id, updatedAt: now));
 }
 
 String _formatOrderUpdated(String iso) {
@@ -104,7 +102,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       return const Scaffold(body: EmptyView(message: 'Sign in to see orders.'));
     }
     final orders = ref.watch(ordersProvider(store));
-    final customers = ref.watch(customersProvider(store)).asData?.value ?? const [];
+    final customers =
+        ref.watch(customersProvider(store)).asData?.value ?? const [];
     final customerNames = {
       for (final customer in customers) customer.id: customer.name,
     };
@@ -119,7 +118,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
         data: (list) {
           if (list.isEmpty) {
             return EmptyView(
-              message: 'No quotes yet. Price a print in the calculator and save.',
+              message:
+                  'No quotes yet. Price a print in the calculator and save.',
               action: FilledButton(
                 onPressed: () => context.go('/calculator'),
                 child: const Text('Open calculator'),
@@ -226,8 +226,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                           ? '1 quote'
                           : '${visible.length} quotes',
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ),
@@ -239,7 +239,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                     : ListView.separated(
                         padding: TappableListCard.listPadding,
                         itemCount: visible.length,
-                        separatorBuilder: (_, _) => TappableListCard.listSeparator,
+                        separatorBuilder: (_, _) =>
+                            TappableListCard.listSeparator,
                         itemBuilder: (context, index) {
                           final order = visible[index];
                           return _OrderListCard(
@@ -294,10 +295,7 @@ class _OrderListCard extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
@@ -394,7 +392,9 @@ class OrderDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(body: EmptyView(message: 'Sign in to see this quote.'));
+      return const Scaffold(
+        body: EmptyView(message: 'Sign in to see this quote.'),
+      );
     }
     final orders = ref.watch(ordersProvider(store));
     final settings = ref.watch(settingsProvider(store));
@@ -421,13 +421,14 @@ class OrderDetailScreen extends ConsumerWidget {
             title: Text('Quote ${order.quoteNumber}'),
             actions: [
               IconButton(
-                tooltip: 'Share quote',
-                onPressed: () => shareQuotePdf(
+                tooltip: 'Preview quote',
+                onPressed: () => openQuotePdfPreview(
+                  context,
                   order: order,
                   settings: settings.asData?.value ?? const WorkshopSettings(),
                   customer: customer,
                 ),
-                icon: const Icon(Icons.ios_share),
+                icon: const Icon(Icons.picture_as_pdf_outlined),
               ),
               IconButton(
                 tooltip: 'Send to user',
@@ -477,7 +478,8 @@ class OrderDetailScreen extends ConsumerWidget {
                             order.breakdown.totalMinor,
                             order.currencyCode,
                           ),
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: Theme.of(context).colorScheme.primary,
                               ),
                         ),
@@ -488,10 +490,8 @@ class OrderDetailScreen extends ConsumerWidget {
                       Text(
                         'Valid until ${order.validUntil.substring(0, 10)}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                     if (_formatOrderUpdated(order.updatedAt).isNotEmpty) ...[
@@ -499,10 +499,8 @@ class OrderDetailScreen extends ConsumerWidget {
                       Text(
                         _formatOrderUpdated(order.updatedAt),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ],
@@ -513,10 +511,9 @@ class OrderDetailScreen extends ConsumerWidget {
                 MaterialBanner(
                   content: Text(order.stockWarning),
                   leading: const Icon(Icons.warning_amber_outlined),
-                  backgroundColor: Theme.of(context)
-                      .colorScheme
-                      .errorContainer
-                      .withValues(alpha: 0.5),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.errorContainer.withValues(alpha: 0.5),
                   actions: const [SizedBox.shrink()],
                 ),
               ],
@@ -524,19 +521,21 @@ class OrderDetailScreen extends ConsumerWidget {
               TappableListCard(
                 onTap: customer == null
                     ? () => _assignOrderCustomer(
-                          context,
-                          store,
-                          order,
-                          customers.asData?.value ?? const [],
-                        )
+                        context,
+                        store,
+                        order,
+                        customers.asData?.value ?? const [],
+                      )
                     : () => context.go('/customers/${customer.id}'),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primaryContainer,
-                      foregroundColor:
-                          Theme.of(context).colorScheme.onPrimaryContainer,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onPrimaryContainer,
                       child: Text(customer?.initials ?? '?'),
                     ),
                     const SizedBox(width: 12),
@@ -552,15 +551,13 @@ class OrderDetailScreen extends ConsumerWidget {
                             customer == null
                                 ? 'Tap to link a customer'
                                 : customer.addressLine.isEmpty
-                                    ? 'View customer'
-                                    : customer.addressLine,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                                ? 'View customer'
+                                : customer.addressLine,
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                           ),
                         ],
@@ -596,10 +593,9 @@ class OrderDetailScreen extends ConsumerWidget {
                       selected: order.status == status,
                       showCheckmark: false,
                       onSelected: (_) async {
-                        final change = await OrderStock(store).setStatus(
-                          order: order,
-                          next: status,
-                        );
+                        final change = await OrderStock(
+                          store,
+                        ).setStatus(order: order, next: status);
                         if (change.warning.isNotEmpty && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(change.warning)),
@@ -615,9 +611,8 @@ class OrderDetailScreen extends ConsumerWidget {
                   const Expanded(child: SectionHeading('Prints')),
                   if (!locked)
                     TextButton.icon(
-                      onPressed: () => context.go(
-                        '/calculator?orderId=${order.id}',
-                      ),
+                      onPressed: () =>
+                          context.go('/calculator?orderId=${order.id}'),
                       icon: const Icon(Icons.add),
                       label: const Text('Add print'),
                     ),
@@ -629,8 +624,8 @@ class OrderDetailScreen extends ConsumerWidget {
                   child: Text(
                     'Move the order back to Accepted before changing prints.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               for (final line in prints)
@@ -652,7 +647,8 @@ class OrderDetailScreen extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(body: EmptyView(message: '$error')),
     );
   }
@@ -823,15 +819,15 @@ class _PrintLineTile extends StatelessWidget {
             ),
             Text(
               'Qty ${line.quantity} · ${formatDuration(line.printTimeSeconds)}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             ),
             Text(
               formatMoney(line.breakdown.totalMinor, order.currencyCode),
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: scheme.primary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(color: scheme.primary),
             ),
             if (printer != null) ...[
               const SizedBox(height: 4),
@@ -854,9 +850,9 @@ class _PrintLineTile extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 line.sourceUrl,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -864,10 +860,8 @@ class _PrintLineTile extends StatelessWidget {
                 spacing: 8,
                 children: [
                   TextButton(
-                    onPressed: () => launchUrl(
-                      source,
-                      mode: LaunchMode.externalApplication,
-                    ),
+                    onPressed: () =>
+                        launchUrl(source, mode: LaunchMode.externalApplication),
                     child: const Text('Open model'),
                   ),
                 ],
@@ -966,4 +960,3 @@ String _filamentLine(FilamentUsage usage, List<FilamentSpool> spools) {
   }
   return '${formatGrams(usage.grams)} $name';
 }
-
