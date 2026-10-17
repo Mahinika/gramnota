@@ -186,6 +186,7 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
             else
               DropdownButtonFormField<String>(
                 key: ValueKey(_printerQuery.text.trim().toLowerCase()),
+                isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Common printer'),
                 items: [
                   for (final printer in _matchingPrinters())

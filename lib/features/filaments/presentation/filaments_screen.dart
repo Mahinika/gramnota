@@ -519,6 +519,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
             else
               DropdownButtonFormField<String>(
                 key: ValueKey(_presetQuery.text.trim().toLowerCase()),
+                isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Standard spool'),
                 items: [
                   for (final preset in _matchingPresets())

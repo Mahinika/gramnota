@@ -921,6 +921,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             key: ValueKey(_printerId),
+            isExpanded: true,
             initialValue: printers.any((printer) => printer.id == _printerId)
                 ? _printerId
                 : null,
@@ -1124,6 +1125,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 flex: 2,
                 child: DropdownButtonFormField<String>(
                   key: ValueKey('${row.filamentId}-$index'),
+                  isExpanded: true,
                   initialValue: spools.any((item) => item.id == row.filamentId)
                       ? row.filamentId
                       : null,
