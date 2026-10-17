@@ -21,7 +21,7 @@ description: >-
 
 1. Scale material, electricity, and machine wear by `quantity`.
 2. Failure is basis points of those three lines only, after scaling.
-3. Scale labor by `quantity`. Leave `extraMinors` as a flat sum.
+3. Prep labor is charged once. Post labor scales with `quantity`. Leave `extraMinors` as a flat sum.
 4. Markup is basis points of the full cost. VAT is basis points of net (cost + markup).
 5. `perUnitMinor` is `totalMinor / quantity`, rounded. Quantity below 1 is treated as 1.
 6. Filament kroner per kilogram comes from `FilamentSpool.pricePerKgMinor` (spool price / spool weight). Do not store that rate.
@@ -34,7 +34,7 @@ Update the Freezed model, `PriceBreakdown.zero()`, then run:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-Every `PriceBreakdown(...)` constructor must still compile, including `test/order_stock_test.dart` and `test/widget_test.dart`. Update `breakdown_card.dart` and `quote_pdf.dart` if the new line is shown to the user.
+Every `PriceBreakdown(...)` constructor must still compile, including `test/order_stock_test.dart` and `test/widget_test.dart`. Update `breakdown_card.dart` if the new line is shown in the app. The customer PDF shows `netMinor` per line and order-level Subtotal, VAT, and `totalMinor` only. Do not add an internal cost label there. Update `customerQuoteBreakdownFields` when the customer summary changes.
 
 ## Calculator defaults (not workshop settings)
 

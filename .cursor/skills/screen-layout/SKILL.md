@@ -28,4 +28,6 @@ On a form, leave space between outlined fields so the borders do not touch. Put 
 - Search sits above the list. Status or stock filters are horizontal `FilterChip`s.
 - Deletes go through `confirmDelete`.
 - Wide layouts (width >= 840) may split a form and its summary with a `VerticalDivider`. The shell rail uses the same breakpoint.
-- After a visible change, hot reload a running debug session. Hot restart when a widget class was renamed or controller text must reload.
+- After a visible change, hot reload a running debug session. Hot restart when a widget class was renamed, a plugin was added, or controller text must reload.
+- Quote customer choice goes through `pickCustomerId` in `customer_quote_picker.dart`. Do not build a second picker.
+- `Customer.initials` is the shared avatar text. Do not format initials in a screen.

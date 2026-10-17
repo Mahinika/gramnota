@@ -69,11 +69,19 @@ Share-into-app (`receive_sharing_intent`) is Android only. The URL lands in `pen
 
 ## UI
 
-Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProvider`. Confirm deletes with `confirmDelete`. Empty lists use `EmptyView`. Theme is `buildGramnotaTheme()`. Quote PDFs go through `shareQuotePdf` and the Noto Sans files in `assets/fonts/`. Customer PDFs omit internal cost lines (`customer_quote_view.dart`).
+Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProvider`. Confirm deletes with `confirmDelete`. Empty lists use `EmptyView`. Theme is `buildGramnotaTheme()`; the brand green is `#0F6E56`.
 
 List rows use `TappableListCard` (`lib/core/menu_card.dart`). Section titles, label/value rows, and dividers use `SectionHeading`, `DetailRow`, and `SectionRule` in `lib/core/section_layout.dart`. Shared Firestore streams for orders, customers, and settings live in `lib/features/orders/data/orders_providers.dart`. Import that file. Do not import a screen only to reach a provider.
 
-Orders list: search, status chips, and an In progress filter. Filament list: search, a Low stock filter, and standard spools in a bottom sheet (`common_spools.dart`). Customers list shows initials and quote counts. Wide calculator layouts (width >= 840) put the price breakdown in a second column.
+Orders list: search, status chips, and an In progress filter. Filament list: search, a Low stock filter, and standard spools in a bottom sheet (`common_spools.dart`). Customers list shows `Customer.initials` and quote counts. Wide calculator layouts (width >= 840) put the price breakdown in a second column, with padding beside the divider. Recent quotes sit under the price, not inside the form.
+
+A new quote picks its customer on the calculator before save. The same sheet is `pickCustomerId` in `lib/features/customers/presentation/customer_quote_picker.dart` (search, no customer, new customer). Order detail uses it to link or change the customer. An empty printer or spool list on the calculator shows a setup card with a route to that screen.
+
+## Quote PDF
+
+`buildQuotePdf` draws the customer document. `openQuotePdfPreview` shows it with the `printing` package before `shareQuotePdf` writes a temp file and shares it. Fonts are Noto Sans in `assets/fonts/`.
+
+The page is an invoice: workshop and bill-to side by side, quote number with issued date and valid-until, then a table of description, quantity, unit price, and amount. Those line amounts are `netMinor` (excluding VAT). The summary is Subtotal, VAT (with the rate when every line shares it), and a highlighted Total (`totalMinor`). A short material or profile note may sit under a line title. Do not print grams, the internal note, or cost words such as Material, Markup, or Net. Allowed summary labels live in `customerQuoteBreakdownFields`. Do not put the Gramnota app icon on the document; the workshop name is the brand.
 
 ## Tests
 
