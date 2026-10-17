@@ -532,9 +532,12 @@ class OrderDetailScreen extends ConsumerWidget {
                     : () => context.go('/customers/${customer.id}'),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.person_outline,
-                      color: Theme.of(context).colorScheme.primary,
+                    CircleAvatar(
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primaryContainer,
+                      foregroundColor:
+                          Theme.of(context).colorScheme.onPrimaryContainer,
+                      child: Text(customer?.initials ?? '?'),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -563,17 +566,19 @@ class OrderDetailScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    IconButton(
-                      tooltip: 'Change customer',
-                      onPressed: () => _assignOrderCustomer(
-                        context,
-                        store,
-                        order,
-                        customers.asData?.value ?? const [],
+                    if (customer != null)
+                      IconButton(
+                        tooltip: 'Change customer',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => _assignOrderCustomer(
+                          context,
+                          store,
+                          order,
+                          customers.asData?.value ?? const [],
+                        ),
+                        icon: const Icon(Icons.edit_outlined),
                       ),
-                      icon: const Icon(Icons.edit_outlined),
-                    ),
-                    if (customer != null) const Icon(Icons.chevron_right),
+                    const Icon(Icons.chevron_right),
                   ],
                 ),
               ),

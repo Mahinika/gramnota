@@ -629,6 +629,18 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     return null;
   }
 
+  String? _customerName(List<Customer> customers, String id) {
+    if (id.isEmpty) {
+      return null;
+    }
+    for (final customer in customers) {
+      if (customer.id == id) {
+        return customer.name;
+      }
+    }
+    return null;
+  }
+
   String _quoteCustomerLabel(List<Customer> customers) {
     if (!_quoteCustomerChosen) {
       return 'Tap to choose before saving';
@@ -773,10 +785,24 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               const SizedBox(height: 8),
               Text(
                 'Valid for ${activeSettings.quoteValidityDays} days after save',
+                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
+            ],
+          ];
+          final recent = <Widget>[
+            if (recentQuotes.isNotEmpty) ...[
+              const SectionRule(),
+              const SectionHeading('Recent quotes'),
+              for (final order in recentQuotes) ...[
+                _RecentQuoteCard(
+                  order: order,
+                  customerName: _customerName(customers, order.customerId),
+                ),
+                const SizedBox(height: 8),
+              ],
             ],
           ];
           final fields = <Widget>[
@@ -815,7 +841,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           ),
           if (_importNote != null) ...[
             const SizedBox(height: 8),
-            Text(_importNote!),
+            Text(
+              _importNote!,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
           ],
           const SizedBox(height: 12),
           TextField(
@@ -828,9 +859,20 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               onTap: () => _chooseQuoteCustomer(store, customers),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.person_outline,
-                    color: Theme.of(context).colorScheme.primary,
+                  CircleAvatar(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onPrimaryContainer,
+                    child: Text(
+                      _quoteCustomerChosen && _quoteCustomerId.isNotEmpty
+                          ? (customers
+                                    .where((item) => item.id == _quoteCustomerId)
+                                    .firstOrNull
+                                    ?.initials ??
+                                '?')
+                          : '?',
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -853,119 +895,30 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               ),
             ),
           ],
-          if (isNewQuote && recentQuotes.isNotEmpty) ...[
-            const SectionHeading('Recent quotes'),
-            for (final order in recentQuotes) ...[
-              TappableListCard(
-                onTap: () => context.go('/orders/${order.id}'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Quote ${order.quoteNumber}',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      order.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      formatMoney(
-                        order.breakdown.totalMinor,
-                        order.currencyCode,
-                      ),
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-            const SectionRule(),
-          ],
-          const SizedBox(height: 12),
           if (printers.isEmpty) ...[
-            TappableListCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'No printers',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Electricity and machine wear need a printer profile.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      FilledButton.tonal(
-                        onPressed: () => context.go('/more/printers'),
-                        child: const Text('Open Printers'),
-                      ),
-                      OutlinedButton(
-                        onPressed: () => context.go('/more/printers/new'),
-                        child: const Text('Add printer'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 12),
+            const _SetupHint(
+              title: 'No printers',
+              message: 'Electricity and machine wear need a printer profile.',
+              primaryLabel: 'Open Printers',
+              primaryRoute: '/more/printers',
+              secondaryLabel: 'Add printer',
+              secondaryRoute: '/more/printers/new',
+            ),
           ],
           if (spools.isEmpty) ...[
-            TappableListCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'No filament spools',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Material cost needs at least one spool. Add a standard spool or enter your own.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      FilledButton.tonal(
-                        onPressed: () => context.go('/filaments'),
-                        child: const Text('Open Filament'),
-                      ),
-                      OutlinedButton(
-                        onPressed: () => context.go('/filaments/new'),
-                        child: const Text('Custom spool'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 12),
+            const _SetupHint(
+              title: 'No filament spools',
+              message:
+                  'Material cost needs at least one spool. Add a standard spool or enter your own.',
+              primaryLabel: 'Open Filament',
+              primaryRoute: '/filaments',
+              secondaryLabel: 'Custom spool',
+              secondaryRoute: '/filaments/new',
+            ),
           ],
+          const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             key: ValueKey(_printerId),
             initialValue: printers.any((printer) => printer.id == _printerId)
@@ -1112,7 +1065,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           if (!wide) {
             return ListView(
               padding: const EdgeInsets.all(16),
-              children: [...fields, const SectionRule(), ...summary],
+              children: [...fields, const SectionRule(), ...summary, ...recent],
             );
           }
           return ListView(
@@ -1124,22 +1077,29 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   children: [
                     Expanded(
                       flex: 5,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: fields,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: fields,
+                        ),
                       ),
                     ),
                     const VerticalDivider(width: 1),
                     Expanded(
                       flex: 4,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: summary,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: summary,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+              ...recent,
             ],
           );
         },
@@ -1217,6 +1177,115 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SetupHint extends StatelessWidget {
+  const _SetupHint({
+    required this.title,
+    required this.message,
+    required this.primaryLabel,
+    required this.primaryRoute,
+    required this.secondaryLabel,
+    required this.secondaryRoute,
+  });
+
+  final String title;
+  final String message;
+  final String primaryLabel;
+  final String primaryRoute;
+  final String secondaryLabel;
+  final String secondaryRoute;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return TappableListCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            message,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.tonal(
+                onPressed: () => context.go(primaryRoute),
+                child: Text(primaryLabel),
+              ),
+              OutlinedButton(
+                onPressed: () => context.go(secondaryRoute),
+                child: Text(secondaryLabel),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecentQuoteCard extends StatelessWidget {
+  const _RecentQuoteCard({required this.order, required this.customerName});
+
+  final PrintOrder order;
+  final String? customerName;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return TappableListCard(
+      onTap: () => context.go('/orders/${order.id}'),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quote ${order.quoteNumber} · ${orderStatusLabel(order.status)}',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  order.title,
+                  style: theme.textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (customerName != null && customerName!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    customerName!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            formatMoney(order.breakdown.totalMinor, order.currencyCode),
+            style: theme.textTheme.labelLarge?.copyWith(color: scheme.primary),
+          ),
         ],
       ),
     );

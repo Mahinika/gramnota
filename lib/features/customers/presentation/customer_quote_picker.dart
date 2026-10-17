@@ -114,9 +114,14 @@ class _CustomerQuotePickerSheetState extends State<CustomerQuotePickerSheet> {
     final query = _search.text.trim().toLowerCase();
     final visible = [
       for (final customer in widget.customers)
-        if (query.isEmpty || customer.name.toLowerCase().contains(query))
+        if (query.isEmpty ||
+            '${customer.name} ${customer.city} ${customer.email} ${customer.phone}'
+                .toLowerCase()
+                .contains(query))
           customer,
     ]..sort((a, b) => a.name.compareTo(b.name));
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottom),
@@ -125,22 +130,21 @@ class _CustomerQuotePickerSheetState extends State<CustomerQuotePickerSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              widget.title,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text(widget.title, style: theme.textTheme.titleLarge),
             const SizedBox(height: 12),
             TextField(
               controller: _search,
               decoration: const InputDecoration(
-                hintText: 'Customer name',
+                hintText: 'Name, city, phone, or email',
                 prefixIcon: Icon(Icons.search),
+                filled: true,
               ),
               onChanged: (_) => setState(() {}),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             ListTile(
               contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.person_off_outlined),
               title: const Text('No customer'),
               onTap: widget.onNone,
             ),
@@ -153,18 +157,38 @@ class _CustomerQuotePickerSheetState extends State<CustomerQuotePickerSheet> {
             const Divider(height: 1),
             Expanded(
               child: visible.isEmpty
-                  ? const Center(child: Text('No customer with that name.'))
+                  ? Center(
+                      child: Text(
+                        query.isEmpty
+                            ? 'No customers yet. Add one above.'
+                            : 'No customer with that name.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
                   : ListView.separated(
                       itemCount: visible.length,
                       separatorBuilder: (_, _) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         final customer = visible[index];
+                        final city = customer.city.trim();
+                        final email = customer.email.trim();
+                        final subtitle = city.isNotEmpty
+                            ? city
+                            : email.isNotEmpty
+                                ? email
+                                : customer.phone.trim();
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
+                          leading: CircleAvatar(
+                            backgroundColor: scheme.primaryContainer,
+                            foregroundColor: scheme.onPrimaryContainer,
+                            child: Text(customer.initials),
+                          ),
                           title: Text(customer.name),
-                          subtitle: customer.city.trim().isEmpty
-                              ? null
-                              : Text(customer.city),
+                          subtitle: subtitle.isEmpty ? null : Text(subtitle),
                           onTap: () => Navigator.pop(context, customer.id),
                         );
                       },
