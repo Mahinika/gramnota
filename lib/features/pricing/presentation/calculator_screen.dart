@@ -11,6 +11,7 @@ import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../customers/domain/customer.dart';
+import '../../customers/presentation/customer_quote_picker.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../import/data/link_import_service.dart';
 import '../../import/domain/import_models.dart';
@@ -647,19 +648,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     UserStore store,
     List<Customer> customers,
   ) async {
-    final picked = await _pickCustomerForQuote(customers);
+    final picked = await pickCustomerId(context, store, customers);
     if (picked == null || !mounted) {
-      return;
-    }
-    if (picked == 'new') {
-      final created = await _createCustomer(store);
-      if (created == null || !mounted) {
-        return;
-      }
-      setState(() {
-        _quoteCustomerChosen = true;
-        _quoteCustomerId = created.id;
-      });
       return;
     }
     setState(() {
@@ -676,65 +666,20 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (!mounted) {
       return null;
     }
-    final picked = await _pickCustomerForQuote(customers);
+    final picked = await pickCustomerId(
+      context,
+      store,
+      customers,
+      title: 'Save as quote',
+    );
     if (picked == null || !mounted) {
       return null;
-    }
-    if (picked == 'new') {
-      final created = await _createCustomer(store);
-      return created?.id;
     }
     setState(() {
       _quoteCustomerChosen = true;
       _quoteCustomerId = picked;
     });
     return picked;
-  }
-
-  Future<String?> _pickCustomerForQuote(List<Customer> customers) {
-    return showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) => _CustomerQuotePicker(
-        customers: customers,
-        onNew: () => Navigator.pop(sheetContext, 'new'),
-        onNone: () => Navigator.pop(sheetContext, ''),
-      ),
-    );
-  }
-
-  Future<Customer?> _createCustomer(UserStore store) async {
-    final name = TextEditingController();
-    final created = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('New customer'),
-        content: TextField(
-          controller: name,
-          decoration: const InputDecoration(labelText: 'Name'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    if (created != true || name.text.trim().isEmpty) {
-      name.dispose();
-      return null;
-    }
-    final customer = Customer(id: const Uuid().v4(), name: name.text.trim());
-    name.dispose();
-    await store.saveCustomer(customer);
-    return customer;
   }
 
   @override
@@ -806,6 +751,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 840;
+          final recentQuotes = isNewQuote && orders != null
+              ? ([...orders]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)))
+                  .take(5)
+                  .toList()
+              : const <PrintOrder>[];
           final summary = [
             const SectionHeading('Price'),
             BreakdownCard(
@@ -819,6 +769,15 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   : () => _save(store, activeSettings, input, spools, target),
               child: Text(_saving ? 'Saving…' : saveLabel),
             ),
+            if (isNewQuote) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Valid for ${activeSettings.quoteValidityDays} days after save',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
           ];
           final fields = <Widget>[
           if (target != null) ...[
@@ -894,7 +853,83 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               ),
             ),
           ],
+          if (isNewQuote && recentQuotes.isNotEmpty) ...[
+            const SectionHeading('Recent quotes'),
+            for (final order in recentQuotes) ...[
+              TappableListCard(
+                onTap: () => context.go('/orders/${order.id}'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quote ${order.quoteNumber}',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      order.title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      formatMoney(
+                        order.breakdown.totalMinor,
+                        order.currencyCode,
+                      ),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            const SectionRule(),
+          ],
           const SizedBox(height: 12),
+          if (printers.isEmpty) ...[
+            TappableListCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No printers',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Electricity and machine wear need a printer profile.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonal(
+                        onPressed: () => context.go('/more/printers'),
+                        child: const Text('Open Printers'),
+                      ),
+                      OutlinedButton(
+                        onPressed: () => context.go('/more/printers/new'),
+                        child: const Text('Add printer'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           if (spools.isEmpty) ...[
             TappableListCard(
               child: Column(
@@ -1183,98 +1218,6 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _CustomerQuotePicker extends StatefulWidget {
-  const _CustomerQuotePicker({
-    required this.customers,
-    required this.onNew,
-    required this.onNone,
-  });
-
-  final List<Customer> customers;
-  final VoidCallback onNew;
-  final VoidCallback onNone;
-
-  @override
-  State<_CustomerQuotePicker> createState() => _CustomerQuotePickerState();
-}
-
-class _CustomerQuotePickerState extends State<_CustomerQuotePicker> {
-  final _search = TextEditingController();
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final query = _search.text.trim().toLowerCase();
-    final visible = [
-      for (final customer in widget.customers)
-        if (query.isEmpty || customer.name.toLowerCase().contains(query))
-          customer,
-    ]..sort((a, b) => a.name.compareTo(b.name));
-    final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottom),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.55,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Save as quote',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _search,
-              decoration: const InputDecoration(
-                hintText: 'Customer name',
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('No customer'),
-              onTap: widget.onNone,
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.person_add_outlined),
-              title: const Text('New customer'),
-              onTap: widget.onNew,
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: visible.isEmpty
-                  ? const Center(child: Text('No customer with that name.'))
-                  : ListView.separated(
-                      itemCount: visible.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final customer = visible[index];
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(customer.name),
-                          subtitle: customer.city.trim().isEmpty
-                              ? null
-                              : Text(customer.city),
-                          onTap: () => Navigator.pop(context, customer.id),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -10,6 +10,7 @@ import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../customers/domain/customer.dart';
+import '../../customers/presentation/customer_quote_picker.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../filaments/presentation/filaments_screen.dart';
 import '../../printers/domain/printer_profile.dart';
@@ -31,6 +32,27 @@ Color _orderStatusColor(OrderStatus status, ColorScheme scheme) {
     OrderStatus.delivered => scheme.primary,
     OrderStatus.cancelled => scheme.error,
   };
+}
+
+Future<void> _assignOrderCustomer(
+  BuildContext context,
+  UserStore store,
+  PrintOrder order,
+  List<Customer> customers,
+) async {
+  final id = await pickCustomerId(
+    context,
+    store,
+    customers,
+    title: 'Link customer',
+  );
+  if (id == null || !context.mounted) {
+    return;
+  }
+  final now = DateTime.now().toUtc().toIso8601String();
+  await store.saveOrder(
+    order.copyWith(customerId: id, updatedAt: now),
+  );
 }
 
 String _formatOrderUpdated(String iso) {
@@ -499,46 +521,62 @@ class OrderDetailScreen extends ConsumerWidget {
                 ),
               ],
               const SizedBox(height: 12),
-              if (customer == null)
-                const TappableListCard(child: Text('No customer linked'))
-              else
-                TappableListCard(
-                  onTap: () => context.go('/customers/${customer.id}'),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.person_outline,
-                        color: Theme.of(context).colorScheme.primary,
+              TappableListCard(
+                onTap: customer == null
+                    ? () => _assignOrderCustomer(
+                          context,
+                          store,
+                          order,
+                          customers.asData?.value ?? const [],
+                        )
+                    : () => context.go('/customers/${customer.id}'),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            customer?.name ?? 'No customer linked',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            customer == null
+                                ? 'Tap to link a customer'
+                                : customer.addressLine.isEmpty
+                                    ? 'View customer'
+                                    : customer.addressLine,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              customer.name,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            Text(
-                              customer.addressLine.isEmpty
-                                  ? 'View customer'
-                                  : customer.addressLine,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
+                    ),
+                    IconButton(
+                      tooltip: 'Change customer',
+                      onPressed: () => _assignOrderCustomer(
+                        context,
+                        store,
+                        order,
+                        customers.asData?.value ?? const [],
                       ),
-                      const Icon(Icons.chevron_right),
-                    ],
-                  ),
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                    if (customer != null) const Icon(Icons.chevron_right),
+                  ],
                 ),
+              ),
               const SectionRule(),
               _OrderNoteField(order: order, store: store),
               const SectionRule(),
