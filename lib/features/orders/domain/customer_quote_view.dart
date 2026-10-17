@@ -11,8 +11,9 @@ const internalQuoteBreakdownFields = {
   'Net',
 };
 
-/// Customer PDF may show order-level VAT and total labels only.
-const customerQuoteBreakdownFields = {'VAT', 'Total'};
+/// Customer PDF summary. Subtotal is the amount excluding VAT.
+/// Internal cost words such as Net and Markup stay off the document.
+const customerQuoteBreakdownFields = {'Subtotal', 'VAT', 'Total'};
 
 bool isInternalQuoteBreakdownField(String label) =>
     internalQuoteBreakdownFields.contains(label);
