@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/format.dart';
+import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
@@ -14,6 +15,7 @@ import '../../filaments/domain/filament_spool.dart';
 import '../../import/data/link_import_service.dart';
 import '../../import/domain/import_models.dart';
 import '../../orders/data/order_stock.dart';
+import '../../orders/data/orders_providers.dart';
 import '../../orders/domain/print_order.dart';
 import '../../printers/domain/printer_profile.dart';
 import '../../settings/domain/workshop_settings.dart';
@@ -66,6 +68,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   String? _importNote;
   var _importing = false;
   var _saving = false;
+  var _quoteCustomerChosen = false;
+  String _quoteCustomerId = '';
   String? _appliedKey;
   String? _scheduledKey;
 
@@ -506,21 +510,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       await _saveOnQuote(store, input, spools, target);
       return;
     }
-    final customers = await store.watchCustomers().first;
-    if (!mounted) {
+    final resolvedCustomer = await _resolveCustomerForNewQuote(store);
+    if (resolvedCustomer == null || !mounted) {
       return;
-    }
-    final customerId = await _pickCustomerForQuote(customers);
-    if (customerId == null || !mounted) {
-      return;
-    }
-    var resolvedCustomer = customerId;
-    if (customerId == 'new') {
-      final created = await _createCustomer(store);
-      if (created == null) {
-        return;
-      }
-      resolvedCustomer = created.id;
     }
     setState(() => _saving = true);
     try {
@@ -636,6 +628,69 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     return null;
   }
 
+  String _quoteCustomerLabel(List<Customer> customers) {
+    if (!_quoteCustomerChosen) {
+      return 'Tap to choose before saving';
+    }
+    if (_quoteCustomerId.isEmpty) {
+      return 'No customer';
+    }
+    for (final customer in customers) {
+      if (customer.id == _quoteCustomerId) {
+        return customer.name;
+      }
+    }
+    return 'Customer';
+  }
+
+  Future<void> _chooseQuoteCustomer(
+    UserStore store,
+    List<Customer> customers,
+  ) async {
+    final picked = await _pickCustomerForQuote(customers);
+    if (picked == null || !mounted) {
+      return;
+    }
+    if (picked == 'new') {
+      final created = await _createCustomer(store);
+      if (created == null || !mounted) {
+        return;
+      }
+      setState(() {
+        _quoteCustomerChosen = true;
+        _quoteCustomerId = created.id;
+      });
+      return;
+    }
+    setState(() {
+      _quoteCustomerChosen = true;
+      _quoteCustomerId = picked;
+    });
+  }
+
+  Future<String?> _resolveCustomerForNewQuote(UserStore store) async {
+    if (_quoteCustomerChosen) {
+      return _quoteCustomerId;
+    }
+    final customers = await store.watchCustomers().first;
+    if (!mounted) {
+      return null;
+    }
+    final picked = await _pickCustomerForQuote(customers);
+    if (picked == null || !mounted) {
+      return null;
+    }
+    if (picked == 'new') {
+      final created = await _createCustomer(store);
+      return created?.id;
+    }
+    setState(() {
+      _quoteCustomerChosen = true;
+      _quoteCustomerId = picked;
+    });
+    return picked;
+  }
+
   Future<String?> _pickCustomerForQuote(List<Customer> customers) {
     return showModalBottomSheet<String>(
       context: context,
@@ -703,6 +758,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         ref.watch(_printersProvider(store)).asData?.value ?? const [];
     final spools =
         ref.watch(_filamentsProvider(store)).asData?.value ?? const [];
+    final customers =
+        ref.watch(customersProvider(store)).asData?.value ?? const [];
+    final isNewQuote = widget.orderId == null && widget.lineId == null;
     final orders = ref.watch(_ordersProvider(store)).asData?.value;
     PrintOrder? target;
     if (widget.orderId != null && orders != null) {
@@ -805,7 +863,74 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             controller: _title,
             decoration: const InputDecoration(labelText: 'Title'),
           ),
+          if (isNewQuote) ...[
+            const SizedBox(height: 12),
+            TappableListCard(
+              onTap: () => _chooseQuoteCustomer(store, customers),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.person_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Customer',
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                        Text(
+                          _quoteCustomerLabel(customers),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
+          if (spools.isEmpty) ...[
+            TappableListCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'No filament spools',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Material cost needs at least one spool. Add a standard spool or enter your own.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonal(
+                        onPressed: () => context.go('/filaments'),
+                        child: const Text('Open Filament'),
+                      ),
+                      OutlinedButton(
+                        onPressed: () => context.go('/filaments/new'),
+                        child: const Text('Custom spool'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           DropdownButtonFormField<String>(
             key: ValueKey(_printerId),
             initialValue: printers.any((printer) => printer.id == _printerId)
