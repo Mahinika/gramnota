@@ -4,67 +4,67 @@
 
 # Gramnota
 
-Räkna ut vad en 3D-utskrift ska kosta att sälja. Samma app på Android och på Windows.
+Work out a sale price for a 3D print. The same app on Android and on Windows.
 
-## Ladda ner
+## Download
 
-Länkarna pekar alltid på den senaste versionen: [Gramnota – senaste versionen](https://github.com/Mahinika/gramnota/releases/tag/latest).
+These links always point at the latest version: [Gramnota – latest version](https://github.com/Mahinika/gramnota/releases/tag/latest).
 
-| Enhet | Fil |
+| Device | File |
 | --- | --- |
-| Telefon eller surfplatta | [![Ladda ner till Android](https://img.shields.io/badge/Android-Ladda%20ner%20APK-0F6E56?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota.apk) |
-| Windows-dator | [![Installera på Windows](https://img.shields.io/badge/Windows-Installera-0F6E56?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe) |
-| Windows utan installation | [![Zip för Windows](https://img.shields.io/badge/Windows-Zip%20utan%20installation-0F6E56?style=for-the-badge)](https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip) |
+| Phone or tablet | [![Download for Android](https://img.shields.io/badge/Android-Download%20APK-0F6E56?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota.apk) |
+| Windows PC | [![Install on Windows](https://img.shields.io/badge/Windows-Install-0F6E56?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe) |
+| Windows, no install | [![Zip for Windows](https://img.shields.io/badge/Windows-Zip%2C%20no%20install-0F6E56?style=for-the-badge)](https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip) |
 
-Direktlänkar, om knapparna inte syns:
+Direct links, if the buttons do not show:
 
 - Android: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota.apk
-- Windows, installationsprogram: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe
-- Windows, zip-fil: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip
+- Windows installer: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe
+- Windows zip: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip
 
 ### Android
 
-1. Ladda ner `Gramnota.apk`.
-2. Öppna filen. Om telefonen frågar, tillåt installation från den här källan (okända källor).
-3. Öppna Gramnota och logga in med Google.
+1. Download `Gramnota.apk`.
+2. Open the file. If your phone asks, allow installation from this source (unknown sources).
+3. Open Gramnota and sign in with Google.
 
 ### Windows
 
-1. Ladda ner `Gramnota-Setup.exe`.
-2. Om Windows visar ”Windows skyddade datorn”: välj **Mer information** och sedan **Kör ändå**. Appen är inte kodsignad, så rutan kan komma första gången.
-3. Installationsprogrammet lägger Gramnota i `C:\Program Files\Gramnota`, skapar en genväg i Start-menyn och (om rutan är ikryssad) på skrivbordet. En nyare version uppgraderar den som redan är installerad, på samma plats. Windows frågar efter administratörsrättighet.
-4. Starta Gramnota. Inloggningen öppnas i webbläsaren. Logga in med Google och gå tillbaka till appen.
+1. Download `Gramnota-Setup.exe`.
+2. If Windows shows "Windows protected your PC", choose **More info**, then **Run anyway**. The installer is unsigned, so that dialog can appear the first time.
+3. The installer puts Gramnota in `C:\Program Files\Gramnota`, adds a Start menu shortcut, and (if the box is checked) a desktop shortcut. A newer version upgrades the app already installed, in the same place. Windows asks for administrator permission.
+4. Start Gramnota. Sign-in opens in your browser. Sign in with Google and return to the app.
 
-Avinstallera senare under Windows-inställningar, Appar.
+Uninstall later under Windows Settings, Apps.
 
-En installerad app letar efter en ny version ungefär en gång om dagen. Knappen **Sök efter uppdateringar** finns under More och under Settings. Android ber dig bekräfta installationen i systemets egen ruta. På Windows stängs appen, installationsprogrammet körs, och Gramnota öppnas igen.
+An installed app looks for a new version about once a day. **Check for updates** is under More and under Settings. Android asks you to confirm the install in the system dialog. On Windows the app closes, the installer runs, and Gramnota opens again.
 
-Zip-filen är samma program utan installation. Packa upp den och kör `gramnota.exe`. Samma SmartScreen-ruta kan visas första gången. Visual C++-biblioteken följer med, så en vanlig Windows 10- eller 11-dator behöver inget extra.
+The zip is the same program without an install. Unpack it and run `gramnota.exe`. The same SmartScreen dialog can appear the first time. The Visual C++ libraries are included, so a normal Windows 10 or 11 PC needs nothing extra.
 
-## Vad du kan göra
+## What you can do
 
-- Räkna ut ett pris med filament, el, maskinslitage, felmarginal, arbete, tillägg, påslag och moms.
-- Lägga flera utskrifter på samma offert, med ett totalpris.
-- Spara kunder, filamentrullar, skrivare och produkter du offererar ofta.
-- Dra filament från rullen när en order markeras som utskriven eller betald. Avbryter du innan dess läggs grammen tillbaka.
-- Dela en PDF-offert.
-- Se månadens intäkter, handpenningar och lågt lager på hemskärmen.
-- Klistra in en länk till en modell, eller importera G-code, så fylls tid och vikt i när sidan publicerar dem. Priset räknas ändå från dina egna rullar.
+- Price a print from filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT.
+- Put several prints on one quote, with a single total.
+- Save customers, filament spools, printers, and products you quote often.
+- Take filament off the spool when an order is marked printed or paid. Cancel before that, and the grams go back.
+- Share a PDF quote.
+- See the month's revenue, deposits, and low stock on the home screen.
+- Paste a model link, or import G-code, and time and weight fill in when the page publishes them. The price still comes from your own spools.
 
-## Så ser appen ut
+## A look at the app
 
 <p>
-  <img src="docs/screenshots/home.webp" alt="Hemskärmen med månadens siffror" width="220">
-  <img src="docs/screenshots/orders.webp" alt="Orderlistan" width="220">
-  <img src="docs/screenshots/quote.webp" alt="En offert med pris" width="220">
-  <img src="docs/screenshots/filament.webp" alt="Filamentrullar och lager" width="220">
+  <img src="docs/screenshots/home.webp" alt="Home screen with this month's numbers" width="220">
+  <img src="docs/screenshots/orders.webp" alt="The order list" width="220">
+  <img src="docs/screenshots/quote.webp" alt="A quote with its price" width="220">
+  <img src="docs/screenshots/filament.webp" alt="Filament spools and stock" width="220">
 </p>
 
 All rights reserved.
 
 ---
 
-## För utvecklare
+## For developers
 
 Gramnota is a Flutter app (`gramnota`) for Android and Windows. The UI of the app is English. The default currency is SEK. Money is integer minor units (öre): `100` minor is one currency unit.
 
@@ -120,7 +120,7 @@ Every push to `master` builds a release APK ([android-apk.yml](.github/workflows
 
 [`.github/scripts/publish_release.sh`](.github/scripts/publish_release.sh) uploads only that job's files, deletes renamed leftovers from the same platform (so a version bump does not leave `Gramnota-Setup-1.0.0.exe` next to `Gramnota-Setup.exe`), and rewrites only that platform's version line. A lock in the release body keeps the two jobs from saving a stale copy over each other when they finish together. You can also start a build from the Actions tab.
 
-Each master build keeps the version name from `pubspec.yaml` (`1.0.0`) and sets the build number from `github.run_number`, so a newer build is detectable. The same publish step writes [`latest.json`](https://github.com/Mahinika/gramnota/releases/download/latest/latest.json) on that release: version, build, commit, date, Swedish notes, the public APK and installer URLs, and a sha256 for each file. The two jobs merge their own platform block and leave the other one in place. The app reads that public URL. There is no download token. A local build can point somewhere else with `--dart-define=UPDATE_MANIFEST_URL=...`.
+Each master build keeps the version name from `pubspec.yaml` (`1.0.0`) and sets the build number from `github.run_number`, so a newer build is detectable. The same publish step writes [`latest.json`](https://github.com/Mahinika/gramnota/releases/download/latest/latest.json) on that release: version, build, commit, date, English notes, the public APK and installer URLs, and a sha256 for each file. The two jobs merge their own platform block and leave the other one in place. The app reads that public URL. There is no download token. A local build can point somewhere else with `--dart-define=UPDATE_MANIFEST_URL=...`.
 
 The APK job needs the repository secrets `GOOGLE_SERVICES_JSON`, `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD`. The Windows job does not read repository secrets: Windows Firebase settings are already in `lib/firebase_options.dart`.
 

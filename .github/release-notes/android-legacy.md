@@ -1,11 +1,11 @@
-Den här sidan uppdateras inte längre.
+This page is no longer updated.
 
-Hämta den senaste Android-appen här:
+Get the latest Android app here:
 
 https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota.apk
 
-Android, Windows-installeraren och zip-filen ligger tillsammans på utgåvan **Gramnota – senaste versionen**:
+The Android app, the Windows installer, and the zip sit together on the release **Gramnota – latest version**:
 
 https://github.com/Mahinika/gramnota/releases/tag/latest
 
-Filen `app-release.apk` på den här sidan är ett äldre bygge och ligger kvar så att gamla länkar fortsätter att fungera.
+The file `app-release.apk` on this page is an older build and stays so existing links keep working.

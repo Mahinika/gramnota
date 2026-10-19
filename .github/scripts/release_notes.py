@@ -1,4 +1,4 @@
-"""Merge Swedish release notes and keep a short publish lock.
+"""Merge the shared release notes and keep a short publish lock.
 
 Android and Windows publish on the same GitHub release. Each job replaces
 only its own version line. A lock comment stops one job from saving a stale
@@ -14,7 +14,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-RELEASE_TITLE = "Gramnota – senaste versionen"
+RELEASE_TITLE = "Gramnota – latest version"
 LOCK_TTL_SECONDS = 180
 LOCK_RE = re.compile(r"<!-- publish-lock:([a-z]+):(\d+) -->\n?")
 VERSION_RE = re.compile(r"^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$", re.MULTILINE)

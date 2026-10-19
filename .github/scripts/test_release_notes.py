@@ -6,14 +6,14 @@ from pathlib import Path
 import release_notes
 
 TEMPLATE = """\
-Gramnota räknar ut ett försäljningspris för en 3D-utskrift.
+Gramnota works out a sale price for a 3D print.
 
 <!-- platform:android -->
-**Android:** inte publicerad än.
+**Android:** not published yet.
 <!-- /platform:android -->
 
 <!-- platform:windows -->
-**Windows:** inte publicerad än.
+**Windows:** not published yet.
 <!-- /platform:windows -->
 """
 
@@ -27,14 +27,14 @@ class ReleaseNotesTest(unittest.TestCase):
         merged = release_notes.merge_notes(TEMPLATE, current, "android", ANDROID)
         self.assertEqual(release_notes.extract_section(merged, "android"), ANDROID)
         self.assertEqual(release_notes.extract_section(merged, "windows"), WINDOWS)
-        self.assertIn("försäljningspris", merged)
+        self.assertIn("sale price", merged)
 
     def test_merge_replaces_only_own_line(self) -> None:
         current = release_notes.merge_notes(TEMPLATE, TEMPLATE, "android", ANDROID)
         newer = "**Android:** 1.0.0 (build 5) · 2026-10-20 · `ffff000`"
         merged = release_notes.merge_notes(TEMPLATE, current, "android", newer)
         self.assertEqual(release_notes.extract_section(merged, "android"), newer)
-        self.assertIn("inte publicerad än", release_notes.extract_section(merged, "windows") or "")
+        self.assertIn("not published yet", release_notes.extract_section(merged, "windows") or "")
 
     def test_crlf_template_still_merges(self) -> None:
         template = TEMPLATE.replace("\n", "\r\n")
@@ -97,15 +97,15 @@ class ReleaseNotesTest(unittest.TestCase):
         self.assertIn("**Windows:**", text)
         self.assertIn("`abc1234`", text)
         payload = release_notes.patch_payload(
-            "hej",
+            "hello",
             title=release_notes.RELEASE_TITLE,
             target="abc",
             make_latest=True,
         )
-        self.assertEqual(payload["name"], "Gramnota – senaste versionen")
+        self.assertEqual(payload["name"], "Gramnota – latest version")
         self.assertEqual(payload["make_latest"], "true")
         self.assertEqual(payload["target_commitish"], "abc")
-        legacy = release_notes.patch_payload("pekare", title="äldre")
+        legacy = release_notes.patch_payload("pointer", title="older")
         self.assertNotIn("make_latest", legacy)
         self.assertNotIn("target_commitish", legacy)
 
@@ -115,6 +115,8 @@ class ReleaseNotesTest(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIsNotNone(release_notes.extract_section(template, "android"))
         self.assertIsNotNone(release_notes.extract_section(template, "windows"))
+        self.assertIn("not published yet", template)
+        self.assertNotIn("inte publicerad", template)
         self.assertNotIn("inloggad", template.lower())
 
     def test_section_text_file_is_utf8(self) -> None:

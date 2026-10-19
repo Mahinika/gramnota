@@ -34,7 +34,7 @@ class ReleaseManifestTest(unittest.TestCase):
             merged["windows"]["url"],
             f"{release_manifest.DOWNLOAD_ROOT}/Gramnota-Setup.exe",
         )
-        self.assertIn("bygge 2026-10-19", merged["android"]["notes"])
+        self.assertIn("built 2026-10-19", merged["android"]["notes"])
 
     def test_second_android_publish_does_not_drop_windows(self) -> None:
         windows = release_manifest.artifact(
