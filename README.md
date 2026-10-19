@@ -19,7 +19,7 @@ The app compiles before Firebase is connected and shows a setup screen until `li
 
 `google-services.json`, `android/key.properties`, and `*.jks` are gitignored. The checked-in `firebase_options.dart` is not a secret; replace it with the file FlutterFire generates. Include both the Android and Windows apps when you configure Firebase.
 
-On Android, sign-in uses the Google Sign-In plugin. On Windows, sign-in opens the browser through Firebase Auth.
+On Android, sign-in uses the Google Sign-In plugin. On Windows, sign-in opens your browser. Continue with Google there, then return to Gramnota.
 
 ## Run
 
@@ -69,7 +69,7 @@ Both include the Visual C++ runtime libraries next to `gramnota.exe` (`msvcp140.
 
 Windows may show "Windows protected your PC" the first time, because the app is not code-signed. Choose **More info**, then **Run anyway**.
 
-Sign-in on Windows opens the browser through Firebase Auth.
+Sign-in on Windows opens your browser. Continue with Google there, then return to the Gramnota window.
 
 ## Model links
 

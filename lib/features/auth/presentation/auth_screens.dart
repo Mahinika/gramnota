@@ -7,6 +7,7 @@ import '../../../core/firebase_emulator.dart';
 import '../../../core/gate_scaffold.dart';
 import '../../../core/providers.dart';
 import '../../../firebase_options.dart';
+import '../domain/sign_in_failed.dart';
 
 class SetupScreen extends StatelessWidget {
   const SetupScreen({super.key});
@@ -49,6 +50,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       setState(() {
         _error = error.message ?? 'Sign-in failed. Try again.';
       });
+    } on SignInFailed catch (error) {
+      setState(() => _error = error.message);
     } on Object {
       setState(() => _error = 'Sign-in failed. Try again.');
     } finally {
@@ -86,6 +89,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   : () => _run(signInWithGoogle),
               child: Text(_busy ? 'Signing in…' : 'Sign in with Google'),
             ),
+          if (_busy &&
+              !kIsWeb &&
+              defaultTargetPlatform == TargetPlatform.windows) ...[
+            const SizedBox(height: 12),
+            const Text(
+              'Finish sign-in in the browser, then return here.',
+              textAlign: TextAlign.center,
+            ),
+          ],
           if (useFirebaseEmulator) ...[
             const SizedBox(height: 12),
             if (kIsWeb)
