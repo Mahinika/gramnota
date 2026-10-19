@@ -54,3 +54,4 @@ app.*.map.json
 
 # Firestore rules tests
 test/firestore_rules/node_modules/
+test/firestore_rules/*-debug.log

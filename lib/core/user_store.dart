@@ -264,7 +264,7 @@ class UserStore {
     required Map<String, dynamic> payload,
     required String senderName,
     required String senderEmail,
-  }) {
+  }) async {
     final payloadJson = jsonEncode(payload);
     if (payloadJson.length > inboxPayloadMaxChars) {
       throw const InboxPayloadTooLarge();
@@ -276,7 +276,7 @@ class UserStore {
         .doc();
     // createdAt has to be the server time. senderEmail has to be the
     // Firebase Auth email, not a lowercased copy.
-    return doc.set({
+    await doc.set({
       'type': type.name,
       'payloadJson': payloadJson,
       'senderUid': uid,

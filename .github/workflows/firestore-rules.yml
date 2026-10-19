@@ -28,6 +28,8 @@ jobs:
 
       - name: Test firestore.rules
         working-directory: test/firestore_rules
+        env:
+          CI: true
         run: |
           npm ci
           npm test
