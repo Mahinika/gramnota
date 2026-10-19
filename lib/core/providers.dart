@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
+import '../features/auth/data/desktop_google_sign_in.dart';
 import '../features/import/domain/slice_file.dart';
 import '../firebase_options.dart';
 import 'firebase_emulator.dart';
@@ -53,6 +54,8 @@ final pendingSliceProvider = NotifierProvider<PendingSlice, String?>(
 );
 
 bool get _isAndroid => !kIsWeb && Platform.isAndroid;
+
+bool get _isWindows => !kIsWeb && Platform.isWindows;
 
 final sharedLinkBootstrapProvider = Provider<void>((ref) {
   if (!_isAndroid) {
@@ -112,9 +115,25 @@ Future<void> signInWithGoogle() async {
       idToken: account.authentication.idToken,
     );
     credential = await FirebaseAuth.instance.signInWithCredential(google);
+  } else if (_isWindows) {
+    // signInWithProvider is rejected by the Firebase C++ SDK on Windows.
+    final options = DefaultFirebaseOptions.windows;
+    final tokens = await requestDesktopGoogleCredential(
+      apiKey: options.apiKey,
+      authDomain: options.authDomain ?? 'gramnota-2c353.firebaseapp.com',
+      projectId: options.projectId,
+      appId: options.appId,
+      storageBucket: options.storageBucket,
+    );
+    credential = await FirebaseAuth.instance.signInWithCredential(
+      GoogleAuthProvider.credential(
+        idToken: tokens.idToken,
+        accessToken: tokens.accessToken,
+      ),
+    );
   } else {
-    credential = await FirebaseAuth.instance.signInWithProvider(
-      GoogleAuthProvider(),
+    throw const SignInFailed(
+      'Google sign-in is available in the Android and Windows apps.',
     );
   }
   await _rememberSignedInUser(credential.user);

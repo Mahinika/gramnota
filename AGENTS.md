@@ -53,7 +53,7 @@ Inbox is the only cross-user write. The payload is a JSON string (`payloadJson`)
 
 ## Auth and platforms
 
-`firebaseIsConfigured` is false while an API key starts with `REPLACE`. An unconfigured build shows `SetupScreen` and does not touch Firebase. Android sign-in uses `google_sign_in`. Windows sign-in uses Firebase Auth in the browser; Windows is registered as a Firebase web app. `android/app/google-services.json` is gitignored. Do not commit secrets, `android/key.properties`, or `*.jks`.
+`firebaseIsConfigured` is false while an API key starts with `REPLACE`. An unconfigured build shows `SetupScreen` and does not touch Firebase. Android sign-in uses `google_sign_in`. Windows sign-in opens the system browser on a localhost page (Firebase web Google sign-in, which `localhost` is allowed to use) and then calls `signInWithCredential`. Do not call `signInWithProvider` on Windows: the Firebase C++ SDK rejects it. Windows is registered as a Firebase web app. `android/app/google-services.json` is gitignored. Do not commit secrets, `android/key.properties`, or `*.jks`.
 
 Release APKs are signed with the upload keystore in `android/app/upload-keystore.jks` when `android/key.properties` exists. Debug builds keep the debug keystore. Google sign-in on Android accepts only SHA-1 fingerprints registered on the Firebase Android app (`se.gramnota.app`). Both the local debug certificate and the upload certificate must stay registered, and `google-services.json` must list both OAuth Android clients.
 
