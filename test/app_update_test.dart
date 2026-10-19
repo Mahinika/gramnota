@@ -216,13 +216,19 @@ void main() {
   test('the windows installer relaunches after a silent install', () {
     final iss = File('windows/installer/gramnota.iss').readAsStringSync();
     final run = iss.split('[Run]').last;
-    expect(run, contains(r'{#AppExe}'));
-    expect(run.toLowerCase(), isNot(contains('skipifsilent')));
+    final launchLine = run
+        .split('\n')
+        .firstWhere((line) => line.startsWith('Filename:'));
+    expect(launchLine, contains(r'{#AppExe}'));
+    expect(launchLine.toLowerCase(), isNot(contains('skipifsilent')));
+    expect(run, contains('WizardShouldLaunchApp'));
+    expect(run, contains('{param:NORUN|0}'));
     expect(windowsInstallerArguments, [
       '/SILENT',
       '/SUPPRESSMSGBOXES',
       '/NORESTART',
     ]);
+    expect(windowsInstallerArguments.join(' '), isNot(contains('NORUN')));
   });
 
   testWidgets('the update dialog is in Swedish', (tester) async {
