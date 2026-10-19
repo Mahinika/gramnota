@@ -81,7 +81,7 @@ jobs:
           Write-Host "Inno Setup installer exit code: $LASTEXITCODE"
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { throw "ISCC.exe was not installed (installer exit $LASTEXITCODE)" }
-          & $iscc /? | Select-Object -First 8
+          Write-Host "ISCC file version: $((Get-Item $iscc).VersionInfo.FileVersion)"
 
       - name: Package installer and portable zip
         shell: pwsh
