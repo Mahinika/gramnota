@@ -124,12 +124,19 @@ jobs:
           $PSNativeCommandUseErrorActionPreference = $false
           $setup = Get-ChildItem "build\windows\installer\Gramnota-Setup-*.exe" | Select-Object -First 1
           $log = Join-Path $env:GITHUB_WORKSPACE "build\windows\installer\silent-install.log"
-          & $setup.FullName /VERYSILENT /SUPPRESSMSGBOXES /NORESTART "/LOG=$log"
-          $installCode = $LASTEXITCODE
-          Write-Host "Installer exit code: $installCode"
-          if ($installCode -ne 0) {
-            if (Test-Path $log) { Get-Content $log -Tail 120 } else { Write-Host "No install log at $log" }
-            throw "Silent install failed with exit code $installCode"
+          Write-Host "Running $($setup.FullName)"
+          # Setup is a GUI executable. Start-Process records its exit code; the
+          # call operator often leaves $LASTEXITCODE empty for GUI programs.
+          $proc = Start-Process -FilePath $setup.FullName -ArgumentList @(
+            "/VERYSILENT",
+            "/SUPPRESSMSGBOXES",
+            "/NORESTART",
+            "/LOG=$log"
+          ) -Wait -PassThru
+          Write-Host "Installer exit code: $($proc.ExitCode)"
+          if (Test-Path $log) { Get-Content $log -Tail 80 } else { Write-Host "No install log at $log" }
+          if ($proc.ExitCode -ne 0) {
+            throw "Silent install failed with exit code $($proc.ExitCode)"
           }
 
           $iss = Get-Content "windows\installer\gramnota.iss" -Raw
