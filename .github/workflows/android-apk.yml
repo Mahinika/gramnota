@@ -11,6 +11,9 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    # A healthy release is about 15 minutes. 45 matches the Windows job and
+    # stops a hung runner from occupying the slot for the default 6 hours.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
