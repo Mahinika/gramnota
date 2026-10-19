@@ -46,14 +46,34 @@ String formatGrams(double grams) {
   return '${grams.toStringAsFixed(1)} g';
 }
 
+/// Calendar date for a stored UTC timestamp, in the device's local zone.
+String formatIsoDate(String iso) {
+  final parsed = DateTime.tryParse(iso);
+  if (parsed == null) {
+    return iso.length >= 10 ? iso.substring(0, 10) : iso;
+  }
+  final local = parsed.toLocal();
+  final month = local.month.toString().padLeft(2, '0');
+  final day = local.day.toString().padLeft(2, '0');
+  return '${local.year}-$month-$day';
+}
+
 String formatDuration(int seconds) {
   final safe = seconds < 0 ? 0 : seconds;
+  if (safe == 0) {
+    return '0m';
+  }
   final hours = safe ~/ 3600;
   final minutes = (safe % 3600) ~/ 60;
-  if (hours == 0) {
-    return '${minutes}m';
+  final remainder = safe % 60;
+  if (hours == 0 && minutes == 0) {
+    return '${remainder}s';
   }
-  return '${hours}h ${minutes}m';
+  if (hours == 0) {
+    return remainder == 0 ? '${minutes}m' : '${minutes}m ${remainder}s';
+  }
+  final clock = '${hours}h ${minutes}m';
+  return remainder == 0 ? clock : '$clock ${remainder}s';
 }
 
 String formatPercent(int basisPoints) {

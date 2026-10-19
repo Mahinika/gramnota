@@ -83,6 +83,25 @@ class UserStore {
     return orders.doc(order.id).set(order.toJson());
   }
 
+  /// Updates the note only. A full [saveOrder] of a screen snapshot can
+  /// overwrite a status change that already moved filament stock.
+  Future<void> saveOrderNote({
+    required String orderId,
+    required String note,
+  }) {
+    final ref = orders.doc(orderId);
+    return db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(ref);
+      if (!snapshot.exists) {
+        return;
+      }
+      transaction.update(ref, {
+        'note': note,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      });
+    });
+  }
+
   Stream<List<InboxItem>> watchInbox() => _watch(inbox, InboxItem.fromJson);
 
   Future<void> deleteInboxItem(String id) => inbox.doc(id).delete();

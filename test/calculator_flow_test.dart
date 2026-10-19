@@ -102,5 +102,28 @@ void main() {
       find.textContaining('Prep is charged once'),
       findsOneWidget,
     );
+
+    await tester.enterText(find.widgetWithText(TextField, 'Hours'), '1,5');
+    await tester.enterText(find.widgetWithText(TextField, 'Quantity'), '1');
+    await tester.pump();
+
+    // 1,5 h is 90 minutes. Electricity 0.1 kW * 1.5 h * 1.50 = 0.225 -> 23 öre.
+    // Machine 1.50. Material stays 20.10. Total 21.83.
+    expect(find.text('1h 30m'), findsOneWidget);
+    expect(find.text(formatMoney(23, 'SEK')), findsWidgets);
+    expect(find.text(formatMoney(150, 'SEK')), findsWidgets);
+    expect(find.text(formatMoney(2183, 'SEK')), findsWidgets);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Hours'), 'abc');
+    await tester.pump();
+    expect(find.textContaining('Could not read hours'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Quantity'), '2,5');
+    await tester.pump();
+    expect(find.textContaining('whole number'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Prep minutes'), '15,4');
+    await tester.pump();
+    expect(find.text('Priced as 15 minutes.'), findsOneWidget);
   });
 }

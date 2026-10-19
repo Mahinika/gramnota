@@ -154,9 +154,81 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   int _seconds() {
-    final hours = parsePositiveInt(_hours.text) ?? 0;
-    final minutes = parsePositiveInt(_minutes.text) ?? 0;
-    return hours * 3600 + minutes * 60 + _extraSeconds;
+    final hours = parseNonNegativeDouble(_hours.text) ?? 0;
+    final minutes = parseNonNegativeDouble(_minutes.text) ?? 0;
+    return _scaled(hours, 3600) + _scaled(minutes, 60) + _extraSeconds;
+  }
+
+  int _scaled(double amount, int unit) {
+    final scaled = amount * unit;
+    if (scaled.isNaN || scaled.isInfinite || scaled > 1000000000000) {
+      return 1000000000000;
+    }
+    return scaled.round();
+  }
+
+  int _minuteCount(TextEditingController controller) {
+    final value = parseNonNegativeDouble(controller.text);
+    if (value == null) {
+      return 0;
+    }
+    return value.round();
+  }
+
+  String? _decimalError(String label, String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || parseNonNegativeDouble(trimmed) != null) {
+      return null;
+    }
+    return 'Could not read $label. Use a number, 0 or more.';
+  }
+
+  String? _wholeNumberError(String label, String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || parsePositiveInt(trimmed) != null) {
+      return null;
+    }
+    return '$label must be a whole number of 0 or more.';
+  }
+
+  String? _moneyError(String label, String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || parseMinor(trimmed) != null) {
+      return null;
+    }
+    return 'Could not read $label. Use a number, 0 or more.';
+  }
+
+  String? _percentError(String label, String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty || parseBasisPoints(trimmed) != null) {
+      return null;
+    }
+    return 'Could not read $label. Use a percent, 0 or more.';
+  }
+
+  String? _roundedMinutesNote(TextEditingController controller) {
+    final value = parseNonNegativeDouble(controller.text);
+    if (value == null || value == value.roundToDouble()) {
+      return null;
+    }
+    return 'Priced as ${value.round()} minutes.';
+  }
+
+  List<String> _inputProblems() {
+    return [
+      ?_decimalError('hours', _hours.text),
+      ?_decimalError('minutes', _minutes.text),
+      ?_decimalError('prep minutes', _prep.text),
+      ?_decimalError('post minutes', _post.text),
+      ?_wholeNumberError('Quantity', _quantity.text),
+      ?_percentError('markup', _markup.text),
+      ?_percentError('failure', _failure.text),
+      ?_percentError('VAT', _vat.text),
+      for (final row in _rows) ?_decimalError('grams', row.grams.text),
+      for (final extra in _extras)
+        ?_moneyError('the extra cost', extra.cost.text),
+    ];
   }
 
   int _quantityValue() {
@@ -351,8 +423,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       maintenanceMinorPerHour: printer?.maintenanceMinorPerHour ?? 0,
       failureBasisPoints:
           parseBasisPoints(_failure.text) ?? settings.defaultFailureBasisPoints,
-      prepMinutes: parsePositiveInt(_prep.text) ?? 0,
-      postMinutes: parsePositiveInt(_post.text) ?? 0,
+      prepMinutes: _minuteCount(_prep),
+      postMinutes: _minuteCount(_post),
       laborMinorPerHour: settings.laborMinorPerHour,
       extraMinors: [
         for (final extra in _extras) parseMinor(extra.cost.text) ?? 0,
@@ -560,6 +632,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     List<FilamentSpool> spools,
     PrintOrder? target,
   ) async {
+    final problems = _inputProblems();
+    if (problems.isNotEmpty) {
+      setState(() => _importNote = problems.join(' '));
+      return;
+    }
     if (_title.text.trim().isEmpty) {
       setState(() => _importNote = 'Add a title before saving the quote.');
       return;
@@ -934,16 +1011,26 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               Expanded(
                 child: TextField(
                   controller: _hours,
-                  decoration: const InputDecoration(labelText: 'Hours'),
-                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Hours',
+                    errorText: _decimalError('hours', _hours.text),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   controller: _minutes,
-                  decoration: const InputDecoration(labelText: 'Minutes'),
-                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Minutes',
+                    errorText: _decimalError('minutes', _minutes.text),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ),
             ],
@@ -954,16 +1041,28 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               Expanded(
                 child: TextField(
                   controller: _prep,
-                  decoration: const InputDecoration(labelText: 'Prep minutes'),
-                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Prep minutes',
+                    helperText: _roundedMinutesNote(_prep),
+                    errorText: _decimalError('prep minutes', _prep.text),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
                   controller: _post,
-                  decoration: const InputDecoration(labelText: 'Post minutes'),
-                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Post minutes',
+                    helperText: _roundedMinutesNote(_post),
+                    errorText: _decimalError('post minutes', _post.text),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ),
             ],
@@ -976,6 +1075,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               helperText: (parsePositiveInt(_quantity.text) ?? 1) < 1
                   ? 'Quantity below 1 is priced as 1.'
                   : 'Material, time, and post-processing scale with quantity. Prep is charged once.',
+              errorText: _wholeNumberError('Quantity', _quantity.text),
             ),
             keyboardType: TextInputType.number,
           ),
@@ -985,7 +1085,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               Expanded(
                 child: TextField(
                   controller: _markup,
-                  decoration: const InputDecoration(labelText: 'Markup %'),
+                  decoration: InputDecoration(
+                    labelText: 'Markup %',
+                    errorText: _percentError('markup', _markup.text),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -995,7 +1098,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               Expanded(
                 child: TextField(
                   controller: _failure,
-                  decoration: const InputDecoration(labelText: 'Failure %'),
+                  decoration: InputDecoration(
+                    labelText: 'Failure %',
+                    errorText: _percentError('failure', _failure.text),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -1005,7 +1111,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               Expanded(
                 child: TextField(
                   controller: _vat,
-                  decoration: const InputDecoration(labelText: 'VAT %'),
+                  decoration: InputDecoration(
+                    labelText: 'VAT %',
+                    errorText: _percentError('VAT', _vat.text),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -1029,7 +1138,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   Expanded(
                     child: TextField(
                       controller: _extras[index].cost,
-                      decoration: const InputDecoration(labelText: 'Cost'),
+                      decoration: InputDecoration(
+                        labelText: 'Cost',
+                        errorText: _moneyError(
+                          'the extra cost',
+                          _extras[index].cost.text,
+                        ),
+                      ),
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
@@ -1156,7 +1271,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               Expanded(
                 child: TextField(
                   controller: row.grams,
-                  decoration: const InputDecoration(labelText: 'Grams'),
+                  decoration: InputDecoration(
+                    labelText: 'Grams',
+                    errorText: _decimalError('grams', row.grams.text),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),

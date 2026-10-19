@@ -317,4 +317,29 @@ void main() {
     expect(breakdown.totalMinor, 0);
     expect(breakdown.quantity, 1);
   });
+
+  test('keeps a huge job finite', () {
+    final breakdown = calculator.calculate(
+      const PriceInput(
+        materials: [MaterialUse(grams: 1e300, pricePerKgMinor: 20000)],
+        powerWatts: 1000000000,
+        printTimeSeconds: 999999999999999,
+        electricityMinorPerKwh: 200,
+        purchasePriceMinor: 100000000000000,
+        lifetimeHours: 0.0000001,
+        maintenanceMinorPerHour: 0,
+        failureBasisPoints: 10000,
+        prepMinutes: 1000000000,
+        postMinutes: 1000000000,
+        laborMinorPerHour: 1000000000,
+        extraMinors: [],
+        markupBasisPoints: 10000,
+        vatBasisPoints: 10000,
+        quantity: 1000000000,
+      ),
+    );
+
+    expect(breakdown.totalMinor, greaterThan(0));
+    expect(breakdown.perUnitMinor, greaterThan(0));
+  });
 }

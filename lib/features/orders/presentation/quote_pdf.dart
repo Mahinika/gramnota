@@ -45,7 +45,7 @@ Future<void> shareQuotePdf({
         pw.Text('Quote ${order.quoteNumber}'),
         pw.Text(order.title),
         if (order.validUntil.isNotEmpty)
-          pw.Text('Valid until ${_quoteDate(order.validUntil)}'),
+          pw.Text('Valid until ${formatIsoDate(order.validUntil)}'),
         if (customer != null) ...[
           pw.SizedBox(height: 8),
           pw.Text(customer.name),
@@ -131,13 +131,3 @@ Future<void> shareQuotePdf({
   );
 }
 
-String _quoteDate(String iso) {
-  final parsed = DateTime.tryParse(iso);
-  if (parsed == null) {
-    return iso.length >= 10 ? iso.substring(0, 10) : iso;
-  }
-  final local = parsed.toLocal();
-  final month = local.month.toString().padLeft(2, '0');
-  final day = local.day.toString().padLeft(2, '0');
-  return '${local.year}-$month-$day';
-}

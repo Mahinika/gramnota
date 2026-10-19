@@ -32,6 +32,26 @@ void main() {
     expect(formatMoney(0, 'NOK'), '0,00 kr');
   });
 
+  test('formats a stored timestamp as a local date', () {
+    final parsed = DateTime.parse('2026-11-02T23:30:00.000Z').toLocal();
+    final month = parsed.month.toString().padLeft(2, '0');
+    final day = parsed.day.toString().padLeft(2, '0');
+    expect(
+      formatIsoDate('2026-11-02T23:30:00.000Z'),
+      '${parsed.year}-$month-$day',
+    );
+    expect(formatIsoDate('not-a-date'), 'not-a-date');
+    expect(formatIsoDate('short'), 'short');
+  });
+
+  test('formats leftover seconds in a print time', () {
+    expect(formatDuration(0), '0m');
+    expect(formatDuration(14), '14s');
+    expect(formatDuration(1514), '25m 14s');
+    expect(formatDuration(5400), '1h 30m');
+    expect(formatDuration(5414), '1h 30m 14s');
+  });
+
   test('formats minor units for a text field without float noise', () {
     expect(formatMinorAmount(1999), '19.99');
     expect(formatMinorAmount(150), '1.50');

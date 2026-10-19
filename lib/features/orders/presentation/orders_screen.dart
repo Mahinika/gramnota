@@ -472,10 +472,10 @@ class OrderDetailScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    if (order.validUntil.length >= 10) ...[
+                    if (order.validUntil.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
-                        'Valid until ${order.validUntil.substring(0, 10)}',
+                        'Valid until ${formatIsoDate(order.validUntil)}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
@@ -692,10 +692,7 @@ class _OrderNoteFieldState extends State<_OrderNoteField> {
     }
     setState(() => _saving = true);
     try {
-      final now = DateTime.now().toUtc().toIso8601String();
-      await widget.store.saveOrder(
-        widget.order.copyWith(note: next, updatedAt: now),
-      );
+      await widget.store.saveOrderNote(orderId: widget.order.id, note: next);
     } finally {
       if (mounted) {
         setState(() => _saving = false);

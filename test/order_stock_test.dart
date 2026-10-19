@@ -462,4 +462,66 @@ void main() {
     expect(change.order.deductedGrams['spool'], 0);
     expect(change.warning, contains('short'));
   });
+
+  test('saving a note does not roll back a printed status', () async {
+    final firestore = FakeFirebaseFirestore();
+    final store = UserStore(firestore, 'user');
+    await store.saveFilament(
+      const FilamentSpool(
+        id: 'spool',
+        brand: 'Prusa',
+        material: 'PLA',
+        remainingGrams: 100,
+      ),
+    );
+    const order = PrintOrder(
+      id: 'order',
+      quoteNumber: 8,
+      title: 'Clip',
+      status: OrderStatus.accepted,
+      validUntil: '2026-10-20T00:00:00.000Z',
+      quantity: 1,
+      printTimeSeconds: 600,
+      filaments: [FilamentUsage(filamentId: 'spool', grams: 10)],
+      markupBasisPoints: 0,
+      failureBasisPoints: 0,
+      vatBasisPoints: 0,
+      currencyCode: 'SEK',
+      breakdown: PriceBreakdown(
+        materialMinor: 0,
+        electricityMinor: 0,
+        machineMinor: 0,
+        failureMinor: 0,
+        laborMinor: 0,
+        extrasMinor: 0,
+        costMinor: 0,
+        markupMinor: 0,
+        netMinor: 0,
+        vatMinor: 0,
+        totalMinor: 0,
+        perUnitMinor: 0,
+        quantity: 1,
+      ),
+      createdAt: '2026-10-15T00:00:00.000Z',
+      updatedAt: '2026-10-15T00:00:00.000Z',
+    );
+    await store.saveOrder(order);
+    await OrderStock(store).setStatus(order: order, next: OrderStatus.printed);
+
+    await store.saveOrderNote(orderId: order.id, note: 'Call the customer');
+
+    final saved = PrintOrder.fromJson({
+      ...(await store.orders.doc(order.id).get()).data()!,
+      'id': order.id,
+    });
+    final spool = FilamentSpool.fromJson({
+      ...(await store.filaments.doc('spool').get()).data()!,
+      'id': 'spool',
+    });
+    expect(saved.status, OrderStatus.printed);
+    expect(saved.stockDeducted, isTrue);
+    expect(saved.deductedGrams['spool'], 10);
+    expect(saved.note, 'Call the customer');
+    expect(spool.remainingGrams, 90);
+  });
 }
