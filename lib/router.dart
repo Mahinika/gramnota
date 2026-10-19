@@ -6,6 +6,7 @@ import 'core/app_redirect.dart';
 import 'core/providers.dart';
 import 'core/shell.dart';
 import 'features/auth/presentation/auth_screens.dart';
+import 'features/catalog/presentation/products_screen.dart';
 import 'features/customers/presentation/customers_screen.dart';
 import 'features/filaments/presentation/filaments_screen.dart';
 import 'features/orders/presentation/orders_screen.dart';
@@ -112,6 +113,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/more',
                 builder: (_, _) => const MoreScreen(),
                 routes: [
+                  GoRoute(
+                    path: 'products',
+                    builder: (_, _) => const ProductsScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':id',
+                        builder: (_, state) =>
+                            ProductEditScreen(id: state.pathParameters['id']!),
+                      ),
+                    ],
+                  ),
                   GoRoute(
                     path: 'printers',
                     builder: (_, _) => const PrintersScreen(),

@@ -37,6 +37,21 @@ class MoreScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           const SectionHeading('Workshop'),
           TappableListCard(
+            onTap: () => context.go('/more/products'),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.inventory_2_outlined,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 16),
+                const Expanded(child: Text('Products')),
+                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+          TappableListCard.listSeparator,
+          TappableListCard(
             onTap: () => context.go('/more/printers'),
             child: Row(
               children: [
@@ -294,8 +309,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               }
               if (!RegExp(r'^[A-Z]{3}$').hasMatch(currency)) {
                 setState(
-                  () => _message =
-                      'Enter a 3-letter currency code, such as SEK.',
+                  () =>
+                      _message = 'Enter a 3-letter currency code, such as SEK.',
                 );
                 return;
               }

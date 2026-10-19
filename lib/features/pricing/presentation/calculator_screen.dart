@@ -1,3 +1,5 @@
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,18 +12,29 @@ import '../../../core/text_prompt.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
+import '../../catalog/presentation/product_picker.dart';
 import '../../customers/domain/customer.dart';
 import '../../filaments/domain/filament_spool.dart';
+import '../../import/data/gcode_file.dart';
+import '../../import/data/gcode_importer.dart';
 import '../../import/data/link_import_service.dart';
+import '../../import/domain/gcode_metadata.dart';
 import '../../import/domain/import_models.dart';
+import '../../import/domain/slice_file.dart';
 import '../../orders/data/order_stock.dart';
 import '../../orders/data/orders_providers.dart';
 import '../../orders/domain/print_order.dart';
 import '../../printers/domain/printer_profile.dart';
 import '../../settings/domain/workshop_settings.dart';
+import '../../pricing/domain/live_quote.dart';
 import '../domain/price_breakdown.dart';
 import '../domain/price_calculator.dart';
 import 'breakdown_card.dart';
+
+/// File read used when a path is shared into the app. Tests replace it.
+@visibleForTesting
+Future<GcodeImport> Function(String path, {required String displayName})
+readSharedGcode = importGcodePath;
 
 class CalculatorScreen extends ConsumerStatefulWidget {
   const CalculatorScreen({this.orderId, this.lineId, super.key});
@@ -67,6 +80,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   String _profileTitle = '';
   String? _importNote;
   var _importing = false;
+  String? _pendingSliceSeen;
   var _saving = false;
   var _mute = false;
   var _extraSeconds = 0;
@@ -284,9 +298,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   void _applyProfile(
     ImportedProfile profile,
     List<PrinterProfile> printers,
-    List<FilamentSpool> spools,
-  ) {
-    var seconds = profile.printTimeSeconds ?? 0;
+    List<FilamentSpool> spools, {
+    bool keepExistingWhenMissing = false,
+  }) {
+    var seconds = profile.printTimeSeconds;
     var filaments = profile.filaments;
     String? printerId = _printerId;
     for (final printer in printers) {
@@ -303,28 +318,47 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         }
       }
     }
-    for (final row in _rows) {
-      row.grams.dispose();
+    if (filaments.isNotEmpty || !keepExistingWhenMissing) {
+      for (final row in _rows) {
+        row.grams.dispose();
+      }
+      _rows
+        ..clear()
+        ..addAll(
+          filaments.isEmpty
+              ? [_FilamentRow()]
+              : filaments.map((filament) {
+                  final row = _FilamentRow(
+                    material: filament.material,
+                    colorHex: filament.colorHex,
+                  );
+                  row.grams.text = _gramsField(filament.grams);
+                  row.filamentId = _matchSpool(
+                    spools,
+                    filament.material,
+                    filament.colorHex,
+                  );
+                  row.grams.addListener(_refresh);
+                  return row;
+                }),
+        );
     }
-    _rows
-      ..clear()
-      ..addAll(
-        filaments.isEmpty
-            ? [_FilamentRow()]
-            : filaments.map((filament) {
-                final row = _FilamentRow(
-                  material: filament.material,
-                  colorHex: filament.colorHex,
-                );
-                row.grams.text = filament.grams.toString();
-                row.filamentId = _matchSpool(spools, filament.material);
-                row.grams.addListener(_refresh);
-                return row;
-              }),
-      );
-    _setDuration(seconds);
+    if (seconds != null) {
+      _setDuration(seconds);
+    } else if (!keepExistingWhenMissing) {
+      _setDuration(0);
+    }
     _printerId = printerId;
     _profileTitle = profile.title;
+  }
+
+  String _gramsField(double grams) {
+    if (grams == grams.roundToDouble()) {
+      return grams.round().toString();
+    }
+    var text = grams.toStringAsFixed(3);
+    text = text.replaceFirst(RegExp(r'0+$'), '');
+    return text.replaceFirst(RegExp(r'\.$'), '');
   }
 
   bool _namesMatch(String saved, String incoming) {
@@ -336,7 +370,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     return left.contains(right) || right.contains(left);
   }
 
-  String? _matchSpool(List<FilamentSpool> spools, String material) {
+  String? _matchSpool(
+    List<FilamentSpool> spools,
+    String material, [
+    String colorHex = '',
+  ]) {
     final needle = material.trim().toLowerCase();
     if (needle.isEmpty) {
       return null;
@@ -346,6 +384,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         .toList();
     if (matches.length == 1) {
       return matches.single.id;
+    }
+    final color = colorHex.trim().toLowerCase();
+    if (color.isEmpty || matches.isEmpty) {
+      return null;
+    }
+    final colored = matches
+        .where((spool) => spool.colorHex.trim().toLowerCase() == color)
+        .toList();
+    if (colored.length == 1) {
+      return colored.single.id;
     }
     return null;
   }
@@ -401,6 +449,213 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       if (mounted) {
         setState(() => _importing = false);
       }
+    }
+  }
+
+  Future<void> _pickGcode(UserStore store) async {
+    setState(() {
+      _importing = true;
+      _importNote = null;
+    });
+    try {
+      final picked = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['gcode', 'gco', '3mf'],
+      );
+      if (!mounted) {
+        return;
+      }
+      if (picked.isEmpty) {
+        return;
+      }
+      final file = picked.single;
+      final name = file.name;
+      if (!isSliceFileName(name)) {
+        setState(() => _importNote = 'Choose a .gcode or .3mf file.');
+        return;
+      }
+      final GcodeImport result;
+      final path = file.path;
+      if (!kIsWeb && path != null && path.isNotEmpty) {
+        result = await importGcodePath(path, displayName: name);
+      } else {
+        result = await importGcodeBytes(
+          await file.readAsBytes(),
+          displayName: name,
+        );
+      }
+      if (!mounted) {
+        return;
+      }
+      await _applyGcode(store, result);
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() => _importNote = 'The file could not be read ($error).');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _importing = false);
+      }
+    }
+  }
+
+  Future<void> _importSharedGcode(UserStore store, String path) async {
+    setState(() {
+      _importing = true;
+      _importNote = null;
+    });
+    try {
+      final result = await readSharedGcode(path, displayName: path);
+      if (!mounted) {
+        return;
+      }
+      await _applyGcode(store, result);
+    } on Object catch (error) {
+      if (mounted) {
+        setState(
+          () => _importNote = 'The shared file could not be read ($error).',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _importing = false);
+      }
+    }
+  }
+
+  Future<void> _applyGcode(UserStore store, GcodeImport result) async {
+    final printers = await store.watchPrinters().first;
+    final spools = await store.watchFilaments().first;
+    if (!mounted) {
+      return;
+    }
+    final usable = result.plates.where((plate) => plate.hasData).toList();
+    if (usable.isEmpty) {
+      setState(() {
+        if (_title.text.trim().isEmpty && result.title.isNotEmpty) {
+          _title.text = result.title;
+        }
+        _importNote = result.note;
+      });
+      return;
+    }
+    var plate = usable.first;
+    if (usable.length > 1) {
+      final picked = await showDialog<GcodePlate>(
+        context: context,
+        builder: (context) => SimpleDialog(
+          title: const Text('Choose a plate'),
+          children: [
+            for (final candidate in usable)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(context, candidate),
+                child: Text(candidate.name),
+              ),
+          ],
+        ),
+      );
+      if (picked == null) {
+        if (mounted) {
+          setState(() => _importNote = 'No plate was imported.');
+        }
+        return;
+      }
+      plate = picked;
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      if (_title.text.trim().isEmpty && result.title.isNotEmpty) {
+        _title.text = result.title;
+      }
+      _applyProfile(
+        ImportedProfile(
+          id: plate.name,
+          title: plate.name,
+          printTimeSeconds: plate.printTimeSeconds,
+          filaments: [
+            for (final filament in plate.filaments)
+              ImportedFilament(
+                grams: filament.grams,
+                material: filament.material,
+                colorHex: filament.colorHex,
+              ),
+          ],
+        ),
+        printers,
+        spools,
+        keepExistingWhenMissing: true,
+      );
+      _importNote = gcodePlateNote(plate, plateCount: result.plates.length);
+    });
+  }
+
+  Future<void> _addFromCatalog(
+    UserStore store,
+    WorkshopSettings settings,
+    List<PrinterProfile> printers,
+    List<FilamentSpool> spools,
+  ) async {
+    final products = await store.watchProducts().first;
+    if (!mounted) {
+      return;
+    }
+    if (products.isEmpty) {
+      setState(
+        () => _importNote =
+            'No saved products yet. Save this print as a product, or add one under More.',
+      );
+      return;
+    }
+    final picked = await pickCatalogProduct(context, products);
+    if (picked == null || !mounted) {
+      return;
+    }
+    final priced = priceProduct(
+      product: picked,
+      lineId: 'draft',
+      quantity: _quantityValue(),
+      settings: settings,
+      spools: spools,
+      printers: printers,
+    );
+    setState(() {
+      _fillFromLine(priced.line);
+      final warning = priced.warnings.isEmpty
+          ? ''
+          : ' ${priced.warnings.join(' ')}';
+      _importNote = '$productPriceExplanation$warning';
+    });
+  }
+
+  Future<void> _saveAsProduct(
+    UserStore store,
+    PriceInput input,
+    PriceBreakdown breakdown,
+    List<FilamentSpool> spools,
+  ) async {
+    final problems = _inputProblems();
+    if (problems.isNotEmpty) {
+      setState(() => _importNote = problems.join(' '));
+      return;
+    }
+    if (_title.text.trim().isEmpty) {
+      setState(() => _importNote = 'Add a title before saving a product.');
+      return;
+    }
+    final line = _captureLine('draft', input, breakdown, spools);
+    final product = productFromLine(
+      line,
+      id: const Uuid().v4(),
+      now: DateTime.now().toUtc(),
+    );
+    await store.saveProduct(product);
+    if (mounted) {
+      setState(
+        () => _importNote =
+            'Saved “${product.name}” as a product. $productPriceExplanation',
+      );
     }
   }
 
@@ -565,7 +820,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         row.filamentId = filament.filamentId.isEmpty
             ? null
             : filament.filamentId;
-        row.grams.text = filament.grams.toString();
+        row.grams.text = _gramsField(filament.grams);
         row.grams.addListener(_refresh);
         _rows.add(row);
       }
@@ -759,10 +1014,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         }
       }
       final now = DateTime.now().toUtc().toIso8601String();
-      final updated = orderWithPrints(target, next).copyWith(
-        title: quoteTitleFor(target, next),
-        updatedAt: now,
-      );
+      final updated = orderWithPrints(
+        target,
+        next,
+      ).copyWith(title: quoteTitleFor(target, next), updatedAt: now);
       await store.saveOrder(updated);
       if (mounted) {
         context.go('/orders/${updated.id}');
@@ -845,6 +1100,20 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         }
       });
     }
+    final pendingSlice = ref.watch(pendingSliceProvider);
+    if (pendingSlice != null && pendingSlice != _pendingSliceSeen) {
+      _pendingSliceSeen = pendingSlice;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        final path = ref.read(pendingSliceProvider);
+        ref.read(pendingSliceProvider.notifier).setPath(null);
+        if (path != null && store != null) {
+          _importSharedGcode(store, path);
+        }
+      });
+    }
     if (store == null) {
       return const Scaffold(body: EmptyView(message: 'Sign in to calculate.'));
     }
@@ -914,283 +1183,310 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ),
           ];
           final fields = <Widget>[
-          if (target != null) ...[
-            Text(
-              widget.lineId == null
-                  ? 'Adding a print to ${target.title}'
-                  : 'Editing a print on ${target.title}',
+            if (target != null) ...[
+              Text(
+                widget.lineId == null
+                    ? 'Adding a print to ${target.title}'
+                    : 'Editing a print on ${target.title}',
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: () => context.go('/calculator'),
+                  child: const Text('Cancel'),
+                ),
+              ),
+            ],
+            if (locked)
+              const Text(
+                'Move the order back to Quote or Accepted before changing prints.',
+              ),
+            TextField(
+              controller: _link,
+              decoration: const InputDecoration(
+                labelText: 'Model link',
+                hintText:
+                    'MakerWorld, Printables, Creality Cloud, or another site',
+              ),
             ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.tonal(
+                  onPressed: _importing ? null : () => _import(store),
+                  child: Text(_importing ? 'Reading…' : 'Fill from link'),
+                ),
+                FilledButton.tonal(
+                  onPressed: _importing ? null : () => _pickGcode(store),
+                  child: const Text('Import G-code'),
+                ),
+                TextButton(
+                  onPressed: _importing
+                      ? null
+                      : () => _addFromCatalog(
+                          store,
+                          activeSettings,
+                          printers,
+                          spools,
+                        ),
+                  child: const Text('Add from catalog'),
+                ),
+                TextButton(
+                  onPressed: _importing || _saving
+                      ? null
+                      : () => _saveAsProduct(store, input, breakdown, spools),
+                  child: const Text('Save as product'),
+                ),
+              ],
+            ),
+            if (_importNote != null) ...[
+              const SizedBox(height: 8),
+              Text(_importNote!),
+            ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: _title,
+              decoration: const InputDecoration(labelText: 'Title'),
+              onChanged: (value) {
+                if (value.trim().isNotEmpty &&
+                    (_importNote == 'Add a title before saving the quote.' ||
+                        _importNote ==
+                            'Add a title before saving a product.')) {
+                  setState(() => _importNote = null);
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              key: ValueKey(_printerId),
+              initialValue: printers.any((printer) => printer.id == _printerId)
+                  ? _printerId
+                  : null,
+              decoration: const InputDecoration(labelText: 'Printer'),
+              items: [
+                const DropdownMenuItem(child: Text('No printer')),
+                for (final printer in printers)
+                  DropdownMenuItem(
+                    value: printer.id,
+                    child: Text(printer.name),
+                  ),
+              ],
+              onChanged: (value) => setState(() => _printerId = value),
+            ),
+            if (_selectedPrinter(printers) == null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'No printer selected, so electricity and machine wear stay at 0.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            const SizedBox(height: 12),
+            for (var index = 0; index < _rows.length; index++)
+              _filamentEditor(
+                index,
+                spools,
+                activeSettings.currencyCode,
+                input.quantity,
+              ),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
-                onPressed: () => context.go('/calculator'),
-                child: const Text('Cancel'),
+                onPressed: () => setState(() {
+                  final row = _FilamentRow();
+                  row.grams.addListener(_refresh);
+                  _rows.add(row);
+                }),
+                child: const Text('Add filament'),
               ),
             ),
-          ],
-          if (locked)
-            const Text(
-              'Move the order back to Quote or Accepted before changing prints.',
-            ),
-          TextField(
-            controller: _link,
-            decoration: const InputDecoration(
-              labelText: 'Model link',
-              hintText: 'MakerWorld, Printables, Creality Cloud, or another site',
-            ),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FilledButton.tonal(
-              onPressed: _importing ? null : () => _import(store),
-              child: Text(_importing ? 'Reading link…' : 'Fill from link'),
-            ),
-          ),
-          if (_importNote != null) ...[
-            const SizedBox(height: 8),
-            Text(_importNote!),
-          ],
-          const SizedBox(height: 12),
-          TextField(
-            controller: _title,
-            decoration: const InputDecoration(labelText: 'Title'),
-            onChanged: (value) {
-              if (value.trim().isNotEmpty &&
-                  _importNote == 'Add a title before saving the quote.') {
-                setState(() => _importNote = null);
-              }
-            },
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            key: ValueKey(_printerId),
-            initialValue: printers.any((printer) => printer.id == _printerId)
-                ? _printerId
-                : null,
-            decoration: const InputDecoration(labelText: 'Printer'),
-            items: [
-              const DropdownMenuItem(child: Text('No printer')),
-              for (final printer in printers)
-                DropdownMenuItem(value: printer.id, child: Text(printer.name)),
-            ],
-            onChanged: (value) => setState(() => _printerId = value),
-          ),
-          if (_selectedPrinter(printers) == null) ...[
-            const SizedBox(height: 4),
-            Text(
-              'No printer selected, so electricity and machine wear stay at 0.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-          const SizedBox(height: 12),
-          for (var index = 0; index < _rows.length; index++)
-            _filamentEditor(
-              index,
-              spools,
-              activeSettings.currencyCode,
-              input.quantity,
-            ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: () => setState(() {
-                final row = _FilamentRow();
-                row.grams.addListener(_refresh);
-                _rows.add(row);
-              }),
-              child: const Text('Add filament'),
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _hours,
-                  decoration: InputDecoration(
-                    labelText: 'Hours',
-                    errorText: _decimalError('hours', _hours.text),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _minutes,
-                  decoration: InputDecoration(
-                    labelText: 'Minutes',
-                    errorText: _decimalError('minutes', _minutes.text),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _prep,
-                  decoration: InputDecoration(
-                    labelText: 'Prep minutes',
-                    helperText: _roundedMinutesNote(_prep),
-                    errorText: _decimalError('prep minutes', _prep.text),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _post,
-                  decoration: InputDecoration(
-                    labelText: 'Post minutes',
-                    helperText: _roundedMinutesNote(_post),
-                    errorText: _decimalError('post minutes', _post.text),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _quantity,
-            decoration: InputDecoration(
-              labelText: 'Quantity',
-              helperText: (parsePositiveInt(_quantity.text) ?? 1) < 1
-                  ? 'Quantity below 1 is priced as 1.'
-                  : 'Material, time, and post-processing scale with quantity. Prep is charged once.',
-              errorText: _wholeNumberError('Quantity', _quantity.text),
-            ),
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _markup,
-                  decoration: InputDecoration(
-                    labelText: 'Markup %',
-                    helperText: _defaultPercentHint(
-                      _markup.text,
-                      activeSettings.defaultMarkupBasisPoints,
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _hours,
+                    decoration: InputDecoration(
+                      labelText: 'Hours',
+                      errorText: _decimalError('hours', _hours.text),
                     ),
-                    errorText: _percentError('markup', _markup.text),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _failure,
-                  decoration: InputDecoration(
-                    labelText: 'Failure %',
-                    helperText: _defaultPercentHint(
-                      _failure.text,
-                      activeSettings.defaultFailureBasisPoints,
-                    ),
-                    errorText: _percentError('failure', _failure.text),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _vat,
-                  decoration: InputDecoration(
-                    labelText: 'VAT %',
-                    helperText: _defaultPercentHint(
-                      _vat.text,
-                      activeSettings.vatBasisPoints,
-                    ),
-                    errorText: _percentError('VAT', _vat.text),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          for (var index = 0; index < _extras.length; index++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _extras[index].name,
-                      decoration: const InputDecoration(labelText: 'Extra'),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _extras[index].cost,
-                      decoration: InputDecoration(
-                        labelText: 'Cost',
-                        errorText: _moneyError(
-                          'the extra cost',
-                          _extras[index].cost.text,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _minutes,
+                    decoration: InputDecoration(
+                      labelText: 'Minutes',
+                      errorText: _decimalError('minutes', _minutes.text),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _prep,
+                    decoration: InputDecoration(
+                      labelText: 'Prep minutes',
+                      helperText: _roundedMinutesNote(_prep),
+                      errorText: _decimalError('prep minutes', _prep.text),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _post,
+                    decoration: InputDecoration(
+                      labelText: 'Post minutes',
+                      helperText: _roundedMinutesNote(_post),
+                      errorText: _decimalError('post minutes', _post.text),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _quantity,
+              decoration: InputDecoration(
+                labelText: 'Quantity',
+                helperText: (parsePositiveInt(_quantity.text) ?? 1) < 1
+                    ? 'Quantity below 1 is priced as 1.'
+                    : 'Material, time, and post-processing scale with quantity. Prep is charged once.',
+                errorText: _wholeNumberError('Quantity', _quantity.text),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _markup,
+                    decoration: InputDecoration(
+                      labelText: 'Markup %',
+                      helperText: _defaultPercentHint(
+                        _markup.text,
+                        activeSettings.defaultMarkupBasisPoints,
+                      ),
+                      errorText: _percentError('markup', _markup.text),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _failure,
+                    decoration: InputDecoration(
+                      labelText: 'Failure %',
+                      helperText: _defaultPercentHint(
+                        _failure.text,
+                        activeSettings.defaultFailureBasisPoints,
+                      ),
+                      errorText: _percentError('failure', _failure.text),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _vat,
+                    decoration: InputDecoration(
+                      labelText: 'VAT %',
+                      helperText: _defaultPercentHint(
+                        _vat.text,
+                        activeSettings.vatBasisPoints,
+                      ),
+                      errorText: _percentError('VAT', _vat.text),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            for (var index = 0; index < _extras.length; index++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _extras[index].name,
+                        decoration: const InputDecoration(labelText: 'Extra'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _extras[index].cost,
+                        decoration: InputDecoration(
+                          labelText: 'Cost',
+                          errorText: _moneyError(
+                            'the extra cost',
+                            _extras[index].cost.text,
+                          ),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
                         ),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
                     ),
-                  ),
-                  IconButton(
-                    tooltip: 'Remove extra',
-                    onPressed: () => setState(() {
-                      final extra = _extras.removeAt(index);
-                      extra.cost.removeListener(_refresh);
-                      extra.name.dispose();
-                      extra.cost.dispose();
-                    }),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
+                    IconButton(
+                      tooltip: 'Remove extra',
+                      onPressed: () => setState(() {
+                        final extra = _extras.removeAt(index);
+                        extra.cost.removeListener(_refresh);
+                        extra.name.dispose();
+                        extra.cost.dispose();
+                      }),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => setState(() {
+                  final extra = _ExtraRow();
+                  extra.cost.addListener(_refresh);
+                  _extras.add(extra);
+                }),
+                child: const Text('Add extra cost'),
               ),
             ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: () => setState(() {
-                final extra = _ExtraRow();
-                extra.cost.addListener(_refresh);
-                _extras.add(extra);
-              }),
-              child: const Text('Add extra cost'),
-            ),
-          ),
-          if (_extras.isNotEmpty)
-            Text(
-              'Extras are a flat amount for the whole print, not per unit. A cost without a name is saved as Extra.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            DetailRow(
-              label: 'Print time',
-              value: formatDuration(_seconds()),
-            ),
+            if (_extras.isNotEmpty)
+              Text(
+                'Extras are a flat amount for the whole print, not per unit. A cost without a name is saved as Extra.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            DetailRow(label: 'Print time', value: formatDuration(_seconds())),
           ];
           if (!wide) {
             return ListView(
@@ -1433,4 +1729,3 @@ class _CustomerQuotePickerState extends State<_CustomerQuotePicker> {
     );
   }
 }
-
