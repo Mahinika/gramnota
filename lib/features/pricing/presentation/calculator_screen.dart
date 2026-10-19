@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/format.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/money.dart';
+import '../../../core/text_prompt.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
@@ -811,34 +812,15 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   Future<Customer?> _createCustomer(UserStore store) async {
-    final name = TextEditingController();
-    final created = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('New customer'),
-        content: TextField(
-          controller: name,
-          decoration: const InputDecoration(labelText: 'Name'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+    final name = await promptForText(
+      context,
+      title: 'New customer',
+      label: 'Name',
     );
-    if (created != true || name.text.trim().isEmpty) {
-      name.dispose();
+    if (name == null || name.isEmpty) {
       return null;
     }
-    final customer = Customer(id: const Uuid().v4(), name: name.text.trim());
-    name.dispose();
+    final customer = Customer(id: const Uuid().v4(), name: name);
     await store.saveCustomer(customer);
     return customer;
   }

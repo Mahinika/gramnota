@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/format.dart';
+import '../../../core/text_prompt.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/providers.dart';
@@ -851,39 +852,16 @@ Future<void> _renameQuote(
   UserStore store,
   PrintOrder order,
 ) async {
-  final title = TextEditingController(text: order.title);
-  final saved = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Quote title'),
-      content: TextField(
-        controller: title,
-        decoration: const InputDecoration(labelText: 'Title'),
-        autofocus: true,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Save'),
-        ),
-      ],
-    ),
+  final next = await promptForText(
+    context,
+    title: 'Quote title',
+    label: 'Title',
+    initialText: order.title,
   );
-  final next = title.text.trim();
-  title.dispose();
-  if (saved != true || next.isEmpty) {
+  if (next == null || next.isEmpty) {
     return;
   }
-  await store.saveOrder(
-    order.copyWith(
-      title: next,
-      updatedAt: DateTime.now().toUtc().toIso8601String(),
-    ),
-  );
+  await store.saveOrderTitle(orderId: order.id, title: next);
 }
 
 Future<void> _removePrint(

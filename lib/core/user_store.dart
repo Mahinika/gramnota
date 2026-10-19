@@ -89,6 +89,21 @@ class UserStore {
     required String orderId,
     required String note,
   }) {
+    return _updateOrderFields(orderId, {'note': note});
+  }
+
+  /// Updates the title only, for the same reason as [saveOrderNote].
+  Future<void> saveOrderTitle({
+    required String orderId,
+    required String title,
+  }) {
+    return _updateOrderFields(orderId, {'title': title});
+  }
+
+  Future<void> _updateOrderFields(
+    String orderId,
+    Map<String, Object?> fields,
+  ) {
     final ref = orders.doc(orderId);
     return db.runTransaction((transaction) async {
       final snapshot = await transaction.get(ref);
@@ -96,7 +111,7 @@ class UserStore {
         return;
       }
       transaction.update(ref, {
-        'note': note,
+        ...fields,
         'updatedAt': DateTime.now().toUtc().toIso8601String(),
       });
     });
