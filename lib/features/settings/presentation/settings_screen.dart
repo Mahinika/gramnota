@@ -12,6 +12,7 @@ import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../orders/data/orders_providers.dart';
+import '../../updates/presentation/update_section.dart';
 import '../domain/workshop_settings.dart';
 
 class MoreScreen extends ConsumerWidget {
@@ -65,6 +66,9 @@ class MoreScreen extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          const SectionHeading('App'),
+          const UpdateSection(),
           const SizedBox(height: 16),
           const SectionHeading('Workshop'),
           _MoreDestination(
@@ -239,6 +243,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const SectionHeading('App'),
+          const UpdateSection(),
+          const SizedBox(height: 16),
           if (_message != null) Text(_message!),
           TextField(
             controller: _currency,

@@ -24,6 +24,9 @@ if (-not $versionLine) {
 }
 $appVersion = $versionLine.Matches[0].Groups[1].Value
 $appBuild = $versionLine.Matches[0].Groups[2].Value
+if ($env:APP_BUILD -match '^\d+$') {
+  $appBuild = $env:APP_BUILD
+}
 Write-Host "Packaging Gramnota $appVersion+$appBuild"
 
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"

@@ -195,6 +195,7 @@ def main(argv: list[str] | None = None) -> int:
     section.add_argument("--build", required=True)
     section.add_argument("--date", required=True)
     section.add_argument("--sha", required=True)
+    section.add_argument("--out")
 
     prepare = sub.add_parser("prepare")
     prepare.add_argument("--template", required=True)
@@ -241,11 +242,13 @@ def main(argv: list[str] | None = None) -> int:
         print(stockholm_today())
         return 0
     if args.cmd == "section-text":
-        print(
-            section_text(
-                args.platform, args.version, args.build, args.date, args.sha
-            )
+        text = section_text(
+            args.platform, args.version, args.build, args.date, args.sha
         )
+        if args.out:
+            _write(args.out, text + "\n")
+        else:
+            print(text)
         return 0
     if args.cmd == "prepare":
         body = prepare_body(

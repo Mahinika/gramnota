@@ -37,6 +37,8 @@ Direktlänkar, om knapparna inte syns:
 
 Avinstallera senare under Windows-inställningar, Appar.
 
+En installerad app letar efter en ny version ungefär en gång om dagen. Knappen **Sök efter uppdateringar** finns under More och under Settings. Android ber dig bekräfta installationen i systemets egen ruta. På Windows stängs appen, installationsprogrammet körs, och Gramnota öppnas igen.
+
 Zip-filen är samma program utan installation. Packa upp den och kör `gramnota.exe`. Samma SmartScreen-ruta kan visas första gången. Visual C++-biblioteken följer med, så en vanlig Windows 10- eller 11-dator behöver inget extra.
 
 ## Vad du kan göra
@@ -117,6 +119,8 @@ Every push to `master` builds a release APK ([android-apk.yml](.github/workflows
 - https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip
 
 [`.github/scripts/publish_release.sh`](.github/scripts/publish_release.sh) uploads only that job's files, deletes renamed leftovers from the same platform (so a version bump does not leave `Gramnota-Setup-1.0.0.exe` next to `Gramnota-Setup.exe`), and rewrites only that platform's version line. A lock in the release body keeps the two jobs from saving a stale copy over each other when they finish together. You can also start a build from the Actions tab.
+
+Each master build keeps the version name from `pubspec.yaml` (`1.0.0`) and sets the build number from `github.run_number`, so a newer build is detectable. The same publish step writes [`latest.json`](https://github.com/Mahinika/gramnota/releases/download/latest/latest.json) on that release: version, build, commit, date, Swedish notes, the public APK and installer URLs, and a sha256 for each file. The two jobs merge their own platform block and leave the other one in place. The app reads that public URL. There is no download token. A local build can point somewhere else with `--dart-define=UPDATE_MANIFEST_URL=...`.
 
 The APK job needs the repository secrets `GOOGLE_SERVICES_JSON`, `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD`. The Windows job does not read repository secrets: Windows Firebase settings are already in `lib/firebase_options.dart`.
 

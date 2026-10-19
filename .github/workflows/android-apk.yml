@@ -57,7 +57,10 @@ jobs:
           printf '%s\n' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
 
       - run: flutter pub get
-      - run: flutter build apk --release
+      - name: Build release APK
+        run: |
+          name="$(python3 -c 'import re; text=open("pubspec.yaml", encoding="utf-8").read(); match=re.search(r"^version:\s*(\d+\.\d+\.\d+)\+\d+\s*$", text, re.M); print(match.group(1))')"
+          flutter build apk --release --build-name="$name" --build-number="${{ github.run_number }}"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -68,6 +71,7 @@ jobs:
       - name: Publish APK on the latest release
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_BUILD: ${{ github.run_number }}
         run: |
           cp build/app/outputs/flutter-apk/app-release.apk "$RUNNER_TEMP/Gramnota.apk"
           bash .github/scripts/publish_release.sh android "$RUNNER_TEMP/Gramnota.apk"

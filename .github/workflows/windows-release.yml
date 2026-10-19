@@ -65,7 +65,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           flutter pub get
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          flutter build windows --release
+          $versionLine = Select-String -Path pubspec.yaml -Pattern '^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$'
+          if (-not $versionLine) { throw "pubspec.yaml version must look like 1.0.0+1" }
+          $versionName = $versionLine.Matches[0].Groups[1].Value
+          flutter build windows --release --build-name=$versionName --build-number=${{ github.run_number }}
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Save Pub cache
@@ -101,6 +104,8 @@ jobs:
 
       - name: Package installer and portable zip
         shell: pwsh
+        env:
+          APP_BUILD: ${{ github.run_number }}
         run: |
           Set-ExecutionPolicy -Scope Process Bypass
           & "$env:GITHUB_WORKSPACE\windows\installer\package.ps1"
@@ -167,11 +172,13 @@ jobs:
           $desktop = Get-ChildItem -Path $desktopRoots -Filter "Gramnota.lnk" -ErrorAction SilentlyContinue
           if (-not $desktop) { throw "Desktop shortcut was not created" }
           Write-Host "Shortcuts: $($start[0].FullName); $($desktop[0].FullName)"
+          Get-Process gramnota -ErrorAction SilentlyContinue | Stop-Process -Force
 
       - name: Publish on the latest release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_BUILD: ${{ github.run_number }}
         run: |
           if [ -z "$APP_VERSION" ]; then
             echo "APP_VERSION was not set by package.ps1"

@@ -1,4 +1,5 @@
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -115,6 +116,32 @@ class ReleaseNotesTest(unittest.TestCase):
         self.assertIsNotNone(release_notes.extract_section(template, "android"))
         self.assertIsNotNone(release_notes.extract_section(template, "windows"))
         self.assertNotIn("inloggad", template.lower())
+
+    def test_section_text_file_is_utf8(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "section.txt"
+            code = release_notes.main(
+                [
+                    "section-text",
+                    "--platform",
+                    "windows",
+                    "--version",
+                    "1.0.0",
+                    "--build",
+                    "4",
+                    "--date",
+                    "2026-10-19",
+                    "--sha",
+                    "abc1234",
+                    "--out",
+                    str(path),
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertEqual(
+                path.read_text(encoding="utf-8").strip(),
+                "**Windows:** 1.0.0 (build 4) · 2026-10-19 · `abc1234`",
+            )
 
     def test_release_json_body_roundtrip(self) -> None:
         raw = json.dumps({"body": TEMPLATE})

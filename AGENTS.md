@@ -57,7 +57,7 @@ Inbox is the only cross-user write. The payload is a JSON string (`payloadJson`)
 
 Release APKs are signed with the upload keystore in `android/app/upload-keystore.jks` when `android/key.properties` exists. Debug builds keep the debug keystore. Google sign-in on Android accepts only SHA-1 fingerprints registered on the Firebase Android app (`se.gramnota.app`). Both the local debug certificate and the upload certificate must stay registered, and `google-services.json` must list both OAuth Android clients.
 
-GitHub Actions builds on every push to `master`. `.github/workflows/android-apk.yml` publishes `Gramnota.apk` and `.github/workflows/windows-release.yml` publishes `Gramnota-Setup.exe` and `Gramnota-windows.zip`, both on the shared `latest` release. The jobs update that release in place and do not delete each other's files. The older `android` and `windows` releases stay up so existing links keep working; their notes point at `latest`. The APK workflow needs the secrets `GOOGLE_SERVICES_JSON`, `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD`. A new signing key means the installed app must be uninstalled before the new APK can replace it. The repo is public. Do not put keystore material, `google-services.json`, or secret values in the README or the workflows.
+GitHub Actions builds on every push to `master`. `.github/workflows/android-apk.yml` publishes `Gramnota.apk` and `.github/workflows/windows-release.yml` publishes `Gramnota-Setup.exe` and `Gramnota-windows.zip`, both on the shared `latest` release. The jobs update that release in place and do not delete each other's files. The older `android` and `windows` releases stay up so existing links keep working; their notes point at `latest`. CI passes `github.run_number` as the build number and publishes `latest.json` on that same release (public APK and installer URLs plus sha256). The app reads `updateManifestUrl`. The APK workflow needs the secrets `GOOGLE_SERVICES_JSON`, `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD`. A new signing key means the installed app must be uninstalled before the new APK can replace it. The repo is public. Do not put keystore material, `google-services.json`, or secret values in the README or the workflows.
 
 A signed-in user with no settings document, or with `setupCompleted` false, goes to `/workshop-setup` and walks through the workshop profile, one printer, and an optional standard filament spool. A saved document that has no `setupCompleted` field counts as already set up.
 
@@ -97,6 +97,7 @@ The page is an invoice: workshop and bill-to side by side, quote number with iss
 - `test/workshop_setup_test.dart` — setup flag on old settings, `resolveRedirect`, and `setupBypassForUid`
 - `test/customer_quote_view_test.dart` — customer PDF labels
 - `test/customers_menu_card_test.dart` — `TappableListCard`
+- `test/app_update_test.dart` — update manifest, skip-version, and download checksums
 
 Add or update a test when changing the calculator, stock transitions, or an importer.
 
