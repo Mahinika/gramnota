@@ -19,7 +19,7 @@ lib/
   features/<name>/domain|data|presentation
 ```
 
-Features: `pricing`, `orders`, `customers`, `filaments`, `printers`, `settings`, `auth`, `import`, `sharing`.
+Features: `pricing`, `orders`, `customers`, `filaments`, `printers`, `settings`, `auth`, `import`, `sharing`, `catalog`.
 
 Navigation is a `StatefulShellRoute` in `router.dart`: Calculator, Orders, Customers, Filament, More (printers, settings, inbox). `AppShell` uses a navigation rail at width >= 840 and a bottom bar otherwise.
 
@@ -42,7 +42,7 @@ A quote stores each print as a `QuoteLine`. `PriceCalculator` prices one line. `
 `UserStore` is the only Firestore gateway, scoped to the signed-in uid:
 
 - `users/{uid}/settings/main` — `WorkshopSettings`, including `nextQuoteNumber`
-- `users/{uid}/printers|filaments|customers|orders|inbox`
+- `users/{uid}/printers|filaments|customers|orders|products|inbox`
 - `userDirectory/{lowercaseEmail}` — uid lookup so one user can send an item to another
 
 Persisted models are Freezed + `json_serializable`, with `explicit_to_json` in `build.yaml`. Do not hand-edit `*.freezed.dart` or `*.g.dart`. Ids are client UUIDs, except inbox documents created by Firestore. Timestamps are UTC ISO-8601 strings. `UserStore._watch` injects the document id and skips a document that fails to decode.
@@ -61,7 +61,7 @@ GitHub Actions (`.github/workflows/android-apk.yml`) builds a release APK on eve
 
 A signed-in user with no settings document, or with `setupCompleted` false, goes to `/workshop-setup` and walks through the workshop profile, one printer, and an optional standard filament spool. A saved document that has no `setupCompleted` field counts as already set up.
 
-Share-into-app (`receive_sharing_intent`) is Android only. The URL lands in `pendingLinkProvider` for the calculator.
+Share-into-app (`receive_sharing_intent`) is Android only. A URL lands in `pendingLinkProvider` for the calculator. A shared `.gcode` or `.3mf` lands in `pendingSliceProvider` and is scanned the same way as **Import G-code**.
 
 ## Link import
 
@@ -87,9 +87,9 @@ Orders list: search, status chips, and an In progress filter. Filament list: sea
 
 Add or update a test when changing the calculator, stock transitions, or an importer.
 
-## Leave out of this version
+## G-code, duplicate quote, catalog
 
-G-code import, duplicating an order as a new quote, and a saved product catalog.
+`GcodeImport` scans the head and tail of a `.gcode` file (`gcodeHeadBytes` / `gcodeTailBytes`) and the same edges of G-code stored in a `.3mf`. Do not read the whole toolpath into a string. `duplicateAsNewQuote` builds the new quote; `OrderStock.allocateQuoteNumber` assigns the number. It does not copy `stockDeducted`, `deductedGrams`, or `stockWarning`. `pricePrint` / `priceProduct` recompute from the current spool, printer, electricity, and labor. Markup, failure, and VAT stay on the print or product. Products live in `users/{uid}/products`.
 
 ## Skills
 
