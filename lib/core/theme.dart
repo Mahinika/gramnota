@@ -101,6 +101,9 @@ ThemeData buildGramnotaTheme() {
         borderSide: const BorderSide(color: gramnotaGreen, width: 1.6),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      // Narrow fields (grams beside the spool) otherwise ellipsize the error.
+      errorMaxLines: 3,
+      helperMaxLines: 3,
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(

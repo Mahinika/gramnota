@@ -668,7 +668,17 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
                 setState(() => _error = 'Brand, material, weight, and price are required.');
                 return;
               }
-              await store.saveFilament(spool);
+              try {
+                await store.saveFilament(spool);
+              } on Object {
+                if (context.mounted) {
+                  setState(
+                    () => _error =
+                        'Could not save the spool. Check the connection and try again.',
+                  );
+                }
+                return;
+              }
               if (context.mounted) {
                 context.go('/filaments');
               }

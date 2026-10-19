@@ -291,7 +291,17 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                 lifetimeHours: lifetime,
                 maintenanceMinorPerHour: maintenance,
               );
-              await store.savePrinter(printer);
+              try {
+                await store.savePrinter(printer);
+              } on Object {
+                if (context.mounted) {
+                  setState(
+                    () => _error =
+                        'Could not save the printer. Check the connection and try again.',
+                  );
+                }
+                return;
+              }
               if (context.mounted) {
                 context.go('/more/printers');
               }

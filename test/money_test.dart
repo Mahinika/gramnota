@@ -16,6 +16,10 @@ void main() {
     expect(parseMinor(''), isNull);
     expect(parseMinor('-1'), isNull);
     expect(parseMinor('12.5.0'), isNull);
+    expect(parseMinor('12😀'), isNull);
+    expect(parseMinor('999999999999'), 99999999999900);
+    expect(parseMinor('1000000000000'), isNull);
+    expect(parseMinor('9' * 40), isNull);
   });
 
   test('parses percents into basis points', () {

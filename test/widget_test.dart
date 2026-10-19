@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gramnota/core/format.dart';
+import 'package:gramnota/core/theme.dart';
 import 'package:gramnota/features/pricing/domain/price_breakdown.dart';
 import 'package:gramnota/features/pricing/presentation/breakdown_card.dart';
 
@@ -66,5 +67,17 @@ void main() {
 
     expect(find.text('Total'), findsOneWidget);
     expect(find.textContaining('per unit'), findsNothing);
+  });
+
+  testWidgets('primary buttons are at least 48 pixels tall', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildGramnotaTheme(),
+        home: Scaffold(
+          body: FilledButton(onPressed: () {}, child: const Text('Start')),
+        ),
+      ),
+    );
+    expect(tester.getSize(find.byType(FilledButton)).height, greaterThanOrEqualTo(48));
   });
 }

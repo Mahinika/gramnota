@@ -694,6 +694,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       if (mounted) {
         context.go('/orders/${order.id}');
       }
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _importNote =
+              'Could not save the quote. Check the connection and try again.',
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -761,7 +768,17 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       id: existing.isEmpty ? const Uuid().v4() : existing,
       now: DateTime.now().toUtc(),
     );
-    await store.saveProduct(product);
+    try {
+      await store.saveProduct(product);
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _importNote =
+              'Could not save the product. Check the connection and try again.',
+        );
+      }
+      return;
+    }
     if (mounted) {
       setState(() {
         _productId = product.id;
@@ -1067,6 +1084,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       if (mounted) {
         context.go('/orders/${order.id}');
       }
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _importNote =
+              'Could not save the quote. Check the connection and try again.',
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -1126,6 +1150,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       await store.saveOrder(updated);
       if (mounted) {
         context.go('/orders/${updated.id}');
+      }
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _importNote =
+              'Could not save the print. Check the connection and try again.',
+        );
       }
     } finally {
       if (mounted) {
