@@ -181,6 +181,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             controller: _currency,
             decoration: const InputDecoration(labelText: 'Currency'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _electricity,
             decoration: const InputDecoration(
@@ -188,16 +189,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _labor,
             decoration: const InputDecoration(labelText: 'Labor per hour'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _markup,
             decoration: const InputDecoration(labelText: 'Default markup %'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _vat,
             decoration: const InputDecoration(
@@ -205,11 +209,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _failure,
             decoration: const InputDecoration(labelText: 'Default failure %'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _validity,
             decoration: const InputDecoration(labelText: 'Quote validity days'),
@@ -220,30 +226,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'Business profile',
             style: Theme.of(context).textTheme.titleMedium,
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _business,
             decoration: const InputDecoration(labelText: 'Name'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _street,
             decoration: const InputDecoration(labelText: 'Street'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _postal,
             decoration: const InputDecoration(labelText: 'Postal code'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _city,
             decoration: const InputDecoration(labelText: 'City'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _org,
             decoration: const InputDecoration(labelText: 'Org. number'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _phone,
             decoration: const InputDecoration(labelText: 'Phone'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _email,
             decoration: const InputDecoration(labelText: 'Email'),
