@@ -1,0 +1,13 @@
+{
+  "name": "gramnota-firestore-rules-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-gramnota-rules --config ../../firebase.json \"node --test rules.test.js\""
+  },
+  "dependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.0.0",
+    "firebase-tools": "^14.20.0"
+  }
+}

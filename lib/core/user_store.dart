@@ -181,8 +181,6 @@ class UserStore {
     });
   }
 
-  Stream<List<InboxItem>> watchInbox() => _watch(inbox, InboxItem.fromJson);
-
   Future<void> deleteInboxItem(String id) => inbox.doc(id).delete();
 
   Future<void> deleteOwnedData({required String? email}) async {
@@ -236,11 +234,10 @@ class UserStore {
     if (key.isEmpty) {
       return Future.value();
     }
-    return directory.doc(key).set({
-      'uid': uid,
-      'displayName': displayName,
-      'email': key,
-    });
+    // uid and display name only. The email is the document id, not a field.
+    return directory.doc(key).set(
+      directoryEntryData(uid: uid, displayName: displayName),
+    );
   }
 
   Future<DirectoryEntry?> findUserByEmail(String email) async {
@@ -267,23 +264,47 @@ class UserStore {
     required Map<String, dynamic> payload,
     required String senderName,
     required String senderEmail,
-  }) {
+  }) async {
+    final payloadJson = jsonEncode(payload);
+    if (payloadJson.length > inboxPayloadMaxChars) {
+      throw const InboxPayloadTooLarge();
+    }
     final doc = db
         .collection('users')
         .doc(recipientUid)
         .collection('inbox')
         .doc();
-    return doc.set(
-      InboxItem(
-        id: doc.id,
-        type: type,
-        payloadJson: jsonEncode(payload),
-        senderUid: uid,
-        senderName: senderName,
-        senderEmail: senderEmail,
-        createdAt: DateTime.now().toUtc().toIso8601String(),
-      ).toJson(),
-    );
+    // createdAt has to be the server time. senderEmail has to be the
+    // Firebase Auth email, not a lowercased copy.
+    await doc.set({
+      'type': type.name,
+      'payloadJson': payloadJson,
+      'senderUid': uid,
+      'senderName': _bounded(senderName, inboxSenderNameMax),
+      'senderEmail': senderEmail,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<List<InboxItem>> watchInbox() {
+    return inbox.snapshots().map((snapshot) {
+      final items = <InboxItem>[];
+      for (final doc in snapshot.docs) {
+        try {
+          final data = doc.data();
+          items.add(
+            InboxItem.fromJson({
+              ...data,
+              'id': doc.id,
+              'createdAt': inboxCreatedAtText(data['createdAt']),
+            }),
+          );
+        } on Object {
+          // Skip a document the app can no longer read.
+        }
+      }
+      return items;
+    });
   }
 
   Stream<List<T>> _watch<T>(
@@ -314,4 +335,43 @@ class DirectoryEntry {
   final String uid;
   final String email;
   final String displayName;
+}
+
+/// Same caps as firestore.rules.
+const directoryDisplayNameMax = 320;
+const inboxSenderNameMax = 320;
+const inboxPayloadMaxChars = 100000;
+
+/// Directory rows store the uid and a display name. The email is the id.
+Map<String, String> directoryEntryData({
+  required String uid,
+  required String displayName,
+}) {
+  return {
+    'uid': uid,
+    'displayName': _bounded(displayName, directoryDisplayNameMax),
+  };
+}
+
+String _bounded(String value, int max) {
+  final trimmed = value.trim();
+  if (trimmed.length <= max) {
+    return trimmed;
+  }
+  return trimmed.substring(0, max);
+}
+
+/// Inbox writes use a server timestamp. Older items stored an ISO-8601 string.
+String inboxCreatedAtText(Object? value) {
+  if (value is Timestamp) {
+    return value.toDate().toUtc().toIso8601String();
+  }
+  if (value is String) {
+    return value;
+  }
+  return '';
+}
+
+class InboxPayloadTooLarge implements Exception {
+  const InboxPayloadTooLarge();
 }

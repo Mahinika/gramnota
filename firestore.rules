@@ -1,32 +1,154 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // userDirectory/{lowercase email}
+    //   uid: string, the signed-in user (required)
+    //   displayName: string, at most 320 characters (required)
+    //   email: string, optional, and only when it equals the document id.
+    //     The released app still writes it. New clients omit it.
+    //   get: any signed-in user, one document. list and queries: denied.
+    //
+    // users/{uid}/settings|printers|filaments|customers|orders|products/{id}
+    //   Owner read and write, including products. Same checks on every
+    //   collection. Key count and free-text / list sizes are capped.
+    //   Create and update both run validOwnedDocument.
+    //
+    // users/{uid}
+    //   Owner get and delete only (account deletion removes the parent doc).
+    //
+    // users/{uid}/inbox/{itemId}
+    //   Owner read and delete. No updates.
+    //   Another verified user may create one item when their userDirectory
+    //   row exists, senderUid and senderEmail match their token, the field
+    //   set is the whitelist, and createdAt is request.time.
+
     function signedIn() {
       return request.auth != null;
     }
 
-    match /userDirectory/{email} {
-      allow read: if signedIn();
-      allow create, update: if signedIn()
+    function emailVerified() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email is string
+        && request.auth.token.email.size() > 0
+        && request.auth.token.email.size() <= 320;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function optionalText(field, maxLen) {
+      return !(field in request.resource.data)
+        || (
+          request.resource.data[field] is string
+          && request.resource.data[field].size() <= maxLen
+        );
+    }
+
+    function optionalList(field, maxLen) {
+      return !(field in request.resource.data)
+        || (
+          request.resource.data[field] is list
+          && request.resource.data[field].size() <= maxLen
+        );
+    }
+
+    function optionalMap(field, maxLen) {
+      return !(field in request.resource.data)
+        || (
+          request.resource.data[field] is map
+          && request.resource.data[field].size() <= maxLen
+        );
+    }
+
+    // Used for both create and update. Absent fields stay valid so an older
+    // document can still be saved. Present free-text and list fields are capped.
+    function validOwnedDocument() {
+      return request.resource.data.keys().size() >= 1
+        && request.resource.data.keys().size() <= 80
+        && optionalText('id', 128)
+        && optionalText('title', 2000)
+        && optionalText('name', 500)
+        && optionalText('businessName', 300)
+        && optionalText('brand', 200)
+        && optionalText('material', 200)
+        && optionalText('colorHex', 32)
+        && optionalText('note', 20000)
+        && optionalText('notes', 20000)
+        && optionalText('stockWarning', 2000)
+        && optionalText('sourceUrl', 4000)
+        && optionalText('sourceModelTitle', 500)
+        && optionalText('sourceProfileTitle', 500)
+        && optionalText('email', 320)
+        && optionalText('phone', 80)
+        && optionalText('street', 300)
+        && optionalText('city', 200)
+        && optionalText('country', 200)
+        && optionalText('postalCode', 32)
+        && optionalText('orgNumber', 64)
+        && optionalText('currencyCode', 8)
+        && optionalText('status', 32)
+        && optionalText('customerId', 128)
+        && optionalText('printerId', 128)
+        && optionalText('validUntil', 40)
+        && optionalText('depositAt', 40)
+        && optionalText('revenueAt', 40)
+        && optionalText('createdAt', 40)
+        && optionalText('updatedAt', 40)
+        && optionalList('lines', 200)
+        && optionalList('filaments', 100)
+        && optionalList('extras', 100)
+        && optionalMap('breakdown', 40)
+        && optionalMap('deductedGrams', 100);
+    }
+
+    function isWorkshopCollection(collection) {
+      return collection in [
+        'settings',
+        'printers',
+        'filaments',
+        'customers',
+        'orders',
+        'products'
+      ];
+    }
+
+    function validDirectory(emailId) {
+      return emailVerified()
+        && emailId == request.auth.token.email.lower()
+        && emailId.size() <= 320
+        && request.resource.data.keys().hasOnly(['uid', 'displayName', 'email'])
+        && request.resource.data.keys().hasAll(['uid', 'displayName'])
+        && request.resource.data.uid is string
         && request.resource.data.uid == request.auth.uid
-        && email == request.auth.token.email.lower();
-      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+        && request.resource.data.uid.size() > 0
+        && request.resource.data.uid.size() <= 128
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 320
+        && (
+          !request.resource.data.keys().hasAny(['email'])
+          || (
+            request.resource.data.email is string
+            && request.resource.data.email == emailId
+          )
+        );
     }
 
-    // Owned workshop data: settings, printers, filaments, customers, orders,
-    // products (saved print catalog), and inbox. Another user cannot read it.
-    match /users/{uid}/{document=**} {
-      allow read, write: if signedIn() && request.auth.uid == uid;
-    }
-
-    match /users/{uid}/products/{productId} {
-      allow read, write: if signedIn() && request.auth.uid == uid;
-    }
-
-    match /users/{uid}/inbox/{itemId} {
-      allow create: if signedIn()
+    function validInboxCreate(uid, itemId) {
+      return emailVerified()
         && request.auth.uid != uid
-        && request.resource.data.senderUid == request.auth.uid
+        && itemId.size() > 0
+        && itemId.size() <= 128
+        && request.resource.data.keys().hasOnly([
+          'type',
+          'payloadJson',
+          'senderUid',
+          'senderName',
+          'senderEmail',
+          'createdAt',
+          'id'
+        ])
         && request.resource.data.keys().hasAll([
           'type',
           'payloadJson',
@@ -34,7 +156,61 @@ service cloud.firestore {
           'senderName',
           'senderEmail',
           'createdAt'
-        ]);
+        ])
+        && request.resource.data.type is string
+        && request.resource.data.type in [
+          'filament',
+          'customer',
+          'printer',
+          'order'
+        ]
+        && request.resource.data.payloadJson is string
+        && request.resource.data.payloadJson.size() >= 2
+        && request.resource.data.payloadJson.size() <= 100000
+        && request.resource.data.payloadJson.matches('^\\{.*\\}$')
+        && request.resource.data.senderUid is string
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.senderUid.size() <= 128
+        && request.resource.data.senderName is string
+        && request.resource.data.senderName.size() <= 320
+        && request.resource.data.senderEmail is string
+        && request.resource.data.senderEmail == request.auth.token.email
+        && request.resource.data.createdAt == request.time
+        && (
+          !request.resource.data.keys().hasAny(['id'])
+          || (
+            request.resource.data.id is string
+            && request.resource.data.id == itemId
+          )
+        )
+        && exists(/databases/$(database)/documents/userDirectory/$(request.auth.token.email.lower()))
+        && get(/databases/$(database)/documents/userDirectory/$(request.auth.token.email.lower())).data.uid == request.auth.uid;
+    }
+
+    match /userDirectory/{emailId} {
+      allow get: if signedIn();
+      allow create, update: if validDirectory(emailId);
+      allow delete: if emailVerified()
+        && resource.data.uid == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow get, delete: if isOwner(uid);
+    }
+
+    // One owner rule for every workshop collection, products included, so a
+    // second products match cannot drift looser or tighter.
+    match /users/{uid}/{collection}/{docId} {
+      allow read: if isOwner(uid) && isWorkshopCollection(collection);
+      allow create, update: if isOwner(uid)
+        && isWorkshopCollection(collection)
+        && validOwnedDocument();
+      allow delete: if isOwner(uid) && isWorkshopCollection(collection);
+    }
+
+    match /users/{uid}/inbox/{itemId} {
+      allow read, delete: if isOwner(uid);
+      allow create: if validInboxCreate(uid, itemId);
     }
   }
 }

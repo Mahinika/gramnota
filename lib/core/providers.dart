@@ -171,6 +171,11 @@ Future<void> signInWithEmulatorTester() async {
       password: emulatorTesterPassword,
     );
   }
+  final tester = credential.user;
+  if (tester != null) {
+    await markEmulatorEmailVerified(tester.uid);
+    await tester.getIdToken(true);
+  }
   await _rememberSignedInUser(credential.user);
 }
 

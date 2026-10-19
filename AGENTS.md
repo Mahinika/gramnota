@@ -6,6 +6,7 @@ Flutter app that quotes a sale price for a 3D print. Package name `gramnota`. Sa
 
 - Analyze: `flutter analyze`
 - Test: `flutter test`
+- Firestore rules: `npm test` in `test/firestore_rules`
 - Run: `flutter run -d android` or `flutter run -d windows`
 - After editing a Freezed or JSON model: `dart run build_runner build --delete-conflicting-outputs`
 - Firestore rules live in `firestore.rules`. Ask before `firebase deploy`.
@@ -43,13 +44,13 @@ A quote stores each print as a `QuoteLine`. `PriceCalculator` prices one line. `
 
 - `users/{uid}/settings/main` — `WorkshopSettings`, including `nextQuoteNumber`
 - `users/{uid}/printers|filaments|customers|orders|products|inbox`
-- `userDirectory/{lowercaseEmail}` — uid lookup so one user can send an item to another
+- `userDirectory/{lowercaseEmail}` — uid lookup so one user can send an item to another. The document stores `uid` and `displayName` only. Rules allow a single-document get, not a collection query.
 
 Persisted models are Freezed + `json_serializable`, with `explicit_to_json` in `build.yaml`. Do not hand-edit `*.freezed.dart` or `*.g.dart`. Ids are client UUIDs, except inbox documents created by Firestore. Timestamps are UTC ISO-8601 strings. `UserStore._watch` injects the document id and skips a document that fails to decode.
 
 `OrderStock.allocateQuoteNumber` increments `nextQuoteNumber` in a transaction. Stock moves only when status enters or leaves `printed` / `paid` (`statusHoldsStock`). Printed and Paid both hold stock, so moving between them does not deduct again. Leaving them returns `deductedGrams`. A short spool still deducts what remains and stores `stockWarning` plus `deductedGrams` on the order. `revenueAt` is stamped the first time stock is taken and cleared when stock comes back. Older `delivered` documents decode as `paid`. `depositMinor` is an optional amount already paid.
 
-Inbox is the only cross-user write. The payload is a JSON string (`payloadJson`), not a nested map. Keep `firestore.rules` in step with any new field the create rule requires.
+Inbox is the only cross-user write. The payload is a JSON string (`payloadJson`), not a nested map. `createdAt` is a server timestamp. The sender's email must match the verified auth token, and the sender must already have a `userDirectory` row. Keep `firestore.rules` in step with any new field the create rule requires. Do not enforce App Check: Flutter Windows has no provider, and enforcement would reject that app.
 
 ## Auth and platforms
 
@@ -98,6 +99,8 @@ The page is an invoice: workshop and bill-to side by side, quote number with iss
 - `test/customer_quote_view_test.dart` — customer PDF labels
 - `test/customers_menu_card_test.dart` — `TappableListCard`
 - `test/app_update_test.dart` — update manifest, skip-version, and download checksums
+- `test/inbox_share_test.dart` — directory shape and inbox timestamp decoding
+- `test/firestore_rules/` — security rules on the Firestore emulator
 
 Add or update a test when changing the calculator, stock transitions, or an importer.
 
