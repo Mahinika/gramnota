@@ -4,11 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/format.dart';
+import '../../../core/app_language_controller.dart';
+import '../../../core/app_languages.dart';
+import '../../../core/currencies.dart';
+import '../../../core/locale_pickers.dart';
 import '../../../core/money.dart';
 import '../../../core/gate_scaffold.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
+import '../../../l10n/l10n.dart';
 import '../../orders/data/orders_providers.dart';
 import '../../filaments/domain/common_spools.dart';
 import '../../filaments/domain/filament_spool.dart';
@@ -100,7 +104,6 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
   final _markup = TextEditingController(text: '30');
   final _failure = TextEditingController(text: '0');
   final _vat = TextEditingController(text: '25');
-  final _currency = TextEditingController(text: 'SEK');
   final _validity = TextEditingController(text: '14');
   final _printerQuery = TextEditingController();
   final _printerName = TextEditingController();
@@ -111,6 +114,8 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
   final _spoolQuery = TextEditingController();
 
   CommonSpool? _selectedSpool;
+  var _currencyCode = defaultCurrencyCode;
+  var _languageCode = defaultLanguageCode;
   var _step = 0;
   var _saving = false;
   String? _error;
@@ -139,7 +144,6 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
       _markup,
       _failure,
       _vat,
-      _currency,
       _validity,
       _printerQuery,
       _printerName,
@@ -173,53 +177,49 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
     switch (_step) {
       case 1:
         if (_business.text.trim().isEmpty) {
-          return 'Enter the name that should appear on quotes.';
+          return context.l10n.setupNameRequired;
         }
         return null;
       case 2:
         if (parseMinor(_electricity.text) == null) {
-          return 'Enter the electricity price. Use 0 if you do not charge for power.';
+          return context.l10n.settingsElectricityRequired;
         }
         return null;
       case 3:
         if (parseMinor(_labor.text) == null) {
-          return 'Enter the labor rate. Use 0 if you do not charge for labor.';
+          return context.l10n.settingsLaborRequired;
         }
         return null;
       case 4:
         if (parseBasisPoints(_markup.text) == null ||
             parseBasisPoints(_failure.text) == null ||
             parseBasisPoints(_vat.text) == null) {
-          return 'Markup, failure, and VAT must be numbers.';
+          return context.l10n.setupRatesRequired;
         }
         return null;
       case 5:
-        final code = _currency.text.trim().toUpperCase();
-        if (!RegExp(r'^[A-Z]{3}$').hasMatch(code)) {
-          return 'Enter a 3-letter currency code, such as SEK.';
-        }
         final days = parsePositiveInt(_validity.text);
         if (days == null || days < 1) {
-          return 'Enter how many days a quote stays valid.';
+          return context.l10n.settingsValidityRequired;
         }
         return null;
       case 6:
         if (_printerName.text.trim().isEmpty) {
-          return 'Choose or name the printer you price with.';
+          return context.l10n.setupPrinterRequired;
         }
         final watts = parsePositiveInt(_watts.text);
         if (watts == null || watts <= 0) {
-          return 'Enter the average power in watts.';
+          return context.l10n.setupWattsRequired;
         }
         if (parseMinor(_price.text) == null) {
-          return 'Enter the purchase price. Use 0 if you do not count machine wear.';
+          return context.l10n.setupPriceRequired;
         }
         final life = parseNonNegativeDouble(_life.text);
         if (life == null) {
-          return 'Enter the lifetime in hours. Use 0 if you do not charge for machine wear.';
+          return context.l10n.setupLifeRequired;
         }
         if (parseMinor(_maintenance.text) == null) {
-          return 'Enter maintenance per hour. Use 0 if you have none.';
+          return context.l10n.setupMaintenanceRequired;
         }
         return null;
       default:
@@ -258,12 +258,15 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
       final settings = skipped
           ? WorkshopSettings(
               setupCompleted: true,
+              languageCode: _languageCode,
+              currencyCode: _currencyCode,
               nextQuoteNumber: nextQuote,
               email: _email.text.trim(),
             )
           : WorkshopSettings(
               setupCompleted: true,
-              currencyCode: _currency.text.trim().toUpperCase(),
+              languageCode: _languageCode,
+              currencyCode: normalizeCurrencyCode(_currencyCode),
               electricityMinorPerKwh: parseMinor(_electricity.text) ?? 0,
               laborMinorPerHour: parseMinor(_labor.text) ?? 0,
               defaultMarkupBasisPoints: parseBasisPoints(_markup.text) ?? 3000,
@@ -280,6 +283,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
               quoteValidityDays: parsePositiveInt(_validity.text) ?? 14,
             );
       await store.saveSettings(settings);
+      await ref.read(appLanguageProvider.notifier).setLanguage(_languageCode);
       if (!skipped) {
         await store.savePrinter(
           PrinterProfile(
@@ -321,27 +325,26 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
     }
   }
 
-  String get _title {
+  String _title(AppLocalizations l10n) {
     return switch (_step) {
-      0 => 'Set up your workshop',
-      1 => 'Business profile',
-      2 => 'Electricity',
-      3 => 'Labor',
-      4 => 'Markup, failure, and VAT',
-      5 => 'Quotes',
-      6 => 'Printer',
-      7 => 'Filament spool',
-      _ => 'Review',
+      0 => l10n.setupTitle,
+      1 => l10n.settingsBusinessProfile,
+      2 => l10n.setupElectricityTitle,
+      3 => l10n.setupLaborTitle,
+      4 => l10n.setupRatesTitle,
+      5 => l10n.setupQuotesTitle,
+      6 => l10n.setupPrinterTitle,
+      7 => l10n.setupSpoolTitle,
+      _ => l10n.setupReviewTitle,
     };
   }
 
   @override
   Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
+    final l10n = context.l10n;
     if (store == null) {
-      return const Scaffold(
-        body: EmptyView(message: 'Sign in to set up your workshop.'),
-      );
+      return Scaffold(body: EmptyView(message: l10n.setupSignIn));
     }
     final nextQuote =
         ref.watch(settingsProvider(store)).asData?.value.nextQuoteNumber ?? 1;
@@ -359,7 +362,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text(_title),
+          title: Text(_title(l10n)),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(4),
             child: LinearProgressIndicator(value: (_step + 1) / _stepCount),
@@ -376,7 +379,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
                     padding: const EdgeInsets.all(16),
                     children: [
                       Text(
-                        'Step ${_step + 1} of $_stepCount',
+                        l10n.setupStep(_step + 1, _stepCount),
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       const SizedBox(height: 12),
@@ -400,7 +403,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
                       if (_step == 0)
                         TextButton(
                           onPressed: _saving ? null : () => _save(skipped: true),
-                          child: const Text('Skip for now'),
+                          child: Text(l10n.setupSkip),
                         )
                       else
                         TextButton(
@@ -410,19 +413,19 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
                                   _error = null;
                                   _step -= 1;
                                 }),
-                          child: const Text('Back'),
+                          child: Text(l10n.setupBack),
                         ),
                       const Spacer(),
                       FilledButton(
                         onPressed: _saving ? null : _next,
                         child: Text(
                           _saving
-                              ? 'Saving…'
+                              ? l10n.saving
                               : _step == _stepCount - 1
-                              ? 'Save and start'
+                              ? l10n.setupSaveStart
                               : _step == 0
-                              ? 'Start'
-                              : 'Next',
+                              ? l10n.setupStart
+                              : l10n.setupNext,
                         ),
                       ),
                     ],
@@ -437,124 +440,117 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
   }
 
   List<Widget> _stepBody(int nextQuote) {
+    final l10n = context.l10n;
     switch (_step) {
       case 0:
-        return const [
-          Text(
-            'Quotes use your printer, your electricity price, and your labor rate. This setup asks for each of those once. You can change every answer later in Settings.',
-          ),
-          SizedBox(height: 12),
-          Text(
-            'Skip keeps electricity and labor at zero, with 30% markup and 25% VAT, until you fill them in.',
-          ),
+        return [
+          Text(l10n.setupIntro),
+          const SizedBox(height: 12),
+          Text(l10n.setupSkipHint),
         ];
       case 1:
         return [
-          const Text('This name and address appear on the quote PDF.'),
+          Text(l10n.setupProfileHint),
           const SizedBox(height: 12),
           TextField(
             controller: _business,
-            decoration: const InputDecoration(labelText: 'Business name'),
+            decoration: InputDecoration(labelText: l10n.setupBusinessName),
             textCapitalization: TextCapitalization.words,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _street,
-            decoration: const InputDecoration(labelText: 'Street'),
+            decoration: InputDecoration(labelText: l10n.fieldStreet),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _postal,
-            decoration: const InputDecoration(labelText: 'Postal code'),
+            decoration: InputDecoration(labelText: l10n.fieldPostalCode),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _city,
-            decoration: const InputDecoration(labelText: 'City'),
+            decoration: InputDecoration(labelText: l10n.fieldCity),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _org,
-            decoration: const InputDecoration(labelText: 'Org. number'),
+            decoration: InputDecoration(labelText: l10n.fieldOrgNumber),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _phone,
-            decoration: const InputDecoration(labelText: 'Phone'),
+            decoration: InputDecoration(labelText: l10n.fieldPhone),
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _email,
-            decoration: const InputDecoration(labelText: 'Email'),
+            decoration: InputDecoration(labelText: l10n.fieldEmail),
             keyboardType: TextInputType.emailAddress,
           ),
         ];
       case 2:
         return [
-          const Text(
-            'Gramnota multiplies printer watts by the print time and this price. A 100 W printer running for one hour uses 0.1 kWh.',
-          ),
+          Text(l10n.setupElectricityHint),
           const SizedBox(height: 12),
           TextField(
             controller: _electricity,
-            decoration: const InputDecoration(
-              labelText: 'Electricity price per kWh',
-            ),
+            decoration: InputDecoration(labelText: l10n.settingsElectricity),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
         ];
       case 3:
         return [
-          const Text(
-            'Prep and finishing time on each quote is multiplied by this hourly rate.',
-          ),
+          Text(l10n.setupLaborHint),
           const SizedBox(height: 12),
           TextField(
             controller: _labor,
-            decoration: const InputDecoration(labelText: 'Labor per hour'),
+            decoration: InputDecoration(labelText: l10n.settingsLabor),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
         ];
       case 4:
         return [
-          const Text(
-            'Markup is added on top of the full cost. Failure is a percent of material, electricity, and machine wear. VAT is added on the net price. Enter 0 for VAT if you are not registered.',
-          ),
+          Text(l10n.setupRatesHint),
           const SizedBox(height: 12),
           TextField(
             controller: _markup,
-            decoration: const InputDecoration(labelText: 'Default markup %'),
+            decoration: InputDecoration(labelText: l10n.settingsMarkup),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _failure,
-            decoration: const InputDecoration(labelText: 'Default failure %'),
+            decoration: InputDecoration(labelText: l10n.settingsFailure),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _vat,
-            decoration: const InputDecoration(labelText: 'VAT %'),
+            decoration: InputDecoration(labelText: l10n.setupVat),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
         ];
       case 5:
         return [
-          Text(
-            'Currency is shown on quotes. A quote stays valid for the number of days below. The next quote number is $nextQuote.',
+          Text(l10n.setupQuotesHint(nextQuote)),
+          const SizedBox(height: 12),
+          LanguageMenu(
+            languageCode: _languageCode,
+            onChanged: (code) => setState(() => _languageCode = code),
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: _currency,
-            decoration: const InputDecoration(labelText: 'Currency'),
-            textCapitalization: TextCapitalization.characters,
+          CurrencyField(
+            currencyCode: _currencyCode,
+            onChanged: (code) => setState(() => _currencyCode = code),
           ),
+          const SizedBox(height: 8),
+          Text(l10n.currencyChangedHint),
           const SizedBox(height: 12),
           TextField(
             controller: _validity,
-            decoration: const InputDecoration(labelText: 'Quote validity days'),
+            decoration: InputDecoration(labelText: l10n.settingsValidityDays),
             keyboardType: TextInputType.number,
           ),
         ];
@@ -565,29 +561,30 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             ? _printerName.text
             : null;
         return [
-          const Text(
-            'Pick a common machine or type your own. The price should be what you paid. Power is the average while printing, not the power supply rating.',
-          ),
+          Text(l10n.setupPrinterHint),
           const SizedBox(height: 12),
           TextField(
             controller: _printerQuery,
-            decoration: const InputDecoration(labelText: 'Find a printer'),
+            decoration: InputDecoration(labelText: l10n.setupFindPrinter),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),
           if (matches.isEmpty)
-            const Text('No printer with that name.')
+            Text(l10n.setupNoPrinterMatch)
           else
             DropdownButtonFormField<String>(
               key: ValueKey(_printerQuery.text.trim().toLowerCase()),
               isExpanded: true,
               initialValue: selected,
-              decoration: const InputDecoration(labelText: 'Common printer'),
+              decoration: InputDecoration(labelText: l10n.setupCommonPrinter),
               items: [
                 for (final printer in matches)
                   DropdownMenuItem(
                     value: printer.name,
-                    child: Text('${printer.name} · ${printer.powerWatts} W'),
+                    child: Text(
+                      l10n.setupPrinterWatts(printer.name, printer.powerWatts),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
               onChanged: (name) {
@@ -609,35 +606,33 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             ),
           TextField(
             controller: _printerName,
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: InputDecoration(labelText: l10n.fieldName),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _watts,
-            decoration: const InputDecoration(labelText: 'Power W'),
+            decoration: InputDecoration(labelText: l10n.setupPower),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _price,
-            decoration: const InputDecoration(labelText: 'Purchase price'),
+            decoration: InputDecoration(labelText: l10n.setupPurchasePrice),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _life,
-            decoration: const InputDecoration(
-              labelText: 'Lifetime hours',
-              helperText: 'Use 0 if you do not charge for machine wear.',
+            decoration: InputDecoration(
+              labelText: l10n.setupLifetime,
+              helperText: l10n.setupLifetimeHelp,
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _maintenance,
-            decoration: const InputDecoration(
-              labelText: 'Maintenance per hour',
-            ),
+            decoration: InputDecoration(labelText: l10n.setupMaintenance),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
         ];
@@ -645,18 +640,16 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
         final spoolMatches = _matchingSpools();
         final selectedLabel = _selectedSpool?.label;
         return [
-          const Text(
-            'Pick a standard spool for pricing. You can add more spools later from the Filament tab.',
-          ),
+          Text(l10n.setupSpoolHint),
           const SizedBox(height: 12),
           TextField(
             controller: _spoolQuery,
-            decoration: const InputDecoration(labelText: 'Find a spool'),
+            decoration: InputDecoration(labelText: l10n.setupFindSpool),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 8),
           if (spoolMatches.isEmpty)
-            const Text('No standard spool with that name.')
+            Text(l10n.setupNoSpoolMatch)
           else
             DropdownButtonFormField<String>(
               key: ValueKey(_spoolQuery.text.trim().toLowerCase()),
@@ -664,7 +657,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
               initialValue: spoolMatches.any((item) => item.label == selectedLabel)
                   ? selectedLabel
                   : null,
-              decoration: const InputDecoration(labelText: 'Standard spool'),
+              decoration: InputDecoration(labelText: l10n.setupStandardSpool),
               items: [
                 for (final preset in spoolMatches)
                   DropdownMenuItem(
@@ -688,61 +681,75 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             const SizedBox(height: 8),
             Text(
               _selectedSpool!.pricePerSpoolMinor == 0
-                  ? 'You can set the spool price on the Filament tab after setup.'
-                  : 'Indicative price ${formatMoney(_selectedSpool!.pricePerSpoolMinor, _currency.text.trim().toUpperCase())}.',
+                  ? l10n.setupSpoolPriceLater
+                  : l10n.setupSpoolPrice(
+                      context.money(
+                        _selectedSpool!.pricePerSpoolMinor,
+                        _currencyCode,
+                      ),
+                    ),
             ),
           ],
         ];
       default:
-        final currency = _currency.text.trim().toUpperCase();
+        final currency = normalizeCurrencyCode(_currencyCode);
         return [
           Text(
             _selectedSpool == null
-                ? 'Save these answers, then add a filament spool from the Filament tab before you price a print.'
-                : 'Save these answers, then open the calculator to price your first print.',
+                ? l10n.setupReviewNeedSpool
+                : l10n.setupReviewReady,
           ),
           const SizedBox(height: 12),
-          _ReviewRow('Business', _business.text.trim()),
-          _ReviewRow('Street', _street.text.trim()),
+          _ReviewRow(l10n.setupBusiness, _business.text.trim()),
+          _ReviewRow(l10n.fieldStreet, _street.text.trim()),
           _ReviewRow(
-            'City',
+            l10n.fieldCity,
             '${_postal.text.trim()} ${_city.text.trim()}'.trim(),
           ),
-          _ReviewRow('Org. number', _org.text.trim()),
-          _ReviewRow('Phone', _phone.text.trim()),
-          _ReviewRow('Email', _email.text.trim()),
+          _ReviewRow(l10n.fieldOrgNumber, _org.text.trim()),
+          _ReviewRow(l10n.fieldPhone, _phone.text.trim()),
+          _ReviewRow(l10n.fieldEmail, _email.text.trim()),
           _ReviewRow(
-            'Electricity',
-            formatMoney(parseMinor(_electricity.text) ?? 0, currency),
+            l10n.setupElectricity,
+            context.money(parseMinor(_electricity.text) ?? 0, currency),
           ),
           _ReviewRow(
-            'Labor',
-            formatMoney(parseMinor(_labor.text) ?? 0, currency),
+            l10n.setupLabor,
+            context.money(parseMinor(_labor.text) ?? 0, currency),
           ),
           _ReviewRow(
-            'Markup',
-            formatPercent(parseBasisPoints(_markup.text) ?? 0),
+            l10n.setupMarkup,
+            context.percentText(parseBasisPoints(_markup.text) ?? 0),
           ),
           _ReviewRow(
-            'Failure',
-            formatPercent(parseBasisPoints(_failure.text) ?? 0),
+            l10n.setupFailure,
+            context.percentText(parseBasisPoints(_failure.text) ?? 0),
           ),
-          _ReviewRow('VAT', formatPercent(parseBasisPoints(_vat.text) ?? 0)),
-          _ReviewRow('Currency', currency),
-          _ReviewRow('Quote validity', '${_validity.text.trim()} days'),
-          _ReviewRow('Next quote', '$nextQuote'),
-          _ReviewRow('Printer', _printerName.text.trim()),
-          _ReviewRow('Power', '${_watts.text.trim()} W'),
           _ReviewRow(
-            'Purchase price',
-            formatMoney(parseMinor(_price.text) ?? 0, currency),
+            l10n.setupVatShort,
+            context.percentText(parseBasisPoints(_vat.text) ?? 0),
           ),
-          _ReviewRow('Lifetime', '${_life.text.trim()} h'),
+          _ReviewRow(l10n.currencyLabel, currency),
           _ReviewRow(
-            'Maintenance',
-            formatMoney(parseMinor(_maintenance.text) ?? 0, currency),
+            l10n.settingsValidityDays,
+            l10n.setupValidityValue(_validity.text.trim()),
           ),
-          _ReviewRow('Filament', _selectedSpool?.label ?? ''),
+          _ReviewRow(l10n.setupNextQuote, '$nextQuote'),
+          _ReviewRow(l10n.setupPrinterTitle, _printerName.text.trim()),
+          _ReviewRow(l10n.setupPower, l10n.setupPowerValue(_watts.text.trim())),
+          _ReviewRow(
+            l10n.setupPurchasePrice,
+            context.money(parseMinor(_price.text) ?? 0, currency),
+          ),
+          _ReviewRow(
+            l10n.setupLifetime,
+            l10n.setupLifetimeValue(_life.text.trim()),
+          ),
+          _ReviewRow(
+            l10n.setupMaintenance,
+            context.money(parseMinor(_maintenance.text) ?? 0, currency),
+          ),
+          _ReviewRow(l10n.navFilament, _selectedSpool?.label ?? ''),
         ];
     }
   }
@@ -764,8 +771,12 @@ class _ReviewRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 140, child: Text(label)),
-          Expanded(child: Text(value)),
+          Expanded(
+            flex: 2,
+            child: Text(label, maxLines: 3, overflow: TextOverflow.ellipsis),
+          ),
+          const SizedBox(width: 8),
+          Expanded(flex: 3, child: Text(value)),
         ],
       ),
     );

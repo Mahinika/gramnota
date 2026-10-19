@@ -1,3 +1,4 @@
+import '../../../l10n/l10n.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../orders/domain/print_order.dart';
 import '../../pricing/domain/live_quote.dart';
@@ -7,6 +8,7 @@ import 'gcode_metadata.dart';
 
 /// One sliced plate turned into a priced print on a quote.
 QuoteLine quoteLineFromPlate({
+  required AppLocalizations l10n,
   required GcodePlate plate,
   required String id,
   required WorkshopSettings settings,
@@ -20,7 +22,9 @@ QuoteLine quoteLineFromPlate({
   int? failureBasisPoints,
   int? vatBasisPoints,
 }) {
-  final title = plate.name.trim().isEmpty ? 'Plate' : plate.name.trim();
+  final title = plate.name.trim().isEmpty
+      ? l10n.plateDefaultName
+      : plate.name.trim();
   final filaments = [
     for (final filament in plate.filaments)
       if (filament.grams > 0)
@@ -33,6 +37,7 @@ QuoteLine quoteLineFromPlate({
         ),
   ];
   return pricePrint(
+    l10n: l10n,
     id: id,
     title: title,
     quantity: quantity < 1 ? 1 : quantity,
@@ -42,8 +47,7 @@ QuoteLine quoteLineFromPlate({
     prepMinutes: prepMinutes < 0 ? 0 : prepMinutes,
     postMinutes: postMinutes < 0 ? 0 : postMinutes,
     extras: const [],
-    markupBasisPoints:
-        markupBasisPoints ?? settings.defaultMarkupBasisPoints,
+    markupBasisPoints: markupBasisPoints ?? settings.defaultMarkupBasisPoints,
     failureBasisPoints:
         failureBasisPoints ?? settings.defaultFailureBasisPoints,
     vatBasisPoints: vatBasisPoints ?? settings.vatBasisPoints,
@@ -55,6 +59,7 @@ QuoteLine quoteLineFromPlate({
 }
 
 List<QuoteLine> quoteLinesFromPlates({
+  required AppLocalizations l10n,
   required List<GcodePlate> plates,
   required String Function() newId,
   required WorkshopSettings settings,
@@ -72,6 +77,7 @@ List<QuoteLine> quoteLinesFromPlates({
     for (final plate in plates)
       if (plate.hasData)
         quoteLineFromPlate(
+          l10n: l10n,
           plate: plate,
           id: newId(),
           settings: settings,
@@ -117,7 +123,5 @@ String? matchSpoolId(
   return null;
 }
 
-const multiPlateImportNote =
-    'Imported every plate as its own print with quantity 1. '
-    'The sale price uses your current spools. '
-    'Match a filament by hand when the material was not found.';
+String multiPlateImportNote({required AppLocalizations l10n}) =>
+    l10n.plateMultiImportNote;

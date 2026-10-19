@@ -1,30 +1,42 @@
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
-String formatMoney(int minor, String currencyCode) {
-  final code = currencyCode.trim().isEmpty
-      ? 'SEK'
-      : currencyCode.trim().toUpperCase();
-  if (code == 'SEK' || code == 'NOK' || code == 'DKK') {
-    return _nordicMoney(minor);
+import 'currencies.dart';
+
+bool _datesReady = false;
+
+/// Loads CLDR date symbols for every locale. Safe to call more than once.
+void ensureGramnotaDateFormatting() {
+  if (_datesReady) {
+    return;
   }
-  final format = NumberFormat.simpleCurrency(name: code);
-  return format.format(num.parse(formatMinorAmount(minor)));
+  initializeDateFormatting();
+  _datesReady = true;
 }
 
-String _nordicMoney(int minor) {
-  final sign = minor < 0 ? '-' : '';
-  final abs = minor.abs();
-  final major = abs ~/ 100;
-  final cents = (abs % 100).toString().padLeft(2, '0');
-  final digits = major.toString();
-  final groups = StringBuffer();
-  for (var i = 0; i < digits.length; i++) {
-    if (i > 0 && (digits.length - i) % 3 == 0) {
-      groups.write('\u00a0');
-    }
-    groups.write(digits[i]);
+/// Formats [minor] hundredths of a major unit with [NumberFormat] for [locale].
+///
+/// Storage is always hundredths (100 = 1), including for currencies whose
+/// cash has fewer or more decimal places. Display uses the currency's own
+/// fraction digits, symbol, and position. There is no exchange conversion.
+String formatMoney(int minor, String currencyCode, {String? locale}) {
+  final code = normalizeCurrencyCode(currencyCode);
+  final loc = _formattingLocale(locale);
+  final digits = currencyFractionDigits(code);
+  final format = NumberFormat.simpleCurrency(
+    locale: loc,
+    name: code,
+    decimalDigits: digits,
+  );
+  return format.format(minor / 100);
+}
+
+String _formattingLocale(String? locale) {
+  final raw = (locale ?? Intl.defaultLocale ?? 'sv').trim();
+  if (raw.isEmpty) {
+    return 'sv';
   }
-  return '$sign$groups,$cents kr';
+  return raw;
 }
 
 /// Major units for a text field, with two decimals only when öre remain.
@@ -41,19 +53,27 @@ String formatMinorAmount(int minor) {
   return '$sign$major.${cents.toString().padLeft(2, '0')}';
 }
 
-/// Same as [formatMinorAmount], with a Swedish decimal comma.
-String formatMinorField(int minor) =>
-    formatMinorAmount(minor).replaceAll('.', ',');
+/// Same as [formatMinorAmount], using the locale decimal separator.
+/// The default locale is Swedish, so existing fields keep a comma.
+String formatMinorField(int minor, {String? locale}) =>
+    formatMinorAmount(minor).replaceAll('.', decimalSeparator(locale));
 
-String formatGrams(double grams) {
+String decimalSeparator([String? locale]) {
+  return NumberFormat.decimalPattern(_formattingLocale(locale)).symbols.DECIMAL_SEP;
+}
+
+String formatGrams(double grams, {String? locale}) {
   if (grams == grams.roundToDouble()) {
     return '${grams.round()} g';
   }
-  return '${grams.toStringAsFixed(1).replaceAll('.', ',')} g';
+  final format = NumberFormat.decimalPattern(_formattingLocale(locale))
+    ..minimumFractionDigits = 1
+    ..maximumFractionDigits = 1;
+  return '${format.format(grams)} g';
 }
 
-/// A decimal for a text field, with a Swedish comma. Parsers accept it.
-String formatDecimalField(double value, {int fractionDigits = 2}) {
+/// A decimal for a text field. Parsers accept a comma or a dot.
+String formatDecimalField(double value, {int fractionDigits = 2, String? locale}) {
   if (value.isNaN || value.isInfinite) {
     return '';
   }
@@ -63,7 +83,7 @@ String formatDecimalField(double value, {int fractionDigits = 2}) {
   var text = value.toStringAsFixed(fractionDigits);
   text = text.replaceFirst(RegExp(r'0+$'), '');
   text = text.replaceFirst(RegExp(r'\.$'), '');
-  return text.replaceAll('.', ',');
+  return text.replaceAll('.', decimalSeparator(locale));
 }
 
 /// Noon UTC on a calendar day. The date stays the same from UTC−12 to UTC+12,
@@ -84,15 +104,16 @@ DateTime? calendarDayOf(String iso) {
 }
 
 /// Calendar date for a stored UTC timestamp, in the device's local zone.
-String formatIsoDate(String iso) {
+///
+/// Uses the locale's medium date (for example 2 Nov 2026 or 2 nov. 2026).
+String formatIsoDate(String iso, {String? locale}) {
   final parsed = DateTime.tryParse(iso);
   if (parsed == null) {
     return iso.length >= 10 ? iso.substring(0, 10) : iso;
   }
   final local = parsed.toLocal();
-  final month = local.month.toString().padLeft(2, '0');
-  final day = local.day.toString().padLeft(2, '0');
-  return '${local.year}-$month-$day';
+  ensureGramnotaDateFormatting();
+  return DateFormat.yMMMd(_formattingLocale(locale)).format(local);
 }
 
 String formatDuration(int seconds) {
@@ -113,10 +134,10 @@ String formatDuration(int seconds) {
   return remainder == 0 ? clock : '$clock ${remainder}s';
 }
 
-String formatPercent(int basisPoints) {
+String formatPercent(int basisPoints, {String? locale}) {
   final percent = basisPoints / 100;
   final text = percent == percent.roundToDouble()
       ? percent.round().toString()
-      : percent.toStringAsFixed(2).replaceAll('.', ',');
+      : percent.toStringAsFixed(2).replaceAll('.', decimalSeparator(locale));
   return '$text%';
 }

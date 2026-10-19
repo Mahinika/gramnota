@@ -1,5 +1,7 @@
 import 'dart:developer';
 
+import 'package:gramnota/l10n/l10n.dart';
+
 import '../data/update_preferences.dart';
 import 'update_failures.dart';
 import 'update_models.dart';
@@ -46,14 +48,15 @@ class UpdateCoordinator {
   final int installedBuild;
   final DateTime Function() _now;
 
-  Future<UpdateCheckOutcome> check({required bool manual}) async {
+  Future<UpdateCheckOutcome> check({
+    required bool manual,
+    required AppLocalizations l10n,
+  }) async {
     if (platform == UpdatePlatform.other) {
       if (!manual) {
         return const UpdateCheckOutcome();
       }
-      return const UpdateCheckOutcome(
-        message: 'Uppdateringar finns för Android och Windows.',
-      );
+      return UpdateCheckOutcome(message: l10n.updatePlatformsOnly);
     }
     if (!manual) {
       final last = await preferences.lastCheck();
@@ -74,7 +77,7 @@ class UpdateCoordinator {
       if (!manual) {
         return const UpdateCheckOutcome();
       }
-      return UpdateCheckOutcome(message: updateFailureMessage(error));
+      return UpdateCheckOutcome(message: updateFailureMessage(error, l10n));
     }
     try {
       await preferences.setLastCheck(_now());
@@ -91,9 +94,7 @@ class UpdateCoordinator {
       if (!manual) {
         return const UpdateCheckOutcome();
       }
-      return const UpdateCheckOutcome(
-        message: 'Kunde inte läsa uppdateringsinformationen.',
-      );
+      return UpdateCheckOutcome(message: l10n.updateManifestUnreadable);
     }
     int? skipped;
     try {
@@ -117,7 +118,7 @@ class UpdateCoordinator {
       }
       return UpdateCheckOutcome(
         upToDate: true,
-        message: 'You have the latest version (build $installedBuild)',
+        message: l10n.updateAlreadyLatestBuild(installedBuild),
       );
     }
     return UpdateCheckOutcome(artifact: artifact);

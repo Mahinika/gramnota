@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/format.dart';
@@ -21,13 +22,11 @@ class PrintersScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(
-        body: EmptyView(message: 'Sign in to see printers.'),
-      );
+      return Scaffold(body: EmptyView(message: context.l10n.printerSignInList));
     }
     final printers = ref.watch(printersProvider(store));
     return Scaffold(
-      appBar: AppBar(title: const Text('Printers')),
+      appBar: AppBar(title: Text(context.l10n.morePrinters)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/more/printers/new'),
         child: const Icon(Icons.add),
@@ -35,7 +34,7 @@ class PrintersScreen extends ConsumerWidget {
       body: printers.when(
         data: (list) {
           if (list.isEmpty) {
-            return const EmptyView(message: 'Add the printer you price with.');
+            return EmptyView(message: context.l10n.printerEmpty);
           }
           return ListView.separated(
             padding: TappableListCard.listPadding,
@@ -50,10 +49,17 @@ class PrintersScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(printer.name, style: theme.textTheme.titleMedium),
+                    Text(
+                      printer.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                      '${printer.powerWatts} W',
+                      context.l10n.setupPowerValue('${printer.powerWatts}'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -118,15 +124,18 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
     return matches;
   }
 
-  void _load(PrinterProfile printer) {
+  void _load(PrinterProfile printer, String locale) {
     if (_loaded) {
       return;
     }
     _name.text = printer.name;
     _watts.text = printer.powerWatts.toString();
-    _price.text = formatMinorField(printer.purchasePriceMinor);
+    _price.text = formatMinorField(printer.purchasePriceMinor, locale: locale);
     _life.text = printer.lifetimeHours.toString();
-    _maintenance.text = formatMinorField(printer.maintenanceMinorPerHour);
+    _maintenance.text = formatMinorField(
+      printer.maintenanceMinorPerHour,
+      locale: locale,
+    );
     _loaded = true;
   }
 
@@ -134,9 +143,7 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
   Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(
-        body: EmptyView(message: 'Sign in to edit printers.'),
-      );
+      return Scaffold(body: EmptyView(message: context.l10n.printerSignInEdit));
     }
     final printers = ref.watch(printersProvider(store));
     if (widget.id != 'new') {
@@ -144,16 +151,20 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
         (item) => item.id == widget.id,
       );
       if (match != null && match.isNotEmpty) {
-        _load(match.first);
+        _load(match.first, context.formattingLocale);
       }
     }
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.id == 'new' ? 'New printer' : 'Printer'),
+        title: Text(
+          widget.id == 'new'
+              ? context.l10n.printerNew
+              : context.l10n.setupPrinterTitle,
+        ),
         actions: [
           if (widget.id != 'new')
             IconButton(
-              tooltip: 'Send to user',
+              tooltip: context.l10n.inboxSendToUser,
               onPressed: () => sendItem(
                 context: context,
                 store: store,
@@ -178,23 +189,31 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
           if (widget.id == 'new') ...[
             TextField(
               controller: _printerQuery,
-              decoration: const InputDecoration(labelText: 'Find a printer'),
+              decoration: InputDecoration(
+                labelText: context.l10n.setupFindPrinter,
+              ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 8),
             if (_matchingPrinters().isEmpty)
-              const Text('No printer with that name.')
+              Text(context.l10n.setupNoPrinterMatch)
             else
               DropdownButtonFormField<String>(
                 key: ValueKey(_printerQuery.text.trim().toLowerCase()),
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Common printer'),
+                decoration: InputDecoration(
+                  labelText: context.l10n.setupCommonPrinter,
+                ),
                 items: [
                   for (final printer in _matchingPrinters())
                     DropdownMenuItem(
                       value: printer.name,
                       child: Text(
-                        '${printer.name} · ${printer.powerWatts} W',
+                        context.l10n.setupPrinterWatts(
+                          printer.name,
+                          printer.powerWatts,
+                        ),
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -217,40 +236,40 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                 },
               ),
             const SizedBox(height: 8),
-            const Text(
-              'The first printers use a maker PLA average and a Swedish shop price. The rest use a community catalog: euro prices converted on 15 October 2026, and power estimated from the heater because the catalog lists the power supply. Lifetime starts at 5,000 hours. Change the price and watts to your machine.',
-            ),
+            Text(context.l10n.printerCatalogNote),
             const SizedBox(height: 12),
           ],
           TextField(
             controller: _name,
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: InputDecoration(labelText: context.l10n.fieldName),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _watts,
-            decoration: const InputDecoration(labelText: 'Power W'),
+            decoration: InputDecoration(labelText: context.l10n.setupPower),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _price,
-            decoration: const InputDecoration(labelText: 'Purchase price'),
+            decoration: InputDecoration(
+              labelText: context.l10n.setupPurchasePrice,
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _life,
-            decoration: const InputDecoration(
-              labelText: 'Expected lifetime hours',
+            decoration: InputDecoration(
+              labelText: context.l10n.printerLifetime,
             ),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _maintenance,
-            decoration: const InputDecoration(
-              labelText: 'Maintenance per hour',
+            decoration: InputDecoration(
+              labelText: context.l10n.setupMaintenance,
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
@@ -258,7 +277,7 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
           FilledButton(
             onPressed: () async {
               if (_name.text.trim().isEmpty) {
-                setState(() => _error = 'Name is required.');
+                setState(() => _error = context.l10n.printerNameRequired);
                 return;
               }
               final watts = parsePositiveInt(_watts.text);
@@ -266,21 +285,15 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
               final lifetime = parseNonNegativeDouble(_life.text);
               final maintenance = parseMinor(_maintenance.text);
               if (watts == null || watts <= 0) {
-                setState(() => _error = 'Enter the average power in watts.');
+                setState(() => _error = context.l10n.setupWattsRequired);
                 return;
               }
               if (price == null || maintenance == null) {
-                setState(
-                  () => _error =
-                      'Purchase price and maintenance must be amounts, like 2495 or 0. Use a comma or a dot.',
-                );
+                setState(() => _error = context.l10n.printerAmountRequired);
                 return;
               }
               if (lifetime == null) {
-                setState(
-                  () => _error =
-                      'Enter the expected lifetime in hours. Use 0 if you do not charge for machine wear.',
-                );
+                setState(() => _error = context.l10n.printerLifetimeRequired);
                 return;
               }
               final printer = PrinterProfile(
@@ -295,10 +308,7 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                 await store.savePrinter(printer);
               } on Object {
                 if (context.mounted) {
-                  setState(
-                    () => _error =
-                        'Could not save the printer. Check the connection and try again.',
-                  );
+                  setState(() => _error = context.l10n.printerSaveFailed);
                 }
                 return;
               }
@@ -306,7 +316,7 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                 context.go('/more/printers');
               }
             },
-            child: const Text('Save'),
+            child: Text(context.l10n.actionSave),
           ),
           if (widget.id != 'new')
             TextButton(
@@ -316,9 +326,8 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
               onPressed: () async {
                 final confirmed = await confirmDelete(
                   context,
-                  title: 'Delete printer',
-                  message:
-                      'This removes the printer. Saved quotes keep their prices.',
+                  title: context.l10n.printerDelete,
+                  message: context.l10n.printerDeleteMessage,
                 );
                 if (!confirmed || !context.mounted) {
                   return;
@@ -328,7 +337,7 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                   context.go('/more/printers');
                 }
               },
-              child: const Text('Delete printer'),
+              child: Text(context.l10n.printerDelete),
             ),
         ],
       ),

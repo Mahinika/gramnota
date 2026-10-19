@@ -13,6 +13,7 @@ import 'package:gramnota/features/import/data/gcode_file.dart';
 import 'package:gramnota/features/import/data/gcode_importer.dart';
 import 'package:gramnota/features/import/domain/gcode_metadata.dart';
 import 'package:gramnota/features/pricing/presentation/calculator_screen.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:gramnota/features/settings/domain/workshop_settings.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
@@ -347,7 +348,12 @@ void main() {
             () => _SeededSlice('/cache/Benchy.gcode'),
           ),
         ],
-        child: const MaterialApp(home: CalculatorScreen()),
+        child: const MaterialApp(
+          locale: Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: CalculatorScreen(),
+        ),
       ),
     );
     await tester.pump();
@@ -364,7 +370,7 @@ void main() {
     expect(_field(tester, 'Title'), 'Benchy');
     expect(_field(tester, 'Hours'), '1');
     expect(_field(tester, 'Minutes'), '5');
-    expect(_field(tester, 'Grams'), '12,5');
+    expect(_field(tester, 'Grams'), '12.5');
     expect(find.text('Import G-code'), findsOneWidget);
     expect(find.text('Save as product'), findsOneWidget);
   });

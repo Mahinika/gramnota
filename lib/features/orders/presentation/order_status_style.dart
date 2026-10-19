@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
 import '../domain/print_order.dart';
 
 Color orderStatusColor(OrderStatus status, ColorScheme scheme) {
@@ -46,9 +47,18 @@ class OrderStatusChip extends StatelessWidget {
         children: [
           Icon(orderStatusIcon(status), size: 14, color: color),
           const SizedBox(width: 4),
-          Text(
-            orderStatusLabel(status),
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(color: color),
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.sizeOf(context).width * 0.45,
+            ),
+            child: Text(
+              orderStatusLabel(status, context.l10n),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(color: color),
+            ),
           ),
         ],
       ),
@@ -118,7 +128,7 @@ class OrderStatusSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          stockRuleSummary,
+          stockRuleSummary(context.l10n),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -143,7 +153,16 @@ class _StatusChoice extends StatelessWidget {
   Widget build(BuildContext context) {
     return FilterChip(
       avatar: Icon(orderStatusIcon(status), size: 16),
-      label: Text(orderStatusLabel(status)),
+      label: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width - 80,
+        ),
+        child: Text(
+          orderStatusLabel(status, context.l10n),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
       selected: selected,
       showCheckmark: false,
       onSelected: (_) => onSelected(),
@@ -176,9 +195,7 @@ class StockWarningBanner extends StatelessWidget {
           children: [
             Icon(Icons.warning_amber_outlined, color: scheme.onErrorContainer),
             const SizedBox(width: 12),
-            Expanded(
-              child: Text(visible.join('\n\n')),
-            ),
+            Expanded(child: Text(visible.join('\n\n'))),
           ],
         ),
       ),

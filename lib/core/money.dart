@@ -1,3 +1,5 @@
+import 'format.dart';
+
 /// Parses a decimal amount typed by the user into minor units (öre/cents).
 ///
 /// Accepts a comma or a dot, and spaces used as thousands separators.
@@ -23,7 +25,7 @@ int? _parseHundredths(String text) {
   if (normalized.startsWith('-') || normalized.isEmpty) {
     return null;
   }
-  normalized = normalized.replaceAll(',', '.');
+  normalized = _decimalNormalized(normalized);
   final parts = normalized.split('.');
   if (parts.length > 2) {
     return null;
@@ -57,14 +59,29 @@ int? _parseHundredths(String text) {
   return whole * 100 + cents;
 }
 
+/// The last of `.` and `,` is the decimal mark when both appear
+/// (`1.234,50` and `1,234.50`). A single separator stays a decimal mark,
+/// which is how `1,005` already rounds to 1.01.
+String _decimalNormalized(String text) {
+  final lastComma = text.lastIndexOf(',');
+  final lastDot = text.lastIndexOf('.');
+  if (lastComma >= 0 && lastDot >= 0) {
+    if (lastComma > lastDot) {
+      return text.replaceAll('.', '').replaceAll(',', '.');
+    }
+    return text.replaceAll(',', '');
+  }
+  return text.replaceAll(',', '.');
+}
+
 double basisPointsToPercent(int basisPoints) => basisPoints / 100;
 
-String basisPointsLabel(int basisPoints) {
+String basisPointsLabel(int basisPoints, {String? locale}) {
   final percent = basisPoints / 100;
   if (percent == percent.roundToDouble()) {
     return percent.round().toString();
   }
-  return percent.toStringAsFixed(2).replaceAll('.', ',');
+  return percent.toStringAsFixed(2).replaceAll('.', decimalSeparator(locale));
 }
 
 int? parsePositiveInt(String text) {

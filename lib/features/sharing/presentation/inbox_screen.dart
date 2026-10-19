@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/menu_card.dart';
@@ -25,9 +26,9 @@ Future<void> sendItem({
 }) async {
   final email = await promptForText(
     context,
-    title: 'Send to user',
-    label: 'Their email',
-    confirmLabel: 'Send',
+    title: context.l10n.inboxSendToUser,
+    label: context.l10n.inboxRecipientEmail,
+    confirmLabel: context.l10n.inboxSend,
     keyboardType: TextInputType.emailAddress,
   );
   if (email == null || email.isEmpty) {
@@ -38,15 +39,15 @@ Future<void> sendItem({
     return;
   }
   if (recipient == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No Gramnota user with that email.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.inboxUserNotFound)));
     return;
   }
   if (recipient.uid == store.uid) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('That email is your own account.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.inboxOwnAccount)));
     return;
   }
   final user = FirebaseAuth.instance.currentUser;
@@ -55,20 +56,21 @@ Future<void> sendItem({
       recipientUid: recipient.uid,
       type: type,
       payload: payload,
-      senderName: user?.displayName ?? user?.email ?? 'Gramnota user',
+      senderName:
+          user?.displayName ?? user?.email ?? context.l10n.inboxSenderFallback,
       senderEmail: user?.email ?? '',
     );
   } on InboxPayloadTooLarge {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('That item is too large to send.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.inboxTooLarge)));
     }
     return;
   }
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Sent to ${recipient.displayName}.')),
+      SnackBar(content: Text(context.l10n.inboxSentTo(recipient.displayName))),
     );
   }
 }
@@ -80,19 +82,15 @@ class InboxScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(
-        body: EmptyView(message: 'Sign in to see inbox.'),
-      );
+      return Scaffold(body: EmptyView(message: context.l10n.inboxSignIn));
     }
     final items = ref.watch(_inboxProvider(store));
     return Scaffold(
-      appBar: AppBar(title: const Text('Inbox')),
+      appBar: AppBar(title: Text(context.l10n.moreInbox)),
       body: items.when(
         data: (list) {
           if (list.isEmpty) {
-            return const EmptyView(
-              message: 'Nothing shared with you yet.',
-            );
+            return EmptyView(message: context.l10n.inboxEmpty);
           }
           return ListView.separated(
             padding: TappableListCard.listPadding,
@@ -107,12 +105,16 @@ class InboxScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${item.senderName} sent a ${item.type.name}',
+                      _inboxSentLine(context.l10n, item),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       item.senderEmail,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -122,12 +124,20 @@ class InboxScreen extends ConsumerWidget {
                       children: [
                         TextButton(
                           onPressed: () => _decline(store, item),
-                          child: const Text('Decline'),
+                          child: Text(
+                            context.l10n.inboxDecline,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         FilledButton(
                           onPressed: () => _accept(context, store, item),
-                          child: const Text('Accept'),
+                          child: Text(
+                            context.l10n.inboxAccept,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -152,16 +162,17 @@ class InboxScreen extends ConsumerWidget {
     UserStore store,
     InboxItem item,
   ) async {
+    final l10n = context.l10n;
     final payload = jsonDecode(item.payloadJson);
     if (payload is! Map<String, dynamic>) {
       return;
     }
-    final stock = await _copy(store, item.type, payload);
+    final stock = await _copy(store, item.type, payload, l10n);
     await store.deleteInboxItem(item.id);
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(stock)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(stock)));
     }
   }
 
@@ -169,6 +180,7 @@ class InboxScreen extends ConsumerWidget {
     UserStore store,
     SharedItemType type,
     Map<String, dynamic> payload,
+    AppLocalizations l10n,
   ) async {
     final id = const Uuid().v4();
     switch (type) {
@@ -176,15 +188,15 @@ class InboxScreen extends ConsumerWidget {
         await store.saveFilament(
           FilamentSpool.fromJson({...payload, 'id': id}),
         );
-        return 'Filament added to your inventory.';
+        return l10n.inboxAddedFilament;
       case SharedItemType.customer:
         await store.saveCustomer(Customer.fromJson({...payload, 'id': id}));
-        return 'Customer added.';
+        return l10n.inboxAddedCustomer;
       case SharedItemType.printer:
         await store.savePrinter(
           PrinterProfile.fromJson({...payload, 'id': id}),
         );
-        return 'Printer added.';
+        return l10n.inboxAddedPrinter;
       case SharedItemType.order:
         final order = PrintOrder.fromJson({...payload, 'id': id});
         final number = await OrderStock(store).allocateQuoteNumber();
@@ -213,9 +225,19 @@ class InboxScreen extends ConsumerWidget {
             quoteNumber: number,
           ),
         );
-        return 'Quote added. Customer, printer, and spool links were cleared.';
+        return l10n.inboxAddedQuote;
     }
   }
+}
+
+String _inboxSentLine(AppLocalizations l10n, InboxItem item) {
+  final sender = item.senderName;
+  return switch (item.type) {
+    SharedItemType.filament => l10n.inboxSentFilament(sender),
+    SharedItemType.customer => l10n.inboxSentCustomer(sender),
+    SharedItemType.printer => l10n.inboxSentPrinter(sender),
+    SharedItemType.order => l10n.inboxSentOrder(sender),
+  };
 }
 
 final _inboxProvider = StreamProvider.family<List<InboxItem>, UserStore>(

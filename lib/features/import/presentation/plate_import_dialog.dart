@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
 import '../domain/gcode_metadata.dart';
 
 class PlateImportChoice {
@@ -20,32 +21,40 @@ Future<PlateImportChoice?> showPlateImportDialog(
   return showDialog<PlateImportChoice>(
     context: context,
     builder: (context) {
+      final l10n = context.l10n;
       return AlertDialog(
         title: Text(
-          plates.length == 1 ? '1 plate' : '${plates.length} plates',
+          l10n.plateCountTitle(plates.length),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Import all plates as separate prints on the quote, or fill this form from one plate.',
-              ),
+              Text(l10n.plateImportHelp),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: () => Navigator.pop(context, const PlateImportChoice.all()),
-                child: Text('Import all ${plates.length} plates'),
+                onPressed: () =>
+                    Navigator.pop(context, const PlateImportChoice.all()),
+                child: Text(
+                  l10n.plateImportAll(plates.length),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               const SizedBox(height: 8),
               for (final plate in plates)
                 TextButton(
-                  onPressed: () => Navigator.pop(
-                    context,
-                    PlateImportChoice.single(plate),
-                  ),
+                  onPressed: () =>
+                      Navigator.pop(context, PlateImportChoice.single(plate)),
                   child: Text(
-                    plate.name.trim().isEmpty ? 'Plate' : plate.name,
+                    plate.name.trim().isEmpty
+                        ? l10n.plateDefaultName
+                        : plate.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
             ],
@@ -54,7 +63,7 @@ Future<PlateImportChoice?> showPlateImportDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.actionCancel),
           ),
         ],
       );

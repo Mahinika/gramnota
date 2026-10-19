@@ -577,9 +577,12 @@
   "updateSearchFailed": "No se pudo buscar actualizaciones.",
   "updatePlatformsOnly": "Las actualizaciones están disponibles para Android y Windows.",
   "updateAlreadyLatest": "Ya tienes la versión más reciente.",
+  "updateAlreadyLatestBuild": "Ya tienes la versión más reciente (compilación {build})",
+  "updateFoundWhileClosed": "Hay una versión nueva {version} (compilación {build}).",
   "updateSearching": "Buscando…",
   "updateSearch": "Buscar actualizaciones",
   "versionLabel": "Versión",
   "versionWithBuild": "Versión {version} (compilación {build})",
-  "updateBuildOnly": "Compilación {build}."
+  "updateBuildOnly": "Compilación {build}.",
+  "importPrintFile": "Archivo de impresión"
 }

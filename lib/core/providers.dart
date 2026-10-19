@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 import '../features/auth/data/desktop_google_sign_in.dart';
@@ -132,9 +133,7 @@ Future<void> signInWithGoogle() async {
       ),
     );
   } else {
-    throw const SignInFailed(
-      'Google sign-in is available in the Android and Windows apps.',
-    );
+    throw SignInFailed(activeGramnotaL10n.authGooglePlatforms);
   }
   await _rememberSignedInUser(credential.user);
 }

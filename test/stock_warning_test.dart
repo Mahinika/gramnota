@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gramnota/features/filaments/domain/filament_spool.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:gramnota/features/orders/domain/print_order.dart';
 import 'package:gramnota/features/orders/domain/stock_coverage.dart';
 import 'package:gramnota/features/pricing/domain/price_breakdown.dart';
@@ -65,12 +67,16 @@ void main() {
         line(
           id: 'a',
           quantity: 2,
-          filaments: const [FilamentUsage(filamentId: 'pla', grams: 20, material: 'PLA')],
+          filaments: const [
+            FilamentUsage(filamentId: 'pla', grams: 20, material: 'PLA'),
+          ],
         ),
         line(
           id: 'b',
           quantity: 1,
-          filaments: const [FilamentUsage(filamentId: 'pla', grams: 20, material: 'PLA')],
+          filaments: const [
+            FilamentUsage(filamentId: 'pla', grams: 20, material: 'PLA'),
+          ],
         ),
       ],
     );
@@ -81,7 +87,9 @@ void main() {
         line(
           id: 'c',
           quantity: 1,
-          filaments: const [FilamentUsage(filamentId: 'pla', grams: 50, material: 'PLA')],
+          filaments: const [
+            FilamentUsage(filamentId: 'pla', grams: 50, material: 'PLA'),
+          ],
         ),
       ],
     );
@@ -92,7 +100,9 @@ void main() {
         line(
           id: 'd',
           quantity: 1,
-          filaments: const [FilamentUsage(filamentId: 'pla', grams: 80, material: 'PLA')],
+          filaments: const [
+            FilamentUsage(filamentId: 'pla', grams: 80, material: 'PLA'),
+          ],
         ),
       ],
     );
@@ -104,7 +114,9 @@ void main() {
         line(
           id: 'e',
           quantity: 1,
-          filaments: const [FilamentUsage(filamentId: 'pla', grams: 40, material: 'PLA')],
+          filaments: const [
+            FilamentUsage(filamentId: 'pla', grams: 40, material: 'PLA'),
+          ],
         ),
       ],
     );
@@ -120,7 +132,10 @@ void main() {
     expect(warnings.single.reservedGrams, 50);
     expect(warnings.single.remainingGrams, 100);
     expect(warnings.single.shortfallGrams, 10);
-    expect(warnings.single.message, contains('short by 10 g'));
+    expect(
+      warnings.single.messageFor(lookupAppLocalizations(const Locale('en'))),
+      contains('short by 10 g'),
+    );
   });
 
   test('a printed order does not warn again for grams already taken', () {
@@ -156,7 +171,9 @@ void main() {
         line(
           id: 'a',
           quantity: 2,
-          filaments: const [FilamentUsage(filamentId: 'pla', grams: 50, material: 'PLA')],
+          filaments: const [
+            FilamentUsage(filamentId: 'pla', grams: 50, material: 'PLA'),
+          ],
         ),
       ],
     );

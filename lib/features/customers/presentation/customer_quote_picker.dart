@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/text_prompt.dart';
@@ -9,7 +10,7 @@ import '../domain/customer.dart';
 Future<String?> showCustomerQuotePicker(
   BuildContext context, {
   required List<Customer> customers,
-  String title = 'Customer',
+  String? title,
 }) {
   return showModalBottomSheet<String>(
     context: context,
@@ -17,7 +18,7 @@ Future<String?> showCustomerQuotePicker(
     showDragHandle: true,
     builder: (sheetContext) => CustomerQuotePickerSheet(
       customers: customers,
-      title: title,
+      title: title ?? context.l10n.customerLabel,
       onNew: () => Navigator.pop(sheetContext, 'new'),
       onNone: () => Navigator.pop(sheetContext, ''),
     ),
@@ -30,8 +31,8 @@ Future<Customer?> promptNewCustomer(
 ) async {
   final name = await promptForText(
     context,
-    title: 'New customer',
-    label: 'Name',
+    title: context.l10n.customerNew,
+    label: context.l10n.fieldName,
   );
   if (name == null || name.isEmpty) {
     return null;
@@ -46,7 +47,7 @@ Future<String?> pickCustomerId(
   BuildContext context,
   UserStore store,
   List<Customer> customers, {
-  String title = 'Customer',
+  String? title,
 }) async {
   final picked = await showCustomerQuotePicker(
     context,
@@ -115,13 +116,18 @@ class _CustomerQuotePickerSheetState extends State<CustomerQuotePickerSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(widget.title, style: theme.textTheme.titleLarge),
+            Text(
+              widget.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge,
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: _search,
-              decoration: const InputDecoration(
-                hintText: 'Name, city, phone, or email',
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                hintText: context.l10n.customerSearchHint,
+                prefixIcon: const Icon(Icons.search),
                 filled: true,
               ),
               onChanged: (_) => setState(() {}),
@@ -130,13 +136,21 @@ class _CustomerQuotePickerSheetState extends State<CustomerQuotePickerSheet> {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.person_off_outlined),
-              title: const Text('No customer'),
+              title: Text(
+                context.l10n.noCustomer,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               onTap: widget.onNone,
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.person_add_outlined),
-              title: const Text('New customer'),
+              title: Text(
+                context.l10n.customerNew,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               onTap: widget.onNew,
             ),
             const Divider(height: 1),
@@ -145,8 +159,8 @@ class _CustomerQuotePickerSheetState extends State<CustomerQuotePickerSheet> {
                   ? Center(
                       child: Text(
                         query.isEmpty
-                            ? 'No customers yet. Add one above.'
-                            : 'No customer with that name.',
+                            ? context.l10n.customerPickerEmpty
+                            : context.l10n.customerPickerNoMatch,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -172,8 +186,18 @@ class _CustomerQuotePickerSheetState extends State<CustomerQuotePickerSheet> {
                             foregroundColor: scheme.onPrimaryContainer,
                             child: Text(customer.initials),
                           ),
-                          title: Text(customer.name),
-                          subtitle: subtitle.isEmpty ? null : Text(subtitle),
+                          title: Text(
+                            customer.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: subtitle.isEmpty
+                              ? null
+                              : Text(
+                                  subtitle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                           onTap: () => Navigator.pop(context, customer.id),
                         );
                       },

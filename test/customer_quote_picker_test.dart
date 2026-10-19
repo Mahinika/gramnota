@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gramnota/features/customers/domain/customer.dart';
 import 'package:gramnota/features/customers/presentation/customer_quote_picker.dart';
+import 'package:gramnota/l10n/l10n.dart';
 
 void main() {
   testWidgets('customer sheet searches and shows initials', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: CustomerQuotePickerSheet(
             title: 'Customer',

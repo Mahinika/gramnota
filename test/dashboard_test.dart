@@ -177,7 +177,7 @@ void main() {
     expect(snapshot.hasRevenueMoney, isFalse);
     expect(snapshot.pipelineOrderCount, 1);
     expect(snapshot.pipelineInclVatMinor, 125);
-    expect(snapshot.monthLabel, 'August 2026');
+    expect(snapshot.monthLabel(), 'August 2026');
   });
 
   test('older printed orders without revenueAt use updatedAt', () {
@@ -270,9 +270,7 @@ void main() {
     expect(april.profitMinor, -1000);
     expect(april.revenueOrders.single.totalMinor, 11250);
 
-    final together = job.copyWith(
-      depositAt: '2026-04-02T12:00:00.000Z',
-    );
+    final together = job.copyWith(depositAt: '2026-04-02T12:00:00.000Z');
     final sameMonth = buildDashboard(
       orders: [together],
       spools: const [],
@@ -372,9 +370,11 @@ void main() {
 
   test('overdue quotes are counted outside the selected month', () {
     final until = DateTime.parse('2026-03-01T12:00:00.000Z').toLocal();
-    final nextDay = DateTime(until.year, until.month, until.day).add(
-      const Duration(days: 1),
-    );
+    final nextDay = DateTime(
+      until.year,
+      until.month,
+      until.day,
+    ).add(const Duration(days: 1));
     final expired = sample(
       id: 'late',
       status: OrderStatus.sent,

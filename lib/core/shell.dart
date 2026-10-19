@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gramnota/l10n/l10n.dart';
 
 import 'brand_icon.dart';
 import 'gate_scaffold.dart';
@@ -8,15 +9,6 @@ class AppShell extends StatelessWidget {
   const AppShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
-
-  static const destinations = [
-    (label: 'Home', icon: 'home'),
-    (label: 'Calculator', icon: 'calculator'),
-    (label: 'Orders', icon: 'orders'),
-    (label: 'Customers', icon: 'customers'),
-    (label: 'Filament', icon: 'filament'),
-    (label: 'More', icon: 'more'),
-  ];
 
   void _selectBranch(int index) {
     navigationShell.goBranch(
@@ -27,6 +19,15 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final destinations = <({String label, String icon})>[
+      (label: l10n.navHome, icon: 'home'),
+      (label: l10n.navCalculator, icon: 'calculator'),
+      (label: l10n.navOrders, icon: 'orders'),
+      (label: l10n.navCustomers, icon: 'customers'),
+      (label: l10n.navFilament, icon: 'filament'),
+      (label: l10n.navMore, icon: 'more'),
+    ];
     final wide = MediaQuery.sizeOf(context).width >= 840;
     if (wide) {
       return Scaffold(
@@ -46,7 +47,13 @@ class AppShell extends StatelessWidget {
                   NavigationRailDestination(
                     icon: GramnotaSvgIcon(destination.icon),
                     selectedIcon: GramnotaSvgIcon('${destination.icon}_filled'),
-                    label: Text(destination.label),
+                    label: Text(
+                      destination.label,
+                      softWrap: true,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
                   ),
               ],
             ),
@@ -90,11 +97,11 @@ Future<bool> confirmDelete(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Delete'),
+          child: Text(context.l10n.actionDelete),
         ),
       ],
     ),

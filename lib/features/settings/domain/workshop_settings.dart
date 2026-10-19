@@ -1,5 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../core/app_languages.dart';
+import '../../../core/currencies.dart';
+
 part 'workshop_settings.freezed.dart';
 part 'workshop_settings.g.dart';
 
@@ -16,7 +19,10 @@ Object? readSetupCompleted(Map<dynamic, dynamic> json, String key) {
 abstract class WorkshopSettings with _$WorkshopSettings {
   const factory WorkshopSettings({
     @JsonKey(readValue: readSetupCompleted) @Default(false) bool setupCompleted,
-    @Default('SEK') String currencyCode,
+    /// `sv` when the field is missing, so an existing workshop stays Swedish.
+    /// [systemLanguageCode] follows the device language.
+    @JsonKey(readValue: readLanguageCode) @Default('sv') String languageCode,
+    @JsonKey(readValue: readCurrencyCode) @Default('SEK') String currencyCode,
     @Default(0) int electricityMinorPerKwh,
     @Default(0) int laborMinorPerHour,
     @Default(3000) int defaultMarkupBasisPoints,

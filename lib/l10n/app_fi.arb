@@ -577,9 +577,12 @@
   "updateSearchFailed": "Päivityksiä ei voitu tarkistaa.",
   "updatePlatformsOnly": "Päivitykset ovat saatavilla Androidille ja Windowsille.",
   "updateAlreadyLatest": "Sinulla on jo uusin versio.",
+  "updateAlreadyLatestBuild": "Sinulla on jo uusin versio (koonti {build})",
+  "updateFoundWhileClosed": "Uusi versio {version} (koonti {build}) on saatavilla.",
   "updateSearching": "Haetaan…",
   "updateSearch": "Tarkista päivitykset",
   "versionLabel": "Versio",
   "versionWithBuild": "Versio {version} (koonti {build})",
-  "updateBuildOnly": "Koonti {build}."
+  "updateBuildOnly": "Koonti {build}.",
+  "importPrintFile": "Tulostustiedosto"
 }

@@ -9,6 +9,7 @@ import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
+import '../../../l10n/l10n.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../orders/data/orders_providers.dart';
 import '../../orders/domain/print_order.dart';
@@ -37,19 +38,21 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
   Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(
-        body: EmptyView(message: 'Sign in to see products.'),
-      );
+      return Scaffold(body: EmptyView(message: context.l10n.productSignIn));
     }
     final products = ref.watch(productsProvider(store));
     final printers =
         ref.watch(printersProvider(store)).asData?.value ?? const [];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Products'),
+        title: Text(
+          context.l10n.moreProducts,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           IconButton(
-            tooltip: 'New product',
+            tooltip: context.l10n.productNewTooltip,
             onPressed: () => context.go('/more/products/new'),
             icon: const Icon(Icons.add),
           ),
@@ -72,11 +75,10 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
               );
           if (list.isEmpty) {
             return EmptyView(
-              message:
-                  'No saved products yet. Save a print from the calculator or a quote, then add it again at today’s spool and printer prices.',
+              message: context.l10n.productEmpty,
               action: FilledButton(
                 onPressed: () => context.go('/more/products/new'),
-                child: const Text('New product'),
+                child: Text(context.l10n.productNew),
               ),
             );
           }
@@ -90,9 +92,9 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
               if (index == 0) {
                 return TextField(
                   controller: _search,
-                  decoration: const InputDecoration(
-                    hintText: 'Search products',
-                    prefixIcon: Icon(Icons.search),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.productSearch,
+                    prefixIcon: const Icon(Icons.search),
                   ),
                   onChanged: (_) => setState(() {}),
                 );
@@ -108,13 +110,21 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                   children: [
                     Text(
                       product.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 4),
-                    Text(productSummary(product)),
+                    Text(
+                      productSummary(product, l10n: context.l10n),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     if (printer != null)
                       Text(
                         printer.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                   ],
@@ -275,20 +285,22 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
     WorkshopSettings settings,
     List<FilamentSpool> spools,
   ) async {
+    final l10n = context.l10n;
     if (_name.text.trim().isEmpty) {
-      setState(() => _message = 'Add a name before saving the product.');
+      setState(() => _message = l10n.productAddName);
       return;
     }
     final problems = [
-      ?_numberError('hours', _hours.text),
-      ?_numberError('minutes', _minutes.text),
-      ?_numberError('prep minutes', _prep.text),
-      ?_numberError('post minutes', _post.text),
-      ?_percentError('markup', _markup.text),
-      ?_percentError('failure', _failure.text),
-      ?_percentError('VAT', _vat.text),
-      for (final row in _filaments) ?_numberError('grams', row.grams.text),
-      for (final extra in _extras) ?_moneyError(extra.cost.text),
+      ?_numberError(l10n, l10n.productErrHours, _hours.text),
+      ?_numberError(l10n, l10n.productErrMinutes, _minutes.text),
+      ?_numberError(l10n, l10n.productErrPrepMinutes, _prep.text),
+      ?_numberError(l10n, l10n.productErrPostMinutes, _post.text),
+      ?_percentError(l10n, l10n.productErrMarkup, _markup.text),
+      ?_percentError(l10n, l10n.productErrFailure, _failure.text),
+      ?_percentError(l10n, l10n.productErrVat, _vat.text),
+      for (final row in _filaments)
+        ?_numberError(l10n, l10n.productErrGrams, row.grams.text),
+      for (final extra in _extras) ?_moneyError(l10n, extra.cost.text),
     ];
     if (problems.isNotEmpty) {
       setState(() => _message = problems.join(' '));
@@ -323,7 +335,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               (parseMinor(extra.cost.text) ?? 0) > 0)
             ExtraCost(
               name: extra.name.text.trim().isEmpty
-                  ? 'Extra'
+                  ? context.l10n.productExtra
                   : extra.name.text.trim(),
               costMinor: parseMinor(extra.cost.text) ?? 0,
             ),
@@ -351,11 +363,13 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
   }
 
   Future<void> _delete(UserStore store) async {
+    final l10n = context.l10n;
     final confirmed = await confirmDelete(
       context,
-      title: 'Delete product',
-      message:
-          'Delete ${_name.text.trim().isEmpty ? 'this product' : _name.text.trim()}? Quotes that already use it stay as they are.',
+      title: l10n.productDeleteTitle,
+      message: l10n.productDeleteMessage(
+        _name.text.trim().isEmpty ? l10n.productThisProduct : _name.text.trim(),
+      ),
     );
     if (!confirmed) {
       return;
@@ -370,9 +384,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
   Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(
-        body: EmptyView(message: 'Sign in to edit products.'),
-      );
+      return Scaffold(body: EmptyView(message: context.l10n.productSignInEdit));
     }
     final settingsSnapshot = ref.watch(settingsProvider(store)).asData?.value;
     final settings = settingsSnapshot ?? const WorkshopSettings();
@@ -387,19 +399,24 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
       }
       final matches = products.where((item) => item.id == widget.id);
       if (matches.isEmpty) {
-        return const Scaffold(body: EmptyView(message: 'Product not found.'));
+        return Scaffold(body: EmptyView(message: context.l10n.productNotFound));
       }
       _load(matches.first, settings);
     } else if (settingsSnapshot != null) {
       _applyDefaults(settingsSnapshot);
     }
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isNew ? 'New product' : 'Edit product'),
+        title: Text(
+          _isNew ? l10n.productNew : l10n.productEdit,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
           if (!_isNew)
             IconButton(
-              tooltip: 'Delete product',
+              tooltip: l10n.productDeleteTooltip,
               onPressed: () => _delete(store),
               icon: const Icon(Icons.delete_outline),
             ),
@@ -408,23 +425,37 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(productPriceExplanation),
+          Text(productPriceExplanation(l10n: l10n)),
           const SizedBox(height: 12),
           TextField(
             controller: _name,
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: InputDecoration(label: _clipLabel(l10n.fieldName)),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             key: ValueKey(_printerId),
+            isExpanded: true,
             initialValue: printers.any((printer) => printer.id == _printerId)
                 ? _printerId
                 : null,
-            decoration: const InputDecoration(labelText: 'Printer'),
+            decoration: InputDecoration(label: _clipLabel(l10n.productPrinter)),
             items: [
-              const DropdownMenuItem(child: Text('No printer')),
+              DropdownMenuItem(
+                child: Text(
+                  l10n.noPrinter,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               for (final printer in printers)
-                DropdownMenuItem(value: printer.id, child: Text(printer.name)),
+                DropdownMenuItem(
+                  value: printer.id,
+                  child: Text(
+                    printer.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
             ],
             onChanged: (value) => setState(() => _printerId = value),
           ),
@@ -435,7 +466,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
             alignment: Alignment.centerLeft,
             child: TextButton(
               onPressed: () => setState(() => _filaments.add(_FilamentDraft())),
-              child: const Text('Add filament'),
+              child: Text(l10n.productAddFilament),
             ),
           ),
           Row(
@@ -443,7 +474,9 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               Expanded(
                 child: TextField(
                   controller: _hours,
-                  decoration: const InputDecoration(labelText: 'Hours'),
+                  decoration: InputDecoration(
+                    label: _clipLabel(l10n.fieldHours),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -453,7 +486,9 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               Expanded(
                 child: TextField(
                   controller: _minutes,
-                  decoration: const InputDecoration(labelText: 'Minutes'),
+                  decoration: InputDecoration(
+                    label: _clipLabel(l10n.fieldMinutes),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -467,7 +502,9 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               Expanded(
                 child: TextField(
                   controller: _prep,
-                  decoration: const InputDecoration(labelText: 'Prep minutes'),
+                  decoration: InputDecoration(
+                    label: _clipLabel(l10n.productPrepMinutes),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -477,7 +514,9 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               Expanded(
                 child: TextField(
                   controller: _post,
-                  decoration: const InputDecoration(labelText: 'Post minutes'),
+                  decoration: InputDecoration(
+                    label: _clipLabel(l10n.productPostMinutes),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -491,7 +530,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
             alignment: Alignment.centerLeft,
             child: TextButton(
               onPressed: () => setState(() => _extras.add(_ExtraDraft())),
-              child: const Text('Add extra'),
+              child: Text(l10n.productAddExtra),
             ),
           ),
           Row(
@@ -499,7 +538,9 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               Expanded(
                 child: TextField(
                   controller: _markup,
-                  decoration: const InputDecoration(labelText: 'Markup %'),
+                  decoration: InputDecoration(
+                    label: _clipLabel(l10n.productMarkupPercent),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -509,7 +550,9 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               Expanded(
                 child: TextField(
                   controller: _failure,
-                  decoration: const InputDecoration(labelText: 'Failure %'),
+                  decoration: InputDecoration(
+                    label: _clipLabel(l10n.productFailurePercent),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -519,7 +562,9 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
               Expanded(
                 child: TextField(
                   controller: _vat,
-                  decoration: const InputDecoration(labelText: 'VAT %'),
+                  decoration: InputDecoration(
+                    label: _clipLabel(l10n.productVatPercent),
+                  ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -530,12 +575,14 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _link,
-            decoration: const InputDecoration(labelText: 'Model link'),
+            decoration: InputDecoration(
+              label: _clipLabel(l10n.productModelLink),
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _notes,
-            decoration: const InputDecoration(labelText: 'Notes'),
+            decoration: InputDecoration(label: _clipLabel(l10n.fieldNotes)),
             minLines: 1,
             maxLines: 3,
           ),
@@ -546,7 +593,11 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _saving ? null : () => _save(store, settings, spools),
-            child: Text(_saving ? 'Saving…' : 'Save product'),
+            child: Text(
+              _saving ? l10n.saving : l10n.productSave,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -555,6 +606,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
 
   Widget _filamentRow(int index, List<FilamentSpool> spools) {
     final row = _filaments[index];
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -563,16 +615,27 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
             flex: 3,
             child: DropdownButtonFormField<String>(
               key: ValueKey('${row.spoolId}-$index'),
+              isExpanded: true,
               initialValue: spools.any((spool) => spool.id == row.spoolId)
                   ? row.spoolId
                   : null,
-              decoration: const InputDecoration(labelText: 'Spool'),
+              decoration: InputDecoration(label: _clipLabel(l10n.productSpool)),
               items: [
-                const DropdownMenuItem(child: Text('No spool')),
+                DropdownMenuItem(
+                  child: Text(
+                    l10n.noSpool,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 for (final spool in spools)
                   DropdownMenuItem(
                     value: spool.id,
-                    child: Text('${spool.brand} ${spool.material}'.trim()),
+                    child: Text(
+                      '${spool.brand} ${spool.material}'.trim(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
               onChanged: (value) => setState(() => row.spoolId = value),
@@ -583,7 +646,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
             flex: 2,
             child: TextField(
               controller: row.grams,
-              decoration: const InputDecoration(labelText: 'Grams'),
+              decoration: InputDecoration(label: _clipLabel(l10n.fieldGrams)),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -591,7 +654,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
           ),
           if (_filaments.length > 1)
             IconButton(
-              tooltip: 'Remove filament',
+              tooltip: l10n.productRemoveFilament,
               onPressed: () => setState(() {
                 row.grams.dispose();
                 _filaments.removeAt(index);
@@ -605,6 +668,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
 
   Widget _extraRow(int index) {
     final extra = _extras[index];
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -612,21 +676,21 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
           Expanded(
             child: TextField(
               controller: extra.name,
-              decoration: const InputDecoration(labelText: 'Extra'),
+              decoration: InputDecoration(label: _clipLabel(l10n.productExtra)),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: extra.cost,
-              decoration: const InputDecoration(labelText: 'Cost'),
+              decoration: InputDecoration(label: _clipLabel(l10n.productCost)),
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
             ),
           ),
           IconButton(
-            tooltip: 'Remove extra',
+            tooltip: l10n.productRemoveExtra,
             onPressed: () => setState(() {
               extra.name.dispose();
               extra.cost.dispose();
@@ -640,28 +704,32 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
   }
 }
 
-String? _numberError(String label, String text) {
+Text _clipLabel(String text) {
+  return Text(text, maxLines: 1, overflow: TextOverflow.ellipsis);
+}
+
+String? _numberError(AppLocalizations l10n, String label, String text) {
   final trimmed = text.trim();
   if (trimmed.isEmpty || parseNonNegativeDouble(trimmed) != null) {
     return null;
   }
-  return 'Could not read $label. Use a number, 0 or more.';
+  return l10n.productReadNumber(label);
 }
 
-String? _percentError(String label, String text) {
+String? _percentError(AppLocalizations l10n, String label, String text) {
   final trimmed = text.trim();
   if (trimmed.isEmpty || parseBasisPoints(trimmed) != null) {
     return null;
   }
-  return 'Could not read $label. Use a percent, 0 or more.';
+  return l10n.productReadPercent(label);
 }
 
-String? _moneyError(String text) {
+String? _moneyError(AppLocalizations l10n, String text) {
   final trimmed = text.trim();
   if (trimmed.isEmpty || parseMinor(trimmed) != null) {
     return null;
   }
-  return 'Could not read the extra cost. Use a number, 0 or more.';
+  return l10n.productReadExtraCost;
 }
 
 String _gramsText(double grams) => formatDecimalField(grams, fractionDigits: 3);

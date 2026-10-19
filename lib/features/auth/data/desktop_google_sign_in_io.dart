@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../domain/sign_in_failed.dart';
@@ -26,7 +27,9 @@ Future<DesktopGoogleCredential> requestDesktopGoogleCredential({
   String? storageBucket,
   Future<bool> Function(Uri url)? openBrowser,
   Duration timeout = const Duration(minutes: 5),
+  AppLocalizations? l10n,
 }) async {
+  final strings = l10n ?? activeGramnotaL10n;
   final nonce = newSignInNonce();
   final page = desktopGoogleSignInPage(
     apiKey: apiKey,
@@ -35,6 +38,7 @@ Future<DesktopGoogleCredential> requestDesktopGoogleCredential({
     appId: appId,
     storageBucket: storageBucket,
     nonce: nonce,
+    l10n: strings,
   );
   final v4 = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   final servers = <HttpServer>[v4];
@@ -52,6 +56,7 @@ Future<DesktopGoogleCredential> requestDesktopGoogleCredential({
           page: page,
           nonce: nonce,
           completer: completer,
+          l10n: strings,
         ),
       );
     }, onError: (Object _) {});
@@ -60,9 +65,7 @@ Future<DesktopGoogleCredential> requestDesktopGoogleCredential({
   final result = completer.future.timeout(
     timeout,
     onTimeout: () {
-      throw const SignInFailed(
-        'Sign-in timed out. Finish it in the browser, or try again.',
-      );
+      throw SignInFailed(strings.authTimedOut);
     },
   );
   try {
@@ -70,9 +73,7 @@ Future<DesktopGoogleCredential> requestDesktopGoogleCredential({
     final opened = await (openBrowser ?? openDesktopBrowser)(url);
     if (!opened && !completer.isCompleted) {
       completer.complete(
-        const _BrowserReply.fail(
-          SignInFailed('Could not open the browser. Try again.'),
-        ),
+        _BrowserReply.fail(SignInFailed(strings.authBrowserFailed)),
       );
     }
     final reply = await result;
@@ -106,7 +107,9 @@ String desktopGoogleSignInPage({
   required String appId,
   required String nonce,
   String? storageBucket,
+  AppLocalizations? l10n,
 }) {
+  final strings = l10n ?? activeGramnotaL10n;
   final config = jsonEncode({
     'apiKey': apiKey,
     'authDomain': authDomain,
@@ -115,13 +118,22 @@ String desktopGoogleSignInPage({
     'storageBucket': ?storageBucket,
   }).replaceAll('<', r'\u003c');
   final nonceLiteral = jsonEncode(nonce).replaceAll('<', r'\u003c');
+  final copy = jsonEncode({
+    'noToken': strings.authNoToken,
+    'signedIn': strings.authSignedInClose,
+    'unauthorizedDomain': strings.authUnauthorizedDomain,
+    'cancelled': strings.authCancelled,
+    'failed': strings.authSignInFailed,
+    'cancelledRetry': strings.authCancelledRetry,
+    'continueFinish': strings.authContinueToFinish,
+  }).replaceAll('<', r'\u003c');
   return '''
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${_html(strings.localeName)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gramnota sign-in</title>
+<title>${_html(strings.authDesktopPageTitle)}</title>
 <style>
   body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
     background: #F6F3EC; color: #1A1F1C; font-family: "Segoe UI", sans-serif; }
@@ -135,15 +147,16 @@ String desktopGoogleSignInPage({
 </head>
 <body>
 <main>
-  <h1>Gramnota</h1>
-  <p id="status">Opening Google…</p>
-  <button id="go" type="button" hidden>Continue with Google</button>
+  <h1>${_html(strings.appTitle)}</h1>
+  <p id="status">${_html(strings.authOpeningGoogle)}</p>
+  <button id="go" type="button" hidden>${_html(strings.authContinueGoogle)}</button>
 </main>
 <script src="https://www.gstatic.com/firebasejs/$_firebaseJs/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/$_firebaseJs/firebase-auth-compat.js"></script>
 <script>
 const config = $config;
 const nonce = $nonceLiteral;
+const copy = $copy;
 const statusEl = document.getElementById('status');
 const button = document.getElementById('go');
 const provider = new firebase.auth.GoogleAuthProvider();
@@ -168,21 +181,21 @@ async function succeed(result) {
   const idToken = credential && credential.idToken || '';
   const accessToken = credential && credential.accessToken || '';
   if (!idToken && !accessToken) {
-    show('Google did not return a sign-in token.');
+    show(copy.noToken);
     await post({code: 'no-token'});
     return;
   }
   await post({idToken: idToken, accessToken: accessToken});
-  show('Signed in. You can close this window and return to Gramnota.');
+  show(copy.signedIn);
   button.hidden = true;
 }
 
 function fail(code) {
   const messages = {
-    'unauthorized-domain': 'Google sign-in is not allowed from this page.',
-    'no-token': 'Google did not return a sign-in token.',
-    'cancelled': 'Sign-in was cancelled.',
-    'failed': 'Sign-in failed. Try again.'
+    'unauthorized-domain': copy.unauthorizedDomain,
+    'no-token': copy.noToken,
+    'cancelled': copy.cancelled,
+    'failed': copy.failed
   };
   show(messages[code] || messages.failed);
   return post({code: code === 'unauthorized-domain' || code === 'no-token' || code === 'cancelled' ? code : 'failed'});
@@ -197,7 +210,7 @@ button.addEventListener('click', async () => {
     const code = error && error.code || '';
     if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
       button.disabled = false;
-      show('Sign-in was cancelled. Try again.');
+      show(copy.cancelledRetry);
       return;
     }
     if (code === 'auth/unauthorized-domain') {
@@ -215,7 +228,7 @@ firebase.auth().getRedirectResult().then(async (result) => {
     return;
   }
   if (sessionStorage.getItem('gramnota-redirect') === '1') {
-    show('Continue with Google to finish sign-in.');
+    show(copy.continueFinish);
     button.hidden = false;
     return;
   }
@@ -229,13 +242,13 @@ firebase.auth().getRedirectResult().then(async (result) => {
       await fail('unauthorized-domain');
       return;
     }
-    show('Continue with Google to finish sign-in.');
+    show(copy.continueFinish);
   }
 }).catch(async (error) => {
   button.hidden = false;
   const code = error && error.code || '';
   if (code === 'auth/redirect-cancelled-by-user' || code === 'auth/user-cancelled') {
-    show('Sign-in was cancelled. Try again.');
+    show(copy.cancelledRetry);
     return;
   }
   await fail('failed');
@@ -250,27 +263,29 @@ firebase.auth().getRedirectResult().then(async (result) => {
 DesktopGoogleCredential parseDesktopGooglePost(
   String body, {
   required String nonce,
+  AppLocalizations? l10n,
 }) {
+  final strings = l10n ?? activeGramnotaL10n;
   final Object? decoded;
   try {
     decoded = jsonDecode(body);
   } on FormatException {
-    throw const FormatException('Sign-in response was not valid.');
+    throw FormatException(strings.authResponseInvalid);
   }
   if (decoded is! Map) {
-    throw const FormatException('Sign-in response was not valid.');
+    throw FormatException(strings.authResponseInvalid);
   }
   if (decoded['nonce'] != nonce) {
     throw const DesktopGoogleRejected();
   }
   final code = decoded['code'];
   if (code is String && code.isNotEmpty) {
-    throw SignInFailed(_messageForCode(code));
+    throw SignInFailed(_messageForCode(code, strings));
   }
   final idToken = _token(decoded['idToken']);
   final accessToken = _token(decoded['accessToken']);
   if (idToken == null && accessToken == null) {
-    throw const SignInFailed('Google did not return a sign-in token.');
+    throw SignInFailed(strings.authNoToken);
   }
   return DesktopGoogleCredential(idToken: idToken, accessToken: accessToken);
 }
@@ -290,16 +305,18 @@ class _BrowserReply {
   final SignInFailed? failure;
 }
 
-String _messageForCode(String code) {
+String _html(String value) => const HtmlEscape().convert(value);
+
+String _messageForCode(String code, AppLocalizations l10n) {
   switch (code) {
     case 'cancelled':
-      return 'Sign-in was cancelled.';
+      return l10n.authCancelled;
     case 'unauthorized-domain':
-      return 'Google sign-in is not allowed from this page.';
+      return l10n.authUnauthorizedDomain;
     case 'no-token':
-      return 'Google did not return a sign-in token.';
+      return l10n.authNoToken;
     default:
-      return 'Sign-in failed. Try again.';
+      return l10n.authSignInFailed;
   }
 }
 
@@ -319,6 +336,7 @@ Future<void> _handleSignInRequest(
   required String page,
   required String nonce,
   required Completer<_BrowserReply> completer,
+  required AppLocalizations l10n,
 }) async {
   try {
     if (!_loopbackHost(request)) {
@@ -347,7 +365,7 @@ Future<void> _handleSignInRequest(
     }
     Object? outcome;
     try {
-      outcome = parseDesktopGooglePost(body, nonce: nonce);
+      outcome = parseDesktopGooglePost(body, nonce: nonce, l10n: l10n);
       request.response.statusCode = HttpStatus.noContent;
     } on DesktopGoogleRejected {
       request.response.statusCode = HttpStatus.forbidden;

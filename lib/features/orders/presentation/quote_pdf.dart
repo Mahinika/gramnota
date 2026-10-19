@@ -8,17 +8,44 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/app_languages.dart';
 import '../../../core/format.dart';
+import '../../../l10n/l10n.dart';
 import '../../customers/domain/customer.dart';
 import '../../settings/domain/workshop_settings.dart';
 import '../domain/print_order.dart';
+
+/// Customer PDF language. A stored quote language wins. Otherwise the app
+/// locale passed by the preview, then the active workshop language.
+AppLocalizations quoteDocumentL10n(PrintOrder order, String? quoteLocale) {
+  final stored = order.quoteLanguage.trim();
+  if (stored.isNotEmpty) {
+    final code = normalizeLanguageCode(stored);
+    if (code != systemLanguageCode) {
+      return lookupAppLocalizations(Locale(code));
+    }
+  }
+  final passed = (quoteLocale ?? '').trim();
+  if (passed.isNotEmpty) {
+    final code = normalizeLanguageCode(passed);
+    if (code != systemLanguageCode) {
+      return lookupAppLocalizations(Locale(code));
+    }
+  }
+  return activeGramnotaL10n;
+}
 
 Future<Uint8List> buildQuotePdf({
   required PrintOrder order,
   required WorkshopSettings settings,
   required Customer? customer,
+  String? quoteLocale,
 }) async {
+  final l10n = quoteDocumentL10n(order, quoteLocale);
+  final locale = l10n.localeName;
   final currency = order.currencyCode;
+  String money(int minor) => formatMoney(minor, currency, locale: locale);
+  String dateText(String iso) => formatIsoDate(iso, locale: locale);
   final prints = orderPrints(order);
   final regular = pw.Font.ttf(
     await rootBundle.load('assets/fonts/NotoSans-Regular.ttf'),
@@ -44,7 +71,7 @@ Future<Uint8List> buildQuotePdf({
     settings.street,
     '${settings.postalCode} ${settings.city}'.trim(),
     if (settings.orgNumber.trim().isNotEmpty)
-      'Org. no. ${settings.orgNumber.trim()}',
+      l10n.pdfOrgNo(settings.orgNumber.trim()),
     settings.phone,
     settings.email,
   ]);
@@ -58,9 +85,9 @@ Future<Uint8List> buildQuotePdf({
           customer.phone,
           customer.email,
         ]);
-  final issued = formatIsoDate(order.createdAt);
-  final valid = formatIsoDate(order.validUntil);
-  final vatLabel = _vatLabel(prints);
+  final issued = dateText(order.createdAt);
+  final valid = dateText(order.validUntil);
+  final vatLabel = _vatLabel(prints, l10n);
 
   pw.Widget party(String title, List<String> lines) {
     return pw.Column(
@@ -69,7 +96,7 @@ Future<Uint8List> buildQuotePdf({
         pw.Text(title, style: label),
         pw.SizedBox(height: 6),
         pw.Text(
-          lines.isEmpty ? 'Not specified' : lines.join('\n'),
+          lines.isEmpty ? l10n.pdfNotSpecified : lines.join('\n'),
           style: lines.isEmpty ? quiet : body,
         ),
       ],
@@ -144,7 +171,7 @@ Future<Uint8List> buildQuotePdf({
                 ),
               ),
               pw.Text(
-                'Page ${context.pageNumber} of ${context.pagesCount}',
+                l10n.pdfPageOf(context.pageNumber, context.pagesCount),
                 style: pw.TextStyle(fontSize: 8, color: muted),
               ),
             ],
@@ -160,7 +187,7 @@ Future<Uint8List> buildQuotePdf({
             pw.Expanded(
               child: pw.Text(
                 settings.businessName.trim().isEmpty
-                    ? 'Quote'
+                    ? l10n.pdfQuote
                     : settings.businessName.trim(),
                 style: pw.TextStyle(
                   fontSize: 20,
@@ -172,7 +199,7 @@ Future<Uint8List> buildQuotePdf({
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.end,
               children: [
-                pw.Text('QUOTE', style: label),
+                pw.Text(l10n.pdfQuoteHeading, style: label),
                 pw.SizedBox(height: 2),
                 pw.Text(
                   '${order.quoteNumber}',
@@ -192,9 +219,9 @@ Future<Uint8List> buildQuotePdf({
           padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: pw.Row(
             children: [
-              meta('Quote no.', '${order.quoteNumber}'),
-              meta('Issued', issued),
-              meta('Valid until', valid),
+              meta(l10n.pdfQuoteNo, '${order.quoteNumber}'),
+              meta(l10n.pdfIssued, issued),
+              meta(l10n.pdfValidUntil, valid),
             ],
           ),
         ),
@@ -202,9 +229,9 @@ Future<Uint8List> buildQuotePdf({
         pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Expanded(child: party('From', seller)),
+            pw.Expanded(child: party(l10n.pdfFrom, seller)),
             pw.SizedBox(width: 28),
-            pw.Expanded(child: party('Bill to', buyer)),
+            pw.Expanded(child: party(l10n.pdfBillTo, buyer)),
           ],
         ),
         pw.SizedBox(height: 22),
@@ -232,14 +259,18 @@ Future<Uint8List> buildQuotePdf({
             pw.TableRow(
               decoration: const pw.BoxDecoration(color: brand),
               children: [
-                cell('Description', header: true),
-                cell('Qty', header: true, align: pw.Alignment.center),
+                cell(l10n.pdfDescription, header: true),
+                cell(l10n.pdfQty, header: true, align: pw.Alignment.center),
                 cell(
-                  'Unit price',
+                  l10n.pdfUnitPrice,
                   header: true,
                   align: pw.Alignment.centerRight,
                 ),
-                cell('Amount', header: true, align: pw.Alignment.centerRight),
+                cell(
+                  l10n.pdfAmount,
+                  header: true,
+                  align: pw.Alignment.centerRight,
+                ),
               ],
             ),
             for (var index = 0; index < prints.length; index++)
@@ -273,11 +304,11 @@ Future<Uint8List> buildQuotePdf({
                   ),
                   cell('${prints[index].quantity}', align: pw.Alignment.center),
                   cell(
-                    formatMoney(_unitNet(prints[index]), currency),
+                    money(_unitNet(prints[index])),
                     align: pw.Alignment.centerRight,
                   ),
                   cell(
-                    formatMoney(prints[index].breakdown.netMinor, currency),
+                    money(prints[index].breakdown.netMinor),
                     align: pw.Alignment.centerRight,
                     strong: true,
                   ),
@@ -286,10 +317,7 @@ Future<Uint8List> buildQuotePdf({
           ],
         ),
         pw.SizedBox(height: 6),
-        pw.Text(
-          'Line amounts exclude VAT. VAT is included in the total.',
-          style: quiet,
-        ),
+        pw.Text(l10n.pdfLineAmountsNote, style: quiet),
         pw.SizedBox(height: 14),
         pw.Align(
           alignment: pw.Alignment.centerRight,
@@ -301,14 +329,14 @@ Future<Uint8List> buildQuotePdf({
             child: pw.Column(
               children: [
                 _sumRow(
-                  'Subtotal',
-                  formatMoney(order.breakdown.netMinor, currency),
+                  l10n.pdfSubtotal,
+                  money(order.breakdown.netMinor),
                   ink: ink,
                   muted: muted,
                 ),
                 _sumRow(
                   vatLabel,
-                  formatMoney(order.breakdown.vatMinor, currency),
+                  money(order.breakdown.vatMinor),
                   ink: ink,
                   muted: muted,
                 ),
@@ -322,7 +350,7 @@ Future<Uint8List> buildQuotePdf({
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
                       pw.Text(
-                        'Total',
+                        l10n.pdfTotal,
                         style: pw.TextStyle(
                           color: PdfColors.white,
                           fontSize: 12,
@@ -330,7 +358,7 @@ Future<Uint8List> buildQuotePdf({
                         ),
                       ),
                       pw.Text(
-                        formatMoney(order.breakdown.totalMinor, currency),
+                        money(order.breakdown.totalMinor),
                         style: pw.TextStyle(
                           color: PdfColors.white,
                           fontSize: 13,
@@ -342,24 +370,23 @@ Future<Uint8List> buildQuotePdf({
                 ),
                 if (order.depositMinor > 0) ...[
                   _sumRow(
-                    'Deposit',
-                    formatMoney(order.depositMinor, currency),
+                    l10n.pdfDeposit,
+                    money(order.depositMinor),
                     ink: ink,
                     muted: muted,
                   ),
                   if (order.depositAt.isNotEmpty)
                     _sumRow(
-                      'Deposit date',
-                      formatIsoDate(order.depositAt),
+                      l10n.pdfDepositDate,
+                      dateText(order.depositAt),
                       ink: ink,
                       muted: muted,
                     ),
                   _sumRow(
-                    order.status == OrderStatus.paid ? 'Balance' : 'Still to pay',
-                    formatMoney(
-                      order.breakdown.totalMinor - order.depositMinor,
-                      currency,
-                    ),
+                    order.status == OrderStatus.paid
+                        ? l10n.pdfBalance
+                        : l10n.pdfStillToPay,
+                    money(order.breakdown.totalMinor - order.depositMinor),
                     ink: ink,
                     muted: muted,
                   ),
@@ -373,14 +400,14 @@ Future<Uint8List> buildQuotePdf({
           pw.Align(
             alignment: pw.Alignment.centerRight,
             child: pw.Text(
-              '${formatMoney(prints.single.breakdown.perUnitMinor, currency)} per unit, incl. VAT',
+              l10n.pdfPerUnit(money(prints.single.breakdown.perUnitMinor)),
               style: quiet,
             ),
           ),
         ],
         if (valid.isNotEmpty) ...[
           pw.SizedBox(height: 18),
-          pw.Text('This quote is valid until $valid.', style: quiet),
+          pw.Text(l10n.pdfValidUntilSentence(valid), style: quiet),
         ],
       ],
     ),
@@ -395,15 +422,15 @@ List<String> _filledLines(Iterable<String> parts) {
   ];
 }
 
-String _vatLabel(List<QuoteLine> prints) {
+String _vatLabel(List<QuoteLine> prints, AppLocalizations l10n) {
   if (prints.isEmpty) {
-    return 'VAT';
+    return l10n.pdfVat;
   }
   final rate = prints.first.vatBasisPoints;
   if (prints.every((line) => line.vatBasisPoints == rate)) {
-    return 'VAT ${formatPercent(rate)}';
+    return l10n.pdfVatRate(formatPercent(rate, locale: l10n.localeName));
   }
-  return 'VAT';
+  return l10n.pdfVat;
 }
 
 int _unitNet(QuoteLine line) {
@@ -451,11 +478,14 @@ Future<void> shareQuotePdf({
   required PrintOrder order,
   required WorkshopSettings settings,
   required Customer? customer,
+  String? quoteLocale,
 }) async {
+  final l10n = quoteDocumentL10n(order, quoteLocale);
   final bytes = await buildQuotePdf(
     order: order,
     settings: settings,
     customer: customer,
+    quoteLocale: quoteLocale,
   );
   final dir = await getTemporaryDirectory();
   final file = File('${dir.path}/quote-${order.quoteNumber}.pdf');
@@ -463,7 +493,7 @@ Future<void> shareQuotePdf({
   await SharePlus.instance.share(
     ShareParams(
       files: [XFile(file.path)],
-      subject: 'Quote ${order.quoteNumber}',
+      subject: l10n.orderQuoteNumber(order.quoteNumber),
     ),
   );
 }
@@ -511,11 +541,12 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
         order: widget.order,
         settings: widget.settings,
         customer: widget.customer,
+        quoteLocale: Localizations.localeOf(context).toString(),
       );
     } on Object catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not share the quote. $error')),
+          SnackBar(content: Text(context.l10n.orderShareFailed('$error'))),
         );
       }
     } finally {
@@ -527,12 +558,14 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final quoteLocale = Localizations.localeOf(context).toString();
     return Scaffold(
       appBar: AppBar(
-        title: Text('Quote ${widget.order.quoteNumber}'),
+        title: Text(l10n.orderQuoteNumber(widget.order.quoteNumber)),
         actions: [
           IconButton(
-            tooltip: 'Share quote',
+            tooltip: l10n.orderShareQuote,
             onPressed: _sharing ? null : _share,
             icon: _sharing
                 ? const SizedBox(
@@ -560,6 +593,7 @@ class _QuotePdfPreviewScreenState extends State<QuotePdfPreviewScreen> {
           order: widget.order,
           settings: widget.settings,
           customer: widget.customer,
+          quoteLocale: quoteLocale,
         ),
       ),
     );

@@ -1,3 +1,8 @@
+import 'package:intl/intl.dart';
+
+import '../../../core/currencies.dart';
+import '../../../core/format.dart';
+import '../../../l10n/l10n.dart';
 import '../../filaments/domain/filament_spool.dart';
 import 'print_order.dart';
 
@@ -34,12 +39,14 @@ class DashboardRank {
     required this.label,
     required this.totalMinor,
     required this.count,
+    this.currencyCode = defaultCurrencyCode,
   });
 
   final String id;
   final String label;
   final int totalMinor;
   final int count;
+  final String currencyCode;
 }
 
 class DashboardOrderRow {
@@ -49,6 +56,7 @@ class DashboardOrderRow {
     required this.status,
     required this.totalMinor,
     required this.customerLabel,
+    this.currencyCode = defaultCurrencyCode,
   });
 
   final String id;
@@ -56,6 +64,37 @@ class DashboardOrderRow {
   final OrderStatus status;
   final int totalMinor;
   final String customerLabel;
+  final String currencyCode;
+}
+
+/// Money totals for one currency. Home shows one block per currency so
+/// SEK and EUR orders are never added together.
+class CurrencyTotals {
+  const CurrencyTotals({
+    required this.currencyCode,
+    required this.orderCount,
+    required this.revenueInclVatMinor,
+    required this.revenueExclVatMinor,
+    required this.costMinor,
+    required this.profitMinor,
+    required this.pipelineOrderCount,
+    required this.pipelineInclVatMinor,
+    required this.openDepositMinor,
+    required this.depositsReceivedMinor,
+    required this.finalPaymentsMinor,
+  });
+
+  final String currencyCode;
+  final int orderCount;
+  final int revenueInclVatMinor;
+  final int revenueExclVatMinor;
+  final int costMinor;
+  final int profitMinor;
+  final int pipelineOrderCount;
+  final int pipelineInclVatMinor;
+  final int openDepositMinor;
+  final int depositsReceivedMinor;
+  final int finalPaymentsMinor;
 }
 
 class LowSpoolNotice {
@@ -92,6 +131,7 @@ class DashboardSnapshot {
     required this.topProducts,
     required this.revenueOrders,
     required this.lowSpools,
+    this.currencyTotals = const [],
   });
 
   final int year;
@@ -119,9 +159,20 @@ class DashboardSnapshot {
   final List<DashboardOrderRow> revenueOrders;
   final List<LowSpoolNotice> lowSpools;
 
-  String get monthLabel {
-    final index = month < 1 || month > 12 ? 0 : month - 1;
-    return '${dashboardMonthNames[index]} $year';
+  /// One entry per currency that contributed money. Empty on snapshots built
+  /// by tests that only set the scalar fields.
+  final List<CurrencyTotals> currencyTotals;
+
+  /// English month name when [locale] is omitted, so existing tests stay stable.
+  /// The home screen passes the app locale.
+  String monthLabel([String? locale]) {
+    if (locale == null || locale.trim().isEmpty) {
+      final index = month < 1 || month > 12 ? 0 : month - 1;
+      return '${dashboardMonthNames[index]} $year';
+    }
+    final safeMonth = month < 1 || month > 12 ? 1 : month;
+    ensureGramnotaDateFormatting();
+    return DateFormat.yMMMM(locale).format(DateTime(year, safeMonth));
   }
 
   bool get hasRevenueMoney =>
@@ -166,33 +217,34 @@ DashboardSnapshot buildDashboard({
   double workshopLowStockGrams = 100,
   InstantLocal toLocal = _deviceLocal,
   DateTime? now,
+  AppLocalizations? l10n,
 }) {
+  final strings = l10n ?? activeGramnotaL10n;
   final today = now ?? DateTime.now();
-  var orderCount = 0;
-  var incl = 0;
-  var excl = 0;
-  var cost = 0;
-  var pipelineCount = 0;
-  var pipelineIncl = 0;
-  var openDeposit = 0;
-  var depositsReceived = 0;
-  var finalPayments = 0;
   var overdueCount = 0;
   final materials = <String, _GramBucket>{};
   final customers = <String, _MoneyBucket>{};
   final products = <String, _MoneyBucket>{};
   final rows = <DashboardOrderRow>[];
+  final currencies = <String, _CurrencyAccum>{};
+
+  _CurrencyAccum accumFor(PrintOrder order) {
+    final code = normalizeCurrencyCode(order.currencyCode);
+    return currencies.putIfAbsent(code, () => _CurrencyAccum(code));
+  }
 
   for (final order in orders) {
+    final accum = accumFor(order);
     if (quoteIsExpired(order, today)) {
       overdueCount += 1;
     }
     if (statusIsPipeline(order.status)) {
-      pipelineCount += 1;
-      pipelineIncl += order.breakdown.totalMinor;
+      accum.pipelineCount += 1;
+      accum.pipelineIncl += order.breakdown.totalMinor;
     }
     if (_holdsOpenDeposit(order)) {
-      openDeposit += order.depositMinor < 0 ? 0 : order.depositMinor;
+      final depositMinor = order.depositMinor < 0 ? 0 : order.depositMinor;
+      accum.openDeposit += depositMinor;
     }
     final deposit = recognizedDepositMinor(order);
     final totalForShare = order.breakdown.totalMinor;
@@ -200,9 +252,9 @@ DashboardSnapshot buildDashboard({
     final sharedNet = _shareMinor(netForShare, deposit, totalForShare);
     final depositNet = sharedNet > netForShare ? netForShare : sharedNet;
     if (deposit > 0 && _inMonth(order.depositAt, year, month, toLocal)) {
-      depositsReceived += deposit;
-      incl += deposit;
-      excl += depositNet;
+      accum.depositsReceived += deposit;
+      accum.incl += deposit;
+      accum.excl += depositNet;
     }
     if (!statusCountsAsRevenue(order.status)) {
       continue;
@@ -214,35 +266,46 @@ DashboardSnapshot buildDashboard({
     final net = netForShare;
     final remainder = total - deposit;
     final remainderNet = net - depositNet;
-    orderCount += 1;
-    incl += remainder;
-    excl += remainderNet;
-    finalPayments += remainder;
-    cost += order.breakdown.costMinor;
-    final customerLabel = _customerLabel(order.customerId, customerNames);
+    accum.orderCount += 1;
+    accum.incl += remainder;
+    accum.excl += remainderNet;
+    accum.finalPayments += remainder;
+    accum.cost += order.breakdown.costMinor;
+    final customerLabel = _customerLabel(
+      order.customerId,
+      customerNames,
+      strings,
+    );
     rows.add(
       DashboardOrderRow(
         id: order.id,
-        title: order.title.trim().isEmpty ? 'Untitled' : order.title.trim(),
+        title: order.title.trim().isEmpty
+            ? strings.dashUntitled
+            : order.title.trim(),
         status: order.status,
         totalMinor: remainder,
         customerLabel: customerLabel,
+        currencyCode: accum.currencyCode,
       ),
     );
-    _addCustomer(customers, order, customerLabel);
+    _addCustomer(customers, order, customerLabel, accum.currencyCode);
     for (final line in orderPrints(order)) {
-      _addProduct(products, line, order.title, productNames);
+      _addProduct(
+        products,
+        line,
+        order.title,
+        productNames,
+        accum.currencyCode,
+        strings,
+      );
       for (final usage in line.filaments) {
         final grams = usage.grams * line.quantity;
         if (grams <= 0) {
           continue;
         }
-        final label = _materialLabel(usage.material);
+        final label = _materialLabel(usage.material, strings);
         final key = label.toLowerCase();
-        final bucket = materials.putIfAbsent(
-          key,
-          () => _GramBucket(label),
-        );
+        final bucket = materials.putIfAbsent(key, () => _GramBucket(label));
         bucket.grams += grams;
       }
     }
@@ -254,32 +317,48 @@ DashboardSnapshot buildDashboard({
       DashboardMaterial(material: bucket.label, grams: bucket.grams),
   ]..sort((a, b) => b.grams.compareTo(a.grams));
 
+  final currencyTotals = [
+    for (final accum in currencies.values) accum.toTotals(),
+  ]..sort((a, b) => a.currencyCode.compareTo(b.currencyCode));
+  // Scalar fields stay the single-currency totals. Mixed months keep those
+  // fields on the first currency only; [currencyTotals] has every currency.
+  final primary = currencyTotals.isEmpty ? null : currencyTotals.first;
+
   return DashboardSnapshot(
     year: year,
     month: month,
-    orderCount: orderCount,
-    revenueInclVatMinor: incl,
-    revenueExclVatMinor: excl,
-    costMinor: cost,
-    profitMinor: excl - cost,
-    pipelineOrderCount: pipelineCount,
-    pipelineInclVatMinor: pipelineIncl,
-    openDepositMinor: openDeposit,
-    depositsReceivedMinor: depositsReceived,
-    finalPaymentsMinor: finalPayments,
+    orderCount: currencyTotals.fold<int>(
+      0,
+      (sum, item) => sum + item.orderCount,
+    ),
+    revenueInclVatMinor: primary?.revenueInclVatMinor ?? 0,
+    revenueExclVatMinor: primary?.revenueExclVatMinor ?? 0,
+    costMinor: primary?.costMinor ?? 0,
+    profitMinor: primary?.profitMinor ?? 0,
+    pipelineOrderCount: currencyTotals.fold(
+      0,
+      (sum, item) => sum + item.pipelineOrderCount,
+    ),
+    pipelineInclVatMinor: primary?.pipelineInclVatMinor ?? 0,
+    openDepositMinor: primary?.openDepositMinor ?? 0,
+    depositsReceivedMinor: primary?.depositsReceivedMinor ?? 0,
+    finalPaymentsMinor: primary?.finalPaymentsMinor ?? 0,
     overdueCount: overdueCount,
     materials: materialRows,
     topCustomers: _topMoney(customers),
     topProducts: _topMoney(products),
     revenueOrders: rows,
-    lowSpools: lowSpoolNotices(spools, workshopLowStockGrams),
+    lowSpools: lowSpoolNotices(spools, workshopLowStockGrams, l10n: strings),
+    currencyTotals: currencyTotals,
   );
 }
 
 List<LowSpoolNotice> lowSpoolNotices(
   List<FilamentSpool> spools,
-  double workshopLowStockGrams,
-) {
+  double workshopLowStockGrams, {
+  AppLocalizations? l10n,
+}) {
+  final strings = l10n ?? activeGramnotaL10n;
   final notices = <LowSpoolNotice>[];
   for (final spool in spools) {
     if (!spool.isLowAt(workshopLowStockGrams)) {
@@ -289,7 +368,7 @@ List<LowSpoolNotice> lowSpoolNotices(
     notices.add(
       LowSpoolNotice(
         id: spool.id,
-        label: label.isEmpty ? 'Spool' : label,
+        label: label.isEmpty ? strings.dashSpool : label,
         remainingGrams: spool.remainingGrams,
         thresholdGrams: spool.lowStockThreshold(workshopLowStockGrams),
       ),
@@ -352,21 +431,30 @@ bool _inMonth(String iso, int year, int month, InstantLocal toLocal) {
   return local.year == year && local.month == month;
 }
 
-String _customerLabel(String customerId, Map<String, String> names) {
+String _customerLabel(
+  String customerId,
+  Map<String, String> names,
+  AppLocalizations l10n,
+) {
   if (customerId.isEmpty) {
-    return 'No customer';
+    return l10n.noCustomer;
   }
   final name = names[customerId]?.trim() ?? '';
-  return name.isEmpty ? 'Customer' : name;
+  return name.isEmpty ? l10n.dashCustomer : name;
 }
 
 void _addCustomer(
   Map<String, _MoneyBucket> buckets,
   PrintOrder order,
   String label,
+  String currencyCode,
 ) {
-  final key = order.customerId.isEmpty ? '' : order.customerId;
-  final bucket = buckets.putIfAbsent(key, () => _MoneyBucket(key, label));
+  final id = order.customerId.isEmpty ? '' : order.customerId;
+  final key = '$currencyCode:$id';
+  final bucket = buckets.putIfAbsent(
+    key,
+    () => _MoneyBucket(id, label, currencyCode),
+  );
   bucket.totalMinor += order.breakdown.totalMinor;
   bucket.count += 1;
 }
@@ -376,18 +464,23 @@ void _addProduct(
   QuoteLine line,
   String fallback,
   Map<String, String> productNames,
+  String currencyCode,
+  AppLocalizations l10n,
 ) {
   final title = line.title.trim().isEmpty ? fallback.trim() : line.title.trim();
-  final titleLabel = title.isEmpty ? 'Untitled' : title;
+  final titleLabel = title.isEmpty ? l10n.dashUntitled : title;
   final productId = line.productId.trim();
   final catalog = productId.isEmpty
       ? ''
       : (productNames[productId]?.trim() ?? '');
   final label = catalog.isEmpty ? titleLabel : catalog;
   final key = productId.isEmpty
-      ? 'title:${titleLabel.toLowerCase()}'
-      : 'product:$productId';
-  final bucket = buckets.putIfAbsent(key, () => _MoneyBucket(key, label));
+      ? '$currencyCode:title:${titleLabel.toLowerCase()}'
+      : '$currencyCode:product:$productId';
+  final bucket = buckets.putIfAbsent(
+    key,
+    () => _MoneyBucket(key, label, currencyCode),
+  );
   if (catalog.isNotEmpty) {
     bucket.label = catalog;
   }
@@ -395,27 +488,29 @@ void _addProduct(
   bucket.count += line.quantity < 1 ? 1 : line.quantity;
 }
 
-String _materialLabel(String material) {
+String _materialLabel(String material, AppLocalizations l10n) {
   final trimmed = material.trim();
-  return trimmed.isEmpty ? 'Unspecified' : trimmed;
+  return trimmed.isEmpty ? l10n.dashUnspecified : trimmed;
 }
 
 List<DashboardRank> _topMoney(Map<String, _MoneyBucket> buckets) {
-  final ranks = [
-    for (final bucket in buckets.values)
-      DashboardRank(
-        id: bucket.id,
-        label: bucket.label,
-        totalMinor: bucket.totalMinor,
-        count: bucket.count,
-      ),
-  ]..sort((a, b) {
-      final money = b.totalMinor.compareTo(a.totalMinor);
-      if (money != 0) {
-        return money;
-      }
-      return a.label.compareTo(b.label);
-    });
+  final ranks =
+      [
+        for (final bucket in buckets.values)
+          DashboardRank(
+            id: bucket.id,
+            label: bucket.label,
+            totalMinor: bucket.totalMinor,
+            count: bucket.count,
+            currencyCode: bucket.currencyCode,
+          ),
+      ]..sort((a, b) {
+        final money = b.totalMinor.compareTo(a.totalMinor);
+        if (money != 0) {
+          return money;
+        }
+        return a.label.compareTo(b.label);
+      });
   if (ranks.length <= 5) {
     return ranks;
   }
@@ -430,10 +525,42 @@ class _GramBucket {
 }
 
 class _MoneyBucket {
-  _MoneyBucket(this.id, this.label);
+  _MoneyBucket(this.id, this.label, this.currencyCode);
 
   final String id;
+  final String currencyCode;
   String label;
   int totalMinor = 0;
   int count = 0;
+}
+
+class _CurrencyAccum {
+  _CurrencyAccum(this.currencyCode);
+
+  final String currencyCode;
+  int orderCount = 0;
+  int incl = 0;
+  int excl = 0;
+  int cost = 0;
+  int pipelineCount = 0;
+  int pipelineIncl = 0;
+  int openDeposit = 0;
+  int depositsReceived = 0;
+  int finalPayments = 0;
+
+  CurrencyTotals toTotals() {
+    return CurrencyTotals(
+      currencyCode: currencyCode,
+      orderCount: orderCount,
+      revenueInclVatMinor: incl,
+      revenueExclVatMinor: excl,
+      costMinor: cost,
+      profitMinor: excl - cost,
+      pipelineOrderCount: pipelineCount,
+      pipelineInclVatMinor: pipelineIncl,
+      openDepositMinor: openDeposit,
+      depositsReceivedMinor: depositsReceived,
+      finalPaymentsMinor: finalPayments,
+    );
+  }
 }

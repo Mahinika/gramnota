@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../core/currencies.dart';
+import '../../../l10n/l10n.dart';
 import '../../pricing/domain/price_breakdown.dart';
 
 part 'print_order.freezed.dart';
@@ -44,60 +46,56 @@ OrderStatus orderStatusFromJson(Object? raw) {
 
 String orderStatusToJson(OrderStatus status) => status.name;
 
-String orderStatusLabel(OrderStatus status) => switch (status) {
-  OrderStatus.quote => 'Quote',
-  OrderStatus.sent => 'Sent',
-  OrderStatus.accepted => 'Accepted',
-  OrderStatus.printed => 'Printed',
-  OrderStatus.paid => 'Paid',
-  OrderStatus.declined => 'Declined',
-  OrderStatus.cancelled => 'Cancelled',
-};
+String orderStatusLabel(OrderStatus status, AppLocalizations l10n) =>
+    switch (status) {
+      OrderStatus.quote => l10n.statusQuote,
+      OrderStatus.sent => l10n.statusSent,
+      OrderStatus.accepted => l10n.statusAccepted,
+      OrderStatus.printed => l10n.statusPrinted,
+      OrderStatus.paid => l10n.statusPaid,
+      OrderStatus.declined => l10n.statusDeclined,
+      OrderStatus.cancelled => l10n.statusCancelled,
+    };
 
-const stockRuleSummary =
-    'Filament is taken once, when the order is marked Printed or Paid. '
-    'Moving from Printed to Paid does not take it again. '
-    'Cancelling, declining, or moving the order back before Printed puts the taken grams back on the spool.';
+String stockRuleSummary(AppLocalizations l10n) => l10n.stockRuleSummary;
 
-const stockTakenOnPrintExplanation =
-    'Marking this order Printed or Paid takes filament off the spool once. '
-    'A later change between Printed and Paid does not take filament again. '
-    'If the spool is short, only what is left is taken and the order keeps a warning.';
+String stockTakenOnPrintExplanation(AppLocalizations l10n) =>
+    l10n.stockTakenOnPrint;
 
-const stockReturnedOnCloseExplanation =
-    'Cancelling or declining returns the filament that was taken for this order back onto the spool. '
-    'Only the grams that were actually deducted are returned, including when the spool was short.';
+String stockReturnedOnCloseExplanation(AppLocalizations l10n) =>
+    l10n.stockReturnedOnClose;
 
-const stockReturnedOnRevertExplanation =
-    'Moving this order back before Printed returns the filament that was taken onto the spool. '
-    'Only the grams that were actually deducted are returned.';
+String stockReturnedOnRevertExplanation(AppLocalizations l10n) =>
+    l10n.stockReturnedOnRevert;
 
-const stockStaysDeductedExplanation =
-    'Printed and Paid both keep the filament deducted. This change does not move stock.';
+String stockStaysDeductedExplanation(AppLocalizations l10n) =>
+    l10n.stockStaysDeducted;
 
-const printsLockedMessage =
-    'This order has already taken filament from the spool. '
-    'Move it back before Printed to change prints. The grams that were taken go back on the spool.';
+String printsLockedMessage(AppLocalizations l10n) => l10n.stockPrintsLocked;
 
 /// What a status change does to filament, or null when stock does not move
 /// and needs no extra explanation.
-String? stockChangeExplanation(OrderStatus from, OrderStatus to) {
+String? stockChangeExplanation(
+  OrderStatus from,
+  OrderStatus to,
+  AppLocalizations l10n,
+) {
   if (from == to) {
     return null;
   }
   final fromHolds = statusHoldsStock(from);
   final toHolds = statusHoldsStock(to);
   if (!fromHolds && toHolds) {
-    return stockTakenOnPrintExplanation;
+    return stockTakenOnPrintExplanation(l10n);
   }
   if (fromHolds && !toHolds) {
     if (to == OrderStatus.cancelled || to == OrderStatus.declined) {
-      return stockReturnedOnCloseExplanation;
+      return stockReturnedOnCloseExplanation(l10n);
     }
-    return stockReturnedOnRevertExplanation;
+    return stockReturnedOnRevertExplanation(l10n);
   }
   if (fromHolds && toHolds) {
-    return stockStaysDeductedExplanation;
+    return stockStaysDeductedExplanation(l10n);
   }
   return null;
 }
@@ -143,6 +141,7 @@ abstract class ExtraCost with _$ExtraCost {
 abstract class QuoteLine with _$QuoteLine {
   const factory QuoteLine({
     required String id,
+
     /// Catalog product this print was taken from. Empty on older quotes and
     /// on prints that were never saved as a product. Home groups by this id
     /// so a renamed title still counts as the same product.
@@ -188,12 +187,18 @@ abstract class PrintOrder with _$PrintOrder {
     required int markupBasisPoints,
     required int failureBasisPoints,
     required int vatBasisPoints,
-    required String currencyCode,
+
+    /// Missing on older orders. Those quotes stay in SEK. No conversion.
+    @JsonKey(readValue: readCurrencyCode) @Default('SEK') String currencyCode,
+
+    /// Customer PDF language. Empty follows the app language at preview time.
+    @Default('') String quoteLanguage,
     required PriceBreakdown breakdown,
     @Default(false) bool stockDeducted,
     @Default(<String, double>{}) Map<String, double> deductedGrams,
     @Default('') String stockWarning,
     @Default(0) int depositMinor,
+
     /// When the deposit was received, as a UTC timestamp. Empty on older
     /// orders: Home then keeps the whole total in the print month.
     @Default('') String depositAt,
@@ -262,9 +267,7 @@ PrintOrder orderWithPrints(PrintOrder order, List<QuoteLine> lines) {
   if (lines.isEmpty) {
     return order;
   }
-  final breakdown = sumBreakdowns([
-    for (final line in lines) line.breakdown,
-  ]);
+  final breakdown = sumBreakdowns([for (final line in lines) line.breakdown]);
   final first = lines.first;
   if (lines.length == 1) {
     return order.copyWith(

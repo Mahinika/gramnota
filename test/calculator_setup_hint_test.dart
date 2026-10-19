@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gramnota/core/providers.dart';
 import 'package:gramnota/core/user_store.dart';
 import 'package:gramnota/features/pricing/presentation/calculator_screen.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:gramnota/features/settings/domain/workshop_settings.dart';
 
 void main() {
@@ -23,7 +24,12 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [userStoreProvider.overrideWithValue(store)],
-        child: const MaterialApp(home: CalculatorScreen()),
+        child: const MaterialApp(
+          locale: Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: CalculatorScreen(),
+        ),
       ),
     );
     await tester.pump();

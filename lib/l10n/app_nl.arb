@@ -577,9 +577,12 @@
   "updateSearchFailed": "Controleren op updates is mislukt.",
   "updatePlatformsOnly": "Updates zijn beschikbaar voor Android en Windows.",
   "updateAlreadyLatest": "Je hebt al de nieuwste versie.",
+  "updateAlreadyLatestBuild": "Je hebt al de nieuwste versie (build {build})",
+  "updateFoundWhileClosed": "Nieuwe versie {version} (build {build}) is beschikbaar.",
   "updateSearching": "Zoeken…",
   "updateSearch": "Controleren op updates",
   "versionLabel": "Versie",
   "versionWithBuild": "Versie {version} (build {build})",
-  "updateBuildOnly": "Build {build}."
+  "updateBuildOnly": "Build {build}.",
+  "importPrintFile": "Printbestand"
 }

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gramnota/core/text_prompt.dart';
+import 'package:gramnota/l10n/l10n.dart';
 
 void main() {
   testWidgets('prompt can be opened, filled, and closed twice', (tester) async {
     String? saved;
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: Builder(
             builder: (context) => FilledButton(

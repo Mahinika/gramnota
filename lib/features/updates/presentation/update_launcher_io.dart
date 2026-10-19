@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -34,6 +35,7 @@ Future<UpdatePromptResult> promptForUpdate(
   UpdateClient? client,
   void Function()? onReady,
 }) async {
+  final l10n = context.mounted ? context.l10n : activeGramnotaL10n;
   final navigator = Navigator.maybeOf(context, rootNavigator: true);
   DialogRoute<void>? spinner;
   if (manual && navigator != null && context.mounted) {
@@ -67,7 +69,7 @@ Future<UpdatePromptResult> promptForUpdate(
           platform: currentUpdatePlatform(),
           installedBuild: await _readInstalledBuild(),
         );
-    final outcome = await active.check(manual: manual);
+    final outcome = await active.check(manual: manual, l10n: l10n);
     onReady?.call();
     await closeSpinner();
     final artifact = outcome.artifact;
@@ -91,6 +93,7 @@ Future<UpdatePromptResult> promptForUpdate(
         artifact: artifact,
         preferences: active.preferences,
         downloader: downloader,
+        l10n: l10n,
       );
     }
     return _offerUpdate(
@@ -99,6 +102,7 @@ Future<UpdatePromptResult> promptForUpdate(
       artifact: artifact,
       preferences: active.preferences,
       downloader: downloader,
+      l10n: l10n,
     );
   } on Object catch (error, stackTrace) {
     onReady?.call();
@@ -109,7 +113,7 @@ Future<UpdatePromptResult> promptForUpdate(
       error: error,
       stackTrace: stackTrace,
     );
-    final message = updateFailureMessage(error);
+    final message = updateFailureMessage(error, l10n);
     if (manual) {
       if (context.mounted) {
         await _present(context, navigator, message);
@@ -129,6 +133,7 @@ Future<UpdatePromptResult> _offerUpdate({
   required UpdateArtifact artifact,
   required UpdatePreferences preferences,
   required UpdateClient downloader,
+  required AppLocalizations l10n,
 }) async {
   if (host == null || !host.mounted) {
     log(
@@ -136,8 +141,7 @@ Future<UpdatePromptResult> _offerUpdate({
       name: updateLogName,
     );
     return UpdatePromptResult(
-      message:
-          'Ny version ${artifact.version} (build ${artifact.build}) finns.',
+      message: l10n.updateFoundWhileClosed(artifact.version, artifact.build),
     );
   }
   final choice = await showDialog<UpdateChoice>(
@@ -154,9 +158,7 @@ Future<UpdatePromptResult> _offerUpdate({
   }
   final installHost = host.mounted ? host : _navigatorContext(navigator);
   if (installHost == null || !installHost.mounted) {
-    return const UpdatePromptResult(
-      message: 'Kunde inte starta installationen.',
-    );
+    return UpdatePromptResult(message: l10n.updateInstallFailed);
   }
   await _downloadAndInstall(installHost, artifact, downloader);
   return const UpdatePromptResult();
@@ -251,6 +253,7 @@ Future<void> _downloadAndInstall(
   UpdateArtifact artifact,
   UpdateClient client,
 ) async {
+  final l10n = context.l10n;
   final progress = ValueNotifier<double?>(0);
   Object? failure;
   File? downloaded;
@@ -303,7 +306,7 @@ Future<void> _downloadAndInstall(
     return;
   }
   if (failure != null) {
-    await showUpdateMessage(context, updateFailureMessage(failure!));
+    await showUpdateMessage(context, updateFailureMessage(failure!, l10n));
     return;
   }
   final file = downloaded;
@@ -314,7 +317,7 @@ Future<void> _downloadAndInstall(
     await _installDownloaded(context, file);
   } on Object catch (error) {
     if (context.mounted) {
-      await showUpdateMessage(context, updateFailureMessage(error));
+      await showUpdateMessage(context, updateFailureMessage(error, l10n));
     }
   }
 }

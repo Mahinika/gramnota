@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gramnota/l10n/l10n.dart';
 
 import '../domain/update_models.dart';
 
@@ -11,22 +12,23 @@ class UpdateOfferDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final notes = artifact.notes.trim();
     return AlertDialog(
-      title: Text('Ny version ${artifact.version} finns'),
-      content: Text(notes.isEmpty ? 'Build ${artifact.build}.' : notes),
+      title: Text(l10n.updateAvailableTitle(artifact.version)),
+      content: Text(notes.isEmpty ? l10n.updateBuildOnly(artifact.build) : notes),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, UpdateChoice.skip),
-          child: const Text('Hoppa över denna version'),
+          child: Text(l10n.updateSkipVersion),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, UpdateChoice.later),
-          child: const Text('Senare'),
+          child: Text(l10n.updateLater),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, UpdateChoice.update),
-          child: const Text('Uppdatera'),
+          child: Text(l10n.updateNow),
         ),
       ],
     );
@@ -41,7 +43,7 @@ Future<void> showUpdateMessage(BuildContext context, String message) {
       actions: [
         FilledButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Stäng'),
+          child: Text(context.l10n.actionClose),
         ),
       ],
     ),
@@ -51,23 +53,23 @@ Future<void> showUpdateMessage(BuildContext context, String message) {
 Future<bool> showInstallPermissionDialog(BuildContext context) async {
   final open = await showDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Tillåt installation'),
-      content: const Text(
-        'Tillåt installation från Gramnota. Under Inställningar, välj '
-        'Installera okända appar och slå på Gramnota. Tryck sedan Uppdatera igen.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Stäng'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Öppna inställningar'),
-        ),
-      ],
-    ),
+    builder: (context) {
+      final l10n = context.l10n;
+      return AlertDialog(
+        title: Text(l10n.updateAllowInstallTitle),
+        content: Text(l10n.updateAllowInstallBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.actionClose),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.updateOpenSettings),
+          ),
+        ],
+      );
+    },
   );
   return open ?? false;
 }
@@ -75,19 +77,19 @@ Future<bool> showInstallPermissionDialog(BuildContext context) async {
 Future<void> showAndroidConfirmHint(BuildContext context) {
   return showDialog<void>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Bekräfta i Android'),
-      content: const Text(
-        'Android visar en egen ruta. Tryck Installera där. '
-        'Den rutan går inte att hoppa över.',
-      ),
-      actions: [
-        FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Fortsätt'),
-        ),
-      ],
-    ),
+    builder: (context) {
+      final l10n = context.l10n;
+      return AlertDialog(
+        title: Text(l10n.updateConfirmAndroidTitle),
+        content: Text(l10n.updateConfirmAndroidBody),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.actionContinue),
+          ),
+        ],
+      );
+    },
   );
 }
 
@@ -96,16 +98,16 @@ class UpdateCheckDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const AlertDialog(
+    return AlertDialog(
       content: Row(
         children: [
-          SizedBox(
+          const SizedBox(
             width: 24,
             height: 24,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          SizedBox(width: 16),
-          Expanded(child: Text('Söker…')),
+          const SizedBox(width: 16),
+          Expanded(child: Text(context.l10n.updateSearching)),
         ],
       ),
     );
@@ -120,7 +122,7 @@ class UpdateProgressDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Laddar ner uppdateringen…'),
+      title: Text(context.l10n.updateDownloading),
       content: LinearProgressIndicator(value: progress),
     );
   }

@@ -577,9 +577,12 @@
   "updateSearchFailed": "Kunne ikke se etter oppdateringer.",
   "updatePlatformsOnly": "Oppdateringer er tilgjengelige for Android og Windows.",
   "updateAlreadyLatest": "Du har allerede den nyeste versjonen.",
+  "updateAlreadyLatestBuild": "Du har allerede den nyeste versjonen (build {build})",
+  "updateFoundWhileClosed": "Ny versjon {version} (build {build}) er tilgjengelig.",
   "updateSearching": "Søker…",
   "updateSearch": "Se etter oppdateringer",
   "versionLabel": "Versjon",
   "versionWithBuild": "Versjon {version} (bygg {build})",
-  "updateBuildOnly": "Bygg {build}."
+  "updateBuildOnly": "Bygg {build}.",
+  "importPrintFile": "Utskriftsfil"
 }

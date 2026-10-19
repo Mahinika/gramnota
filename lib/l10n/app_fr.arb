@@ -577,9 +577,12 @@
   "updateSearchFailed": "Impossible de rechercher des mises à jour.",
   "updatePlatformsOnly": "Les mises à jour sont disponibles pour Android et Windows.",
   "updateAlreadyLatest": "Vous avez déjà la dernière version.",
+  "updateAlreadyLatestBuild": "Vous avez déjà la dernière version (build {build})",
+  "updateFoundWhileClosed": "La nouvelle version {version} (build {build}) est disponible.",
   "updateSearching": "Recherche…",
   "updateSearch": "Rechercher des mises à jour",
   "versionLabel": "Version",
   "versionWithBuild": "Version {version} (compilation {build})",
-  "updateBuildOnly": "Compilation {build}."
+  "updateBuildOnly": "Compilation {build}.",
+  "importPrintFile": "Fichier d'impression"
 }

@@ -577,9 +577,12 @@
   "updateSearchFailed": "Kunne ikke søge efter opdateringer.",
   "updatePlatformsOnly": "Opdateringer er tilgængelige til Android og Windows.",
   "updateAlreadyLatest": "Du har allerede den seneste version.",
+  "updateAlreadyLatestBuild": "Du har allerede den seneste version (build {build})",
+  "updateFoundWhileClosed": "Ny version {version} (build {build}) er tilgængelig.",
   "updateSearching": "Søger…",
   "updateSearch": "Søg efter opdateringer",
   "versionLabel": "Version",
   "versionWithBuild": "Version {version} (byg {build})",
-  "updateBuildOnly": "Byg {build}."
+  "updateBuildOnly": "Byg {build}.",
+  "importPrintFile": "Printfil"
 }
