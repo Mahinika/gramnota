@@ -11,9 +11,9 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
-    # A healthy release is about 15 minutes. Cap the job so a runner that
-    # hangs after the APK is published cannot occupy the slot for hours.
-    timeout-minutes: 30
+    # A healthy release is about 15 minutes. 45 matches the Windows job and
+    # stops a hung runner from occupying the slot for the default 6 hours.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -52,24 +52,8 @@ jobs:
           fi
           printf '%s\n' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
 
-      # One-shot CI builds do not reuse a Gradle daemon. Leftover JVMs make
-      # the runner hang in "Terminate orphan process" after the APK is published.
-      - name: Keep Gradle from leaving daemons behind
-        run: |
-          grep -q '^org.gradle.daemon=' android/gradle.properties || echo 'org.gradle.daemon=false' >> android/gradle.properties
-          grep -q '^org.gradle.vfs.watch=' android/gradle.properties || echo 'org.gradle.vfs.watch=false' >> android/gradle.properties
-
       - run: flutter pub get
       - run: flutter build apk --release
-
-      - name: Stop leftover Gradle processes
-        if: always()
-        run: |
-          pkill -9 -f GradleDaemon || true
-          pkill -9 -f KotlinCompileDaemon || true
-          if [ -x android/gradlew ]; then
-            (cd android && timeout 30 ./gradlew --stop) || true
-          fi
 
       - uses: actions/upload-artifact@v4
         with:
