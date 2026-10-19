@@ -596,7 +596,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4, bottom: 8),
                   child: Text(
-                    'Move the order back to Accepted before changing prints.',
+                    'Move the order back to Quote or Accepted before changing prints.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),

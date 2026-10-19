@@ -135,5 +135,35 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('only 1000 g remains'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Markup %'), '');
+    await tester.pump();
+    expect(find.text('Using workshop default 0%'), findsOneWidget);
+
+    await tester.tap(
+      find.widgetWithText(DropdownButtonFormField<String>, 'Spool'),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('No spool').last);
+    await tester.pump();
+    expect(
+      find.text('Pick a spool. These grams are priced at 0.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.widgetWithText(DropdownButtonFormField<String>, 'Printer'),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('No printer').last);
+    await tester.pump();
+    expect(
+      find.text(
+        'No printer selected, so electricity and machine wear stay at 0.',
+      ),
+      findsOneWidget,
+    );
   });
 }

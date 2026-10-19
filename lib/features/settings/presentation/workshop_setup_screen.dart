@@ -215,8 +215,8 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           return 'Enter the purchase price. Use 0 if you do not count machine wear.';
         }
         final life = parseNonNegativeDouble(_life.text);
-        if (life == null || life <= 0) {
-          return 'Enter the lifetime in hours.';
+        if (life == null) {
+          return 'Enter the lifetime in hours. Use 0 if you do not charge for machine wear.';
         }
         if (parseMinor(_maintenance.text) == null) {
           return 'Enter maintenance per hour. Use 0 if you have none.';
@@ -625,7 +625,10 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _life,
-            decoration: const InputDecoration(labelText: 'Lifetime hours'),
+            decoration: const InputDecoration(
+              labelText: 'Lifetime hours',
+              helperText: 'Use 0 if you do not charge for machine wear.',
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),

@@ -66,3 +66,34 @@ abstract class TextFetcher {
   Future<String> get(Uri uri);
   Future<String> postJson(Uri uri, Map<String, Object?> body);
 }
+
+/// Drops site chrome from a page title.
+///
+/// Thingiverse repeats the author (`by Name.se by Name`). Creality appends
+/// `STL & 3MF File for 3D Printing` and a `| Creality Cloud` suffix.
+String cleanModelTitle(String raw) {
+  var title = raw.replaceAll(RegExp(r'\s+'), ' ').trim();
+  title = title.split(RegExp(r'\s+\|\s+')).first.trim();
+  title = title
+      .replaceAll(
+        RegExp(
+          r'\s+STL\s*&\s*3MF(?:\s+File)?(?:\s+for\s+3D\s+Printing)?\s*$',
+          caseSensitive: false,
+        ),
+        '',
+      )
+      .trim();
+  final repeated = RegExp(r'^(.*) by (.+) by ([^|]+)$').firstMatch(title);
+  if (repeated != null) {
+    final earlier = repeated.group(2)!.trim().toLowerCase();
+    final last = repeated.group(3)!.trim().toLowerCase();
+    final earlierStem = earlier.split('.').first;
+    final lastStem = last.split('.').first;
+    if (earlierStem == lastStem ||
+        earlier.startsWith(last) ||
+        last.startsWith(earlier)) {
+      title = '${repeated.group(1)!.trim()} by ${repeated.group(2)!.trim()}';
+    }
+  }
+  return title.trim();
+}

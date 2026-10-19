@@ -142,6 +142,22 @@ void main() {
     expect(result.profiles.single.printTimeSeconds, 60);
   });
 
+  test('site titles drop a repeated author and a file-type suffix', () {
+    expect(
+      cleanModelTitle(
+        '#3DBenchy - The jolly 3D printing torture-test by CreativeTools.se by CreativeTools',
+      ),
+      '#3DBenchy - The jolly 3D printing torture-test by CreativeTools.se',
+    );
+    expect(
+      cleanModelTitle(
+        'Patolino  STL & 3MF File for 3D Printing | Characters & Creatures | Creality Cloud',
+      ),
+      'Patolino',
+    );
+    expect(cleanModelTitle('Clip'), 'Clip');
+  });
+
   test('an unknown site stays manual', () async {
     final service = LinkImportService(fetcher: _FakeFetcher({}));
     final result = await service.importText('https://example.com/model');

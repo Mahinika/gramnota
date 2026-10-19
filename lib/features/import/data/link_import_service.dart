@@ -110,7 +110,7 @@ class LinkImportService {
     if (raw == null || raw.trim().isEmpty) {
       return null;
     }
-    return raw.trim();
+    return cleanModelTitle(raw);
   }
 }
 

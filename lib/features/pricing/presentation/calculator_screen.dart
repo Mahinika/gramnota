@@ -208,6 +208,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     return 'Could not read $label. Use a percent, 0 or more.';
   }
 
+  String? _defaultPercentHint(String text, int workshopBasisPoints) {
+    if (text.trim().isNotEmpty) {
+      return null;
+    }
+    return 'Using workshop default ${formatPercent(workshopBasisPoints)}';
+  }
+
   String? _roundedMinutesNote(TextEditingController controller) {
     final value = parseNonNegativeDouble(controller.text);
     if (value == null || value == value.roundToDouble()) {
@@ -720,7 +727,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (target.stockDeducted) {
       setState(
         () => _importNote =
-            'Move the order back to Accepted before changing prints.',
+            'Move the order back to Quote or Accepted before changing prints.',
       );
       return;
     }
@@ -923,7 +930,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           ],
           if (locked)
             const Text(
-              'Move the order back to Accepted before changing prints.',
+              'Move the order back to Quote or Accepted before changing prints.',
             ),
           TextField(
             controller: _link,
@@ -963,6 +970,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 : null,
             decoration: const InputDecoration(labelText: 'Printer'),
             items: [
+              const DropdownMenuItem(child: Text('No printer')),
               for (final printer in printers)
                 DropdownMenuItem(value: printer.id, child: Text(printer.name)),
             ],
@@ -1075,6 +1083,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   controller: _markup,
                   decoration: InputDecoration(
                     labelText: 'Markup %',
+                    helperText: _defaultPercentHint(
+                      _markup.text,
+                      activeSettings.defaultMarkupBasisPoints,
+                    ),
                     errorText: _percentError('markup', _markup.text),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
@@ -1088,6 +1100,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   controller: _failure,
                   decoration: InputDecoration(
                     labelText: 'Failure %',
+                    helperText: _defaultPercentHint(
+                      _failure.text,
+                      activeSettings.defaultFailureBasisPoints,
+                    ),
                     errorText: _percentError('failure', _failure.text),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
@@ -1101,6 +1117,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   controller: _vat,
                   decoration: InputDecoration(
                     labelText: 'VAT %',
+                    helperText: _defaultPercentHint(
+                      _vat.text,
+                      activeSettings.vatBasisPoints,
+                    ),
                     errorText: _percentError('VAT', _vat.text),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
@@ -1242,6 +1262,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                         : 'Spool (${row.material})',
                   ),
                   items: [
+                    const DropdownMenuItem(child: Text('No spool')),
                     for (final item in spools)
                       DropdownMenuItem(
                         value: item.id,
