@@ -19,6 +19,13 @@ class MainActivity : FlutterActivity() {
             "se.gramnota.app/updates",
         ).setMethodCallHandler { call, result ->
             when (call.method) {
+                "installedBuild" -> {
+                    try {
+                        result.success(installedBuild())
+                    } catch (error: Exception) {
+                        result.error("build", error.message, null)
+                    }
+                }
                 "canInstallPackages" -> result.success(canInstallPackages())
                 "openInstallPermissionSettings" -> {
                     openInstallPermissionSettings()
@@ -40,6 +47,18 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    private fun installedBuild(): Int {
+        val info = packageManager.getPackageInfo(packageName, 0)
+        val code =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                info.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                info.versionCode.toLong()
+            }
+        return code.toInt()
     }
 
     private fun canInstallPackages(): Boolean {
