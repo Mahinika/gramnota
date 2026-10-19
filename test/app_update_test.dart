@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gramnota/features/updates/data/update_client.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:gramnota/features/updates/data/update_preferences.dart';
 import 'package:gramnota/features/updates/domain/update_check.dart';
 import 'package:gramnota/features/updates/domain/update_failures.dart';
@@ -15,6 +16,8 @@ import 'package:gramnota/features/updates/presentation/update_launcher.dart';
 import 'package:gramnota/features/updates/presentation/update_section.dart';
 import 'package:gramnota/features/updates/update_config.dart';
 import 'package:http/http.dart' as http;
+
+final _l10n = lookupAppLocalizations(const Locale('en'));
 
 void main() {
   test('parses installed build numbers', () {
@@ -116,36 +119,73 @@ void main() {
     );
   });
 
-  test('swedish messages name the failure', () {
+  test('failure messages name the failure', () {
     expect(
-      updateFailureMessage(const UpdateChecksumException()),
-      'Filen stämde inte (kontrollsumma). Inget installerades.',
+      updateFailureMessage(const UpdateChecksumException(), _l10n),
+      'The file did not match (checksum). Nothing was installed.',
     );
     expect(
-      updateFailureMessage(const UpdateDownloadException()),
-      'Nedladdningen misslyckades.',
+      updateFailureMessage(const UpdateDownloadException(), _l10n),
+      'The download failed.',
     );
     expect(
-      updateFailureMessage(const UpdateNetworkException()),
-      'Ingen internetanslutning. Försök igen senare.',
+      updateFailureMessage(const UpdateNetworkException(), _l10n),
+      'No internet connection. Try again later.',
     );
     expect(
-      updateFailureMessage(const FormatException('bad')),
-      'Kunde inte läsa uppdateringsinformationen. (bad)',
+      updateFailureMessage(const FormatException('bad'), _l10n),
+      'Could not read the update information. (bad)',
     );
     expect(
-      updateFailureMessage(StateError('x')),
-      'Kunde inte söka efter uppdateringar. (Bad state: x)',
+      updateFailureMessage(StateError('x'), _l10n),
+      'Could not check for updates. (Bad state: x)',
     );
     expect(
       updateFailureMessage(
         const UpdateNetworkException('SocketException: reset'),
+        _l10n,
       ),
-      'Ingen internetanslutning. Försök igen senare. (SocketException: reset)',
+      'No internet connection. Try again later. (SocketException: reset)',
     );
     expect(
-      updateFailureMessage(const UpdateManifestException('HTTP 302')),
-      'Kunde inte läsa uppdateringsinformationen. (HTTP 302)',
+      updateFailureMessage(const UpdateManifestException('HTTP 302'), _l10n),
+      'Could not read the update information. (HTTP 302)',
+    );
+    expect(
+      _l10n.updateAllowInstallBody,
+      'Allow installs from Gramnota. In Settings, choose Install unknown apps and turn Gramnota on. Then tap Update again.',
+    );
+    expect(
+      _l10n.updateConfirmAndroidBody,
+      'Android shows its own prompt. Tap Install there. That prompt cannot be skipped.',
+    );
+    expect(_l10n.updateSearching, 'Searching…');
+    expect(_l10n.updateSearch, 'Check for updates');
+    expect(_l10n.versionLabel, 'Version');
+    expect(_l10n.versionWithBuild('1.0.0', 8), 'Version 1.0.0 (build 8)');
+    expect(_l10n.updateBuildOnly(8), 'Build 8.');
+    expect(
+      _l10n.updateAvailableTitle('1.0.0'),
+      'New version 1.0.0 is available',
+    );
+    expect(
+      _l10n.updateAlreadyLatestBuild(1),
+      'You have the latest version (build 1)',
+    );
+    final swedish = lookupAppLocalizations(const Locale('sv'));
+    expect(
+      swedish.updateAlreadyLatest,
+      'Du har redan den senaste versionen.',
+    );
+    expect(swedish.updateSearching, 'Söker…');
+    expect(swedish.updateSearch, 'Sök efter uppdateringar');
+    expect(
+      swedish.updateAvailableTitle('1.0.0'),
+      'Ny version 1.0.0 finns',
+    );
+    expect(
+      swedish.updateFoundWhileClosed('1.0.0', 17),
+      'Ny version 1.0.0 (build 17) finns.',
     );
   });
 
@@ -167,18 +207,18 @@ void main() {
       installedBuild: 4,
       now: () => now,
     );
-    final skippedDay = await coordinator.check(manual: false);
+    final skippedDay = await coordinator.check(manual: false, l10n: _l10n);
     expect(skippedDay.artifact, isNull);
     expect(source.fetches, 0);
 
     preferences.storedCheck = null;
     preferences.storedSkip = 8;
-    final hidden = await coordinator.check(manual: false);
+    final hidden = await coordinator.check(manual: false, l10n: _l10n);
     expect(hidden.artifact, isNull);
     expect(source.fetches, 1);
     expect(preferences.storedCheck, now);
 
-    final asked = await coordinator.check(manual: true);
+    final asked = await coordinator.check(manual: true, l10n: _l10n);
     expect(asked.artifact?.build, 8);
   });
 
@@ -195,12 +235,12 @@ void main() {
       installedBuild: 1,
       now: () => DateTime.utc(2026, 10, 19),
     );
-    final auto = await coordinator.check(manual: false);
+    final auto = await coordinator.check(manual: false, l10n: _l10n);
     expect(auto.message, isNull);
     expect(preferences.storedCheck, isNull);
 
-    final manual = await coordinator.check(manual: true);
-    expect(manual.message, 'Ingen internetanslutning. Försök igen senare.');
+    final manual = await coordinator.check(manual: true, l10n: _l10n);
+    expect(manual.message, 'No internet connection. Try again later.');
 
     source.error = null;
     source.manifest = _manifest(build: 1, windowsOnly: true);
@@ -210,7 +250,7 @@ void main() {
       platform: UpdatePlatform.windows,
       installedBuild: 1,
       now: () => DateTime.utc(2026, 10, 19),
-    ).check(manual: true);
+    ).check(manual: true, l10n: _l10n);
     expect(current.upToDate, isTrue);
     expect(current.message, 'You have the latest version (build 1)');
   });
@@ -243,9 +283,12 @@ void main() {
     expect(windowsInstallerArguments.join(' '), isNot(contains('NORUN')));
   });
 
-  testWidgets('the update dialog is in Swedish', (tester) async {
+  testWidgets('the update dialog is localized', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: UpdateOfferDialog(
             artifact: UpdateArtifact(
@@ -261,11 +304,11 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Ny version 1.0.0 finns'), findsOneWidget);
+    expect(find.text('New version 1.0.0 is available'), findsOneWidget);
     expect(find.text('Bättre lager.'), findsOneWidget);
-    expect(find.text('Uppdatera'), findsOneWidget);
-    expect(find.text('Senare'), findsOneWidget);
-    expect(find.text('Hoppa över denna version'), findsOneWidget);
+    expect(find.text('Update'), findsOneWidget);
+    expect(find.text('Later'), findsOneWidget);
+    expect(find.text('Skip this version'), findsOneWidget);
   });
 
   testWidgets('settings can show the search button with a known version', (
@@ -273,13 +316,16 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
+        locale: Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: UpdateSection(versionLabel: 'Version 1.0.0 (build 1)'),
         ),
       ),
     );
     expect(find.text('Version 1.0.0 (build 1)'), findsOneWidget);
-    expect(find.text('Sök efter uppdateringar'), findsOneWidget);
+    expect(find.text('Check for updates'), findsOneWidget);
   });
 
   test(
@@ -310,7 +356,7 @@ void main() {
         platform: UpdatePlatform.android,
         installedBuild: 16,
         now: () => DateTime.utc(2026, 10, 19),
-      ).check(manual: true);
+      ).check(manual: true, l10n: _l10n);
       expect(redirecting.redirects, 1);
       expect(newer.artifact?.build, 17);
       expect(newer.artifact?.notes, notes);
@@ -321,7 +367,7 @@ void main() {
         platform: UpdatePlatform.android,
         installedBuild: 17,
         now: () => DateTime.utc(2026, 10, 19),
-      ).check(manual: true);
+      ).check(manual: true, l10n: _l10n);
       expect(current.upToDate, isTrue);
       expect(current.message, 'You have the latest version (build 17)');
 
@@ -369,6 +415,9 @@ void main() {
     final gate = Completer<void>();
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: UpdateSection(
             versionLabel: 'Version 1.0.0 (build 16)',
@@ -382,10 +431,10 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Sök efter uppdateringar'));
+    await tester.tap(find.text('Check for updates'));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.text('Söker…'), findsOneWidget);
+    expect(find.text('Searching…'), findsOneWidget);
     gate.complete();
     await tester.pump();
     await tester.pump();
@@ -398,6 +447,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: UpdateSection(
             versionLabel: 'Version 1.0.0 (build 16)',
@@ -408,12 +460,12 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Sök efter uppdateringar'));
+    await tester.tap(find.text('Check for updates'));
     await tester.pump();
     await tester.pump();
     expect(find.textContaining('plugin missing'), findsOneWidget);
     expect(
-      find.textContaining('Kunde inte söka efter uppdateringar'),
+      find.textContaining('Could not check for updates'),
       findsOneWidget,
     );
   });
@@ -431,6 +483,9 @@ void main() {
     );
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: UpdateSection(
             versionLabel: 'Version 1.0.0 (build 16)',
@@ -444,17 +499,17 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Sök efter uppdateringar'));
+    await tester.tap(find.text('Check for updates'));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsWidgets);
     gate.complete();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Ny version 1.0.0 finns'), findsOneWidget);
-    await tester.tap(find.text('Senare'));
+    expect(find.text('New version 1.0.0 is available'), findsOneWidget);
+    await tester.tap(find.text('Later'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Ny version 1.0.0 finns'), findsNothing);
+    expect(find.text('New version 1.0.0 is available'), findsNothing);
   });
 }
 
@@ -509,7 +564,7 @@ Future<void> _downloadFromLocalServer() async {
     platform: UpdatePlatform.android,
     installedBuild: 1,
     now: () => DateTime.utc(2026, 10, 19),
-  ).check(manual: false);
+  ).check(manual: false, l10n: _l10n);
   expect(outcome.artifact?.build, 20);
   expect(outcome.artifact?.notes, 'Ny version.');
 

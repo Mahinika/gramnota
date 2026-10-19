@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:gramnota/core/format.dart';
 import 'package:gramnota/features/orders/domain/dashboard.dart';
 import 'package:gramnota/features/orders/domain/print_order.dart';
 import 'package:gramnota/features/orders/presentation/dashboard_screen.dart';
 import 'package:gramnota/features/orders/presentation/order_status_style.dart';
+import 'package:gramnota/l10n/l10n.dart';
+
+Widget _localized(Widget home) {
+  return MaterialApp(
+    locale: const Locale('en'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: home,
+  );
+}
 
 void main() {
-  testWidgets('empty month shows pipeline and no revenue chart', (tester) async {
+  testWidgets('empty month shows pipeline and no revenue chart', (
+    tester,
+  ) async {
     const snapshot = DashboardSnapshot(
       year: 2026,
       month: 4,
@@ -26,8 +39,8 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
+      _localized(
+        Scaffold(
           body: DashboardView(
             snapshot: snapshot,
             currencyCode: 'SEK',
@@ -47,7 +60,10 @@ void main() {
       find.text('No spool is at or under its warning threshold.'),
       200,
     );
-    expect(find.text('No spool is at or under its warning threshold.'), findsOneWidget);
+    expect(
+      find.text('No spool is at or under its warning threshold.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('revenue month shows VAT split and a low spool', (tester) async {
@@ -67,7 +83,12 @@ void main() {
         DashboardRank(id: 'anna', label: 'Anna', totalMinor: 16250, count: 1),
       ],
       topProducts: [
-        DashboardRank(id: 'dragon', label: 'Dragon', totalMinor: 16250, count: 2),
+        DashboardRank(
+          id: 'dragon',
+          label: 'Dragon',
+          totalMinor: 16250,
+          count: 2,
+        ),
       ],
       revenueOrders: [
         DashboardOrderRow(
@@ -89,8 +110,8 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
+      _localized(
+        Scaffold(
           body: DashboardView(
             snapshot: snapshot,
             currencyCode: 'SEK',
@@ -103,10 +124,10 @@ void main() {
 
     expect(find.text('Revenue incl. VAT'), findsOneWidget);
     expect(find.text('Revenue excl. VAT'), findsOneWidget);
-    expect(find.text('162,50 kr'), findsWidgets);
-    expect(find.text('130,00 kr'), findsWidgets);
+    expect(find.text(formatMoney(16250, 'SEK', locale: 'en')), findsWidgets);
+    expect(find.text(formatMoney(13000, 'SEK', locale: 'en')), findsWidgets);
     expect(find.text('Profit'), findsWidgets);
-    expect(find.text('30,00 kr'), findsWidgets);
+    expect(find.text(formatMoney(3000, 'SEK', locale: 'en')), findsWidgets);
     await tester.scrollUntilVisible(find.text('PLA'), 200);
     expect(find.text('PLA'), findsOneWidget);
     expect(find.text('25 g'), findsOneWidget);
@@ -118,10 +139,12 @@ void main() {
     expect(find.text('Nothing to chart this month.'), findsNothing);
   });
 
-  testWidgets('status choices name the workflow and the stock rule', (tester) async {
+  testWidgets('status choices name the workflow and the stock rule', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
+      _localized(
+        Scaffold(
           body: OrderStatusSection(
             selected: OrderStatus.quote,
             onSelected: (_) {},
@@ -141,8 +164,8 @@ void main() {
 
   testWidgets('coverage warning is visible before printing', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
+      _localized(
+        const Scaffold(
           body: StockWarningBanner(
             messages: [
               'Prusa PLA needs 60 g for this quote. Another 50 g is reserved on accepted quotes. 100 g is left, so it is short by 10 g before this order is marked Printed.',

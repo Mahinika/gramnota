@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gramnota/l10n/l10n.dart';
 
 import '../../../core/firebase_emulator.dart';
 import '../../../core/gate_scaffold.dart';
@@ -14,16 +15,11 @@ class SetupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const GateScaffold(
-      title: 'Gramnota',
-      subtitle: 'Setup',
-      child: Text(
-        'Firebase is not configured yet. Create a Firebase project, enable '
-        'Google sign-in and Firestore, then run flutterfire configure. '
-        'Add the debug SHA-1 for the Android app and deploy firestore.rules. '
-        'The steps are in the README.',
-        textAlign: TextAlign.center,
-      ),
+    final l10n = context.l10n;
+    return GateScaffold(
+      title: l10n.appTitle,
+      subtitle: l10n.authSetupSubtitle,
+      child: Text(l10n.authSetupBody, textAlign: TextAlign.center),
     );
   }
 }
@@ -40,6 +36,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   String? _error;
 
   Future<void> _run(Future<void> Function() action) async {
+    final failed = context.l10n.authSignInFailed;
     setState(() {
       _busy = true;
       _error = null;
@@ -48,12 +45,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       await action();
     } on FirebaseAuthException catch (error) {
       setState(() {
-        _error = error.message ?? 'Sign-in failed. Try again.';
+        _error = error.message ?? failed;
       });
     } on SignInFailed catch (error) {
       setState(() => _error = error.message);
     } on Object {
-      setState(() => _error = 'Sign-in failed. Try again.');
+      setState(() => _error = failed);
     } finally {
       if (mounted) {
         setState(() => _busy = false);
@@ -63,23 +60,21 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return GateScaffold(
-      title: 'Gramnota',
-      subtitle: 'Price your 3D prints on your phone or on this computer.',
+      title: l10n.appTitle,
+      subtitle: l10n.authSignInSubtitle,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (!firebaseIsConfigured)
-            const Text('Firebase is not configured. See the README.'),
+          if (!firebaseIsConfigured) Text(l10n.authFirebaseMissing),
           if (_error != null) ...[
             Text(_error!, textAlign: TextAlign.center),
             const SizedBox(height: 12),
           ],
           if (kIsWeb)
             Text(
-              useFirebaseEmulator
-                  ? 'Google sign-in is not available in this browser. Use the test seller account.'
-                  : 'Google sign-in is not available in this browser. Use the Android or Windows app.',
+              useFirebaseEmulator ? l10n.authWebEmulator : l10n.authWebUseApp,
               textAlign: TextAlign.center,
             )
           else
@@ -87,16 +82,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               onPressed: _busy || !firebaseIsConfigured
                   ? null
                   : () => _run(signInWithGoogle),
-              child: Text(_busy ? 'Signing in…' : 'Sign in with Google'),
+              child: Text(_busy ? l10n.authSigningIn : l10n.authSignInGoogle),
             ),
           if (_busy &&
               !kIsWeb &&
               defaultTargetPlatform == TargetPlatform.windows) ...[
             const SizedBox(height: 12),
-            const Text(
-              'Finish sign-in in the browser, then return here.',
-              textAlign: TextAlign.center,
-            ),
+            Text(l10n.authFinishInBrowser, textAlign: TextAlign.center),
           ],
           if (useFirebaseEmulator) ...[
             const SizedBox(height: 12),
@@ -105,18 +97,18 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                 onPressed: _busy || !firebaseIsConfigured
                     ? null
                     : () => _run(signInWithEmulatorTester),
-                child: const Text('Sign in as test seller'),
+                child: Text(l10n.authSignInTestSeller),
               )
             else
               OutlinedButton(
                 onPressed: _busy || !firebaseIsConfigured
                     ? null
                     : () => _run(signInWithEmulatorTester),
-                child: const Text('Sign in as test seller'),
+                child: Text(l10n.authSignInTestSeller),
               ),
             const SizedBox(height: 8),
             Text(
-              'Local Firebase emulators. This account is $emulatorTesterEmail.',
+              l10n.authEmulatorAccount(emulatorTesterEmail),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall,
             ),

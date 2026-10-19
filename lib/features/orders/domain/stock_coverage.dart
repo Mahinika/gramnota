@@ -1,4 +1,5 @@
 import '../../../core/format.dart';
+import '../../../l10n/l10n.dart';
 import '../../filaments/domain/filament_spool.dart';
 import 'print_order.dart';
 
@@ -28,16 +29,33 @@ class SpoolCoverage {
 
   bool get isShort => missingSpool || shortfallGrams > 0.0001;
 
-  String get message {
+  /// English when the app locale is unset, so unit tests keep their wording.
+  String get message => messageFor(activeGramnotaL10n);
+
+  String messageFor(AppLocalizations l10n) {
+    final locale = l10n.localeName;
+    final name = missingSpool
+        ? l10n.stockMissingSpoolName
+        : (label.trim().isEmpty ? l10n.stockSpoolFallback : label);
     if (missingSpool) {
-      return '$label needs ${formatGrams(neededGrams)} on this quote, but that spool is no longer in the workshop.';
+      return l10n.stockMissingOnQuote(
+        name,
+        formatGrams(neededGrams, locale: locale),
+      );
     }
-    final reserved = reservedGrams > 0.0001
-        ? ' Another ${formatGrams(reservedGrams)} is reserved on accepted quotes.'
-        : '';
-    return '$label needs ${formatGrams(neededGrams)} for this quote.$reserved '
-        '${formatGrams(remainingGrams)} is left, so it is short by ${formatGrams(shortfallGrams)} '
-        'before this order is marked Printed.';
+    final needed = formatGrams(neededGrams, locale: locale);
+    final left = formatGrams(remainingGrams, locale: locale);
+    final short = formatGrams(shortfallGrams, locale: locale);
+    if (reservedGrams > 0.0001) {
+      return l10n.stockShortReserved(
+        name,
+        needed,
+        formatGrams(reservedGrams, locale: locale),
+        left,
+        short,
+      );
+    }
+    return l10n.stockShortPlain(name, needed, left, short);
   }
 }
 
@@ -83,7 +101,7 @@ List<SpoolCoverage> quoteSpoolCoverage({
       }
     }
     final label = spool == null
-        ? 'A missing spool'
+        ? ''
         : '${spool.brand} ${spool.material}'.trim();
     final remaining = spool == null
         ? 0.0
@@ -91,7 +109,7 @@ List<SpoolCoverage> quoteSpoolCoverage({
     result.add(
       SpoolCoverage(
         filamentId: id,
-        label: label.isEmpty ? 'Spool' : label,
+        label: label,
         neededGrams: grams,
         reservedGrams: reserved[id] ?? 0,
         remainingGrams: remaining,

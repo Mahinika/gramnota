@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gramnota/features/filaments/domain/filament_spool.dart';
 import 'package:gramnota/features/import/domain/gcode_metadata.dart';
 import 'package:gramnota/features/import/domain/plate_quote.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:gramnota/features/import/presentation/plate_import_dialog.dart';
 import 'package:gramnota/features/settings/domain/workshop_settings.dart';
 
@@ -10,12 +11,15 @@ void main() {
   test('each plate becomes its own priced print', () {
     var ids = 0;
     final lines = quoteLinesFromPlates(
+      l10n: activeGramnotaL10n,
       plates: const [
         GcodePlate(
           name: 'Base',
           slicer: 'OrcaSlicer',
           printTimeSeconds: 3600,
-          filaments: [GcodeFilament(grams: 10, material: 'PLA', colorHex: '#FFFFFF')],
+          filaments: [
+            GcodeFilament(grams: 10, material: 'PLA', colorHex: '#FFFFFF'),
+          ],
         ),
         GcodePlate(
           name: 'Lid',
@@ -79,6 +83,9 @@ void main() {
     PlateImportChoice? choice;
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Builder(
           builder: (context) => Scaffold(
             body: TextButton(

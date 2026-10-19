@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../../l10n/l10n.dart';
 import '../domain/import_models.dart';
 
 class PrintablesImporter {
@@ -79,7 +80,7 @@ query PrintFiles($id: ID!) {
         profiles.add(
           ImportedProfile(
             id: '${file['id'] ?? ''}',
-            title: '${file['name'] ?? 'Print file'}',
+            title: '${file['name'] ?? activeGramnotaL10n.importPrintFile}',
             printTimeSeconds: seconds,
             printerName: printer,
             filaments: grams == null

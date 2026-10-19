@@ -1,6 +1,6 @@
 # Gramnota
 
-Flutter app that quotes a sale price for a 3D print. Package name `gramnota`. Same project runs on Android and Windows. UI copy is English. The default currency is SEK.
+Flutter app that quotes a sale price for a 3D print. Package name `gramnota`. Same project runs on Android and Windows. UI copy is localized (Swedish, English, German, Norwegian, Danish, Finnish, French, Spanish, Polish, Dutch). A workshop with no language field stays Swedish. The default currency is SEK. New quotes store the workshop currency; older quotes keep the currency they were saved with. Missing currency reads as SEK. There is no exchange conversion.
 
 ## Commands
 

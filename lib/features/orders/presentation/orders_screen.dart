@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/format.dart';
+import '../../../core/locale_pickers.dart';
 import '../../../core/money.dart';
 import '../../../core/text_prompt.dart';
 import '../../../core/menu_card.dart';
@@ -11,6 +12,7 @@ import '../../../core/section_layout.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
+import '../../../l10n/l10n.dart';
 import '../../catalog/domain/catalog_product.dart';
 import '../../customers/domain/customer.dart';
 import '../../customers/presentation/customer_quote_picker.dart';
@@ -39,7 +41,7 @@ Future<void> _assignOrderCustomer(
     context,
     store,
     customers,
-    title: 'Link customer',
+    title: context.l10n.orderLinkCustomer,
   );
   if (id == null || !context.mounted) {
     return;
@@ -48,7 +50,16 @@ Future<void> _assignOrderCustomer(
   await store.saveOrder(order.copyWith(customerId: id, updatedAt: now));
 }
 
-String _formatOrderUpdated(String iso) {
+Widget _chipLabel(BuildContext context, String text) {
+  return ConstrainedBox(
+    constraints: BoxConstraints(
+      maxWidth: MediaQuery.sizeOf(context).width - 64,
+    ),
+    child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
+  );
+}
+
+String _formatOrderUpdated(String iso, AppLocalizations l10n, String locale) {
   try {
     final updated = DateTime.parse(iso).toLocal();
     final now = DateTime.now();
@@ -56,17 +67,15 @@ String _formatOrderUpdated(String iso) {
     final today = DateTime(now.year, now.month, now.day);
     final delta = today.difference(day).inDays;
     if (delta == 0) {
-      return 'Updated today';
+      return l10n.orderUpdatedToday;
     }
     if (delta == 1) {
-      return 'Updated yesterday';
+      return l10n.orderUpdatedYesterday;
     }
     if (delta < 7) {
-      return 'Updated $delta days ago';
+      return l10n.orderUpdatedDaysAgo(delta);
     }
-    final month = updated.month.toString().padLeft(2, '0');
-    final dayText = updated.day.toString().padLeft(2, '0');
-    return 'Updated ${updated.year}-$month-$dayText';
+    return l10n.orderUpdatedOn(formatIsoDate(iso, locale: locale));
   } on FormatException {
     return '';
   }
@@ -93,9 +102,10 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(body: EmptyView(message: 'Sign in to see orders.'));
+      return Scaffold(body: EmptyView(message: l10n.orderSignIn));
     }
     final orders = ref.watch(ordersProvider(store));
     final customers =
@@ -104,21 +114,20 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       for (final customer in customers) customer.id: customer.name,
     };
     return Scaffold(
-      appBar: AppBar(title: const Text('Orders')),
+      appBar: AppBar(title: Text(l10n.navOrders)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/calculator'),
-        tooltip: 'New quote',
+        tooltip: l10n.orderNewQuote,
         child: const Icon(Icons.add),
       ),
       body: orders.when(
         data: (list) {
           if (list.isEmpty) {
             return EmptyView(
-              message:
-                  'No quotes yet. Price a print in the calculator and save.',
+              message: l10n.orderEmpty,
               action: FilledButton(
                 onPressed: () => context.go('/calculator'),
-                child: const Text('Open calculator'),
+                child: Text(l10n.orderOpenCalculator),
               ),
             );
           }
@@ -156,81 +165,72 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: TextField(
                   controller: _search,
-                  decoration: const InputDecoration(
-                    hintText: 'Title, quote no., customer, or note',
-                    prefixIcon: Icon(Icons.search),
+                  decoration: InputDecoration(
+                    hintText: l10n.orderSearchHint,
+                    prefixIcon: const Icon(Icons.search),
                     filled: true,
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
-              SizedBox(
-                height: 72,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: const Text('All'),
-                        selected:
-                            _filter == null && !_inProgressOnly && !_overdueOnly,
+                    FilterChip(
+                      label: _chipLabel(context, l10n.orderFilterAll),
+                      selected:
+                          _filter == null && !_inProgressOnly && !_overdueOnly,
+                      showCheckmark: false,
+                      materialTapTargetSize: MaterialTapTargetSize.padded,
+                      onSelected: (_) => setState(() {
+                        _filter = null;
+                        _inProgressOnly = false;
+                        _overdueOnly = false;
+                      }),
+                    ),
+                    FilterChip(
+                      label: _chipLabel(context, l10n.orderFilterInProgress),
+                      selected: _inProgressOnly,
+                      showCheckmark: false,
+                      materialTapTargetSize: MaterialTapTargetSize.padded,
+                      onSelected: (_) => setState(() {
+                        _inProgressOnly = !_inProgressOnly;
+                        if (_inProgressOnly) {
+                          _filter = null;
+                          _overdueOnly = false;
+                        }
+                      }),
+                    ),
+                    FilterChip(
+                      label: _chipLabel(context, l10n.orderFilterOverdue),
+                      selected: _overdueOnly,
+                      showCheckmark: false,
+                      materialTapTargetSize: MaterialTapTargetSize.padded,
+                      onSelected: (_) => setState(() {
+                        _overdueOnly = !_overdueOnly;
+                        if (_overdueOnly) {
+                          _filter = null;
+                          _inProgressOnly = false;
+                        }
+                      }),
+                    ),
+                    for (final status in OrderStatus.values)
+                      FilterChip(
+                        label: _chipLabel(
+                          context,
+                          orderStatusLabel(status, l10n),
+                        ),
+                        selected: _filter == status,
                         showCheckmark: false,
                         materialTapTargetSize: MaterialTapTargetSize.padded,
                         onSelected: (_) => setState(() {
-                          _filter = null;
+                          _filter = status;
                           _inProgressOnly = false;
                           _overdueOnly = false;
                         }),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: const Text('In progress'),
-                        selected: _inProgressOnly,
-                        showCheckmark: false,
-                        materialTapTargetSize: MaterialTapTargetSize.padded,
-                        onSelected: (_) => setState(() {
-                          _inProgressOnly = !_inProgressOnly;
-                          if (_inProgressOnly) {
-                            _filter = null;
-                            _overdueOnly = false;
-                          }
-                        }),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: const Text('Overdue'),
-                        selected: _overdueOnly,
-                        showCheckmark: false,
-                        materialTapTargetSize: MaterialTapTargetSize.padded,
-                        onSelected: (_) => setState(() {
-                          _overdueOnly = !_overdueOnly;
-                          if (_overdueOnly) {
-                            _filter = null;
-                            _inProgressOnly = false;
-                          }
-                        }),
-                      ),
-                    ),
-                    for (final status in OrderStatus.values)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(orderStatusLabel(status)),
-                          selected: _filter == status,
-                          showCheckmark: false,
-                          materialTapTargetSize: MaterialTapTargetSize.padded,
-                          onSelected: (_) => setState(() {
-                            _filter = status;
-                            _inProgressOnly = false;
-                            _overdueOnly = false;
-                          }),
-                        ),
                       ),
                   ],
                 ),
@@ -241,9 +241,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      visible.length == 1
-                          ? '1 quote'
-                          : '${visible.length} quotes',
+                      l10n.orderQuoteCount(visible.length),
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -252,9 +250,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 ),
               Expanded(
                 child: visible.isEmpty
-                    ? const EmptyView(
-                        message: 'No orders match your search or filter.',
-                      )
+                    ? EmptyView(message: l10n.orderNoMatch)
                     : ListView.separated(
                         padding: TappableListCard.listPadding,
                         itemCount: visible.length,
@@ -293,13 +289,18 @@ class _OrderListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final statusColor = orderStatusColor(order.status, scheme);
     final expired = quoteIsExpired(order, DateTime.now());
     final note = order.note.trim();
     final prints = orderPrints(order);
-    final updated = _formatOrderUpdated(order.updatedAt);
+    final updated = _formatOrderUpdated(
+      order.updatedAt,
+      l10n,
+      context.formattingLocale,
+    );
     return TappableListCard(
       onTap: onTap,
       child: Column(
@@ -307,23 +308,34 @@ class _OrderListCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'Quote ${order.quoteNumber}',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
+              Expanded(
+                child: Text(
+                  l10n.orderQuoteNumber(order.quoteNumber),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                 ),
-                child: Text(
-                  orderStatusLabel(order.status),
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: statusColor,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.sizeOf(context).width * 0.4,
+                  ),
+                  child: Text(
+                    orderStatusLabel(order.status, l10n),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: statusColor,
+                    ),
                   ),
                 ),
               ),
@@ -339,7 +351,7 @@ class _OrderListCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'Overdue',
+                    l10n.orderFilterOverdue,
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: scheme.onErrorContainer,
                     ),
@@ -392,17 +404,25 @@ class _OrderListCard extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(
-                formatMoney(order.breakdown.totalMinor, order.currencyCode),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: scheme.primary,
+              Expanded(
+                child: Text(
+                  context.money(order.breakdown.totalMinor, order.currencyCode),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: scheme.primary,
+                  ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                prints.length == 1 ? '1 print' : '${prints.length} prints',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  l10n.orderPrintCount(prints.length),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
@@ -430,10 +450,9 @@ class OrderDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(userStoreProvider);
+    final l10n = context.l10n;
     if (store == null) {
-      return const Scaffold(
-        body: EmptyView(message: 'Sign in to see this quote.'),
-      );
+      return Scaffold(body: EmptyView(message: l10n.orderSignInQuote));
     }
     final orders = ref.watch(ordersProvider(store));
     final settings = ref.watch(settingsProvider(store));
@@ -444,7 +463,7 @@ class OrderDetailScreen extends ConsumerWidget {
       data: (list) {
         final matches = list.where((order) => order.id == id);
         if (matches.isEmpty) {
-          return const Scaffold(body: EmptyView(message: 'Quote not found.'));
+          return Scaffold(body: EmptyView(message: l10n.orderNotFound));
         }
         final order = matches.first;
         final customer = customers.asData?.value
@@ -466,10 +485,10 @@ class OrderDetailScreen extends ConsumerWidget {
         );
         return Scaffold(
           appBar: AppBar(
-            title: Text('Quote ${order.quoteNumber}'),
+            title: Text(l10n.orderQuoteNumber(order.quoteNumber)),
             actions: [
               IconButton(
-                tooltip: 'Preview quote',
+                tooltip: l10n.orderPreview,
                 onPressed: () => openQuotePdfPreview(
                   context,
                   order: order,
@@ -479,7 +498,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 icon: const Icon(Icons.picture_as_pdf_outlined),
               ),
               IconButton(
-                tooltip: 'Send to user',
+                tooltip: l10n.orderSendToUser,
                 onPressed: () => sendItem(
                   context: context,
                   store: store,
@@ -503,11 +522,13 @@ class OrderDetailScreen extends ConsumerWidget {
                         Expanded(
                           child: Text(
                             order.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                         ),
                         IconButton(
-                          tooltip: 'Edit title',
+                          tooltip: l10n.orderEditTitle,
                           onPressed: () => _renameQuote(context, store, order),
                           icon: const Icon(Icons.edit_outlined),
                         ),
@@ -519,7 +540,7 @@ class OrderDetailScreen extends ConsumerWidget {
                         OrderStatusChip(status: order.status),
                         const Spacer(),
                         Text(
-                          formatMoney(
+                          context.money(
                             order.breakdown.totalMinor,
                             order.currencyCode,
                           ),
@@ -534,8 +555,12 @@ class OrderDetailScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       Text(
                         quoteIsExpired(order, DateTime.now())
-                            ? 'Overdue · valid until ${formatIsoDate(order.validUntil)}'
-                            : 'Valid until ${formatIsoDate(order.validUntil)}',
+                            ? l10n.orderOverdueUntil(
+                                context.dateText(order.validUntil),
+                              )
+                            : l10n.orderValidUntil(
+                                context.dateText(order.validUntil),
+                              ),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: quoteIsExpired(order, DateTime.now())
                               ? Theme.of(context).colorScheme.error
@@ -543,10 +568,18 @@ class OrderDetailScreen extends ConsumerWidget {
                         ),
                       ),
                     ],
-                    if (_formatOrderUpdated(order.updatedAt).isNotEmpty) ...[
+                    if (_formatOrderUpdated(
+                      order.updatedAt,
+                      l10n,
+                      context.formattingLocale,
+                    ).isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
-                        _formatOrderUpdated(order.updatedAt),
+                        _formatOrderUpdated(
+                          order.updatedAt,
+                          l10n,
+                          context.formattingLocale,
+                        ),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -562,7 +595,9 @@ class OrderDetailScreen extends ConsumerWidget {
               if (coverage.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 StockWarningBanner(
-                  messages: [for (final item in coverage) item.message],
+                  messages: [
+                    for (final item in coverage) item.messageFor(l10n),
+                  ],
                 ),
               ],
               const SizedBox(height: 12),
@@ -592,15 +627,19 @@ class OrderDetailScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            customer?.name ?? 'No customer linked',
+                            customer?.name ?? l10n.orderNoCustomerLinked,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           Text(
                             customer == null
-                                ? 'Tap to link a customer'
+                                ? l10n.orderTapToLink
                                 : customer.addressLine.isEmpty
-                                ? 'View customer'
+                                ? l10n.orderViewCustomer
                                 : customer.addressLine,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   color: Theme.of(
@@ -613,7 +652,7 @@ class OrderDetailScreen extends ConsumerWidget {
                     ),
                     if (customer != null)
                       IconButton(
-                        tooltip: 'Change customer',
+                        tooltip: l10n.orderChangeCustomer,
                         visualDensity: VisualDensity.compact,
                         onPressed: () => _assignOrderCustomer(
                           context,
@@ -629,8 +668,21 @@ class OrderDetailScreen extends ConsumerWidget {
               ),
               const SectionRule(),
               _OrderNoteField(order: order, store: store),
+              const SizedBox(height: 12),
+              QuoteLanguageMenu(
+                quoteLanguage: order.quoteLanguage,
+                onChanged: (language) {
+                  if (language == order.quoteLanguage) {
+                    return;
+                  }
+                  store.orders.doc(order.id).update({
+                    'quoteLanguage': language,
+                    'updatedAt': DateTime.now().toUtc().toIso8601String(),
+                  });
+                },
+              ),
               const SectionRule(),
-              const SectionHeading('Status'),
+              SectionHeading(l10n.orderStatusHeading),
               OrderStatusSection(
                 selected: order.status,
                 onSelected: (status) => _changeOrderStatus(
@@ -644,8 +696,8 @@ class OrderDetailScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               _DepositField(order: order, store: store),
               const SectionRule(),
-              const SectionHeading('New quote'),
-              const Text(duplicateQuoteSummary),
+              SectionHeading(l10n.orderNewQuote),
+              Text(duplicateQuoteSummary(l10n)),
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerLeft,
@@ -663,11 +715,11 @@ class OrderDetailScreen extends ConsumerWidget {
                       context.go('/orders/$id');
                     }
                   },
-                  child: const Text('Duplicate as new quote'),
+                  child: Text(l10n.orderDuplicateAction),
                 ),
               ),
               const SectionRule(),
-              const SectionHeading('Prints'),
+              SectionHeading(l10n.orderPrintsHeading),
               if (!locked)
                 Wrap(
                   spacing: 8,
@@ -676,7 +728,7 @@ class OrderDetailScreen extends ConsumerWidget {
                       onPressed: () =>
                           context.go('/calculator?orderId=${order.id}'),
                       icon: const Icon(Icons.add),
-                      label: const Text('Add print'),
+                      label: Text(l10n.orderAddPrint),
                     ),
                     TextButton.icon(
                       onPressed: () => addProductToQuote(
@@ -689,7 +741,7 @@ class OrderDetailScreen extends ConsumerWidget {
                         printers: printerList,
                       ),
                       icon: const Icon(Icons.inventory_2_outlined),
-                      label: const Text('Add product'),
+                      label: Text(l10n.orderAddProduct),
                     ),
                   ],
                 ),
@@ -697,7 +749,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4, bottom: 8),
                   child: Text(
-                    printsLockedMessage,
+                    printsLockedMessage(l10n),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -713,7 +765,7 @@ class OrderDetailScreen extends ConsumerWidget {
                   store: store,
                 ),
               const SectionRule(),
-              const SectionHeading('Price breakdown'),
+              SectionHeading(l10n.orderPriceBreakdown),
               BreakdownCard(
                 breakdown: order.breakdown,
                 currencyCode: order.currencyCode,
@@ -740,25 +792,26 @@ Future<void> _changeOrderStatus({
   if (order.status == next) {
     return;
   }
-  final explanation = stockChangeExplanation(order.status, next);
+  final l10n = context.l10n;
+  final explanation = stockChangeExplanation(order.status, next, l10n);
   final short = statusHoldsStock(next) && !statusHoldsStock(order.status)
-      ? [for (final item in coverage) item.message]
+      ? [for (final item in coverage) item.messageFor(l10n)]
       : const <String>[];
   final blocks = [?explanation, ...short];
   if (blocks.isNotEmpty) {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Mark as ${orderStatusLabel(next)}?'),
+        title: Text(l10n.orderMarkAs(orderStatusLabel(next, l10n))),
         content: Text(blocks.join('\n\n')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Back'),
+            child: Text(l10n.setupBack),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Update status'),
+            child: Text(l10n.orderUpdateStatus),
           ),
         ],
       ),
@@ -769,9 +822,9 @@ Future<void> _changeOrderStatus({
   }
   final change = await OrderStock(store).setStatus(order: order, next: next);
   if (change.warning.isNotEmpty && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(change.warning)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(change.warning)));
   }
 }
 
@@ -789,14 +842,24 @@ class _DepositFieldState extends State<_DepositField> {
   late final TextEditingController _amount;
   DateTime? _date;
   var _saving = false;
+  String? _amountLocale;
 
   @override
   void initState() {
     super.initState();
-    _amount = TextEditingController(
-      text: formatMinorField(widget.order.depositMinor),
-    );
+    _amount = TextEditingController();
     _date = calendarDayOf(widget.order.depositAt);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = Localizations.localeOf(context).toString();
+    if (_amountLocale == locale) {
+      return;
+    }
+    _amountLocale = locale;
+    _amount.text = formatMinorField(widget.order.depositMinor, locale: locale);
   }
 
   @override
@@ -804,7 +867,10 @@ class _DepositFieldState extends State<_DepositField> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.order.id != widget.order.id ||
         oldWidget.order.depositMinor != widget.order.depositMinor) {
-      _amount.text = formatMinorField(widget.order.depositMinor);
+      _amount.text = formatMinorField(
+        widget.order.depositMinor,
+        locale: _amountLocale ?? Localizations.localeOf(context).toString(),
+      );
     }
     if (oldWidget.order.id != widget.order.id ||
         oldWidget.order.depositAt != widget.order.depositAt) {
@@ -821,11 +887,9 @@ class _DepositFieldState extends State<_DepositField> {
   String _dateLabel() {
     final date = _date;
     if (date == null) {
-      return 'Deposit date';
+      return context.l10n.orderDepositDate;
     }
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
-    return '${date.year}-$month-$day';
+    return context.dateText(calendarDayStamp(date));
   }
 
   Future<void> _pickDate() async {
@@ -835,7 +899,7 @@ class _DepositFieldState extends State<_DepositField> {
       initialDate: _date ?? now,
       firstDate: DateTime(now.year - 10),
       lastDate: DateTime(now.year + 2),
-      helpText: 'Deposit received',
+      helpText: context.l10n.orderDepositReceived,
     );
     if (picked == null) {
       return;
@@ -846,9 +910,9 @@ class _DepositFieldState extends State<_DepositField> {
   Future<void> _save() async {
     final parsed = parseMinor(_amount.text.trim().isEmpty ? '0' : _amount.text);
     if (parsed == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter the deposit with a comma or a dot.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.orderDepositInvalid)));
       return;
     }
     if (_saving) {
@@ -859,7 +923,8 @@ class _DepositFieldState extends State<_DepositField> {
         ? null
         : (_date ?? DateTime(today.year, today.month, today.day));
     final stamp = day == null ? '' : calendarDayStamp(day);
-    if (parsed == widget.order.depositMinor && stamp == widget.order.depositAt) {
+    if (parsed == widget.order.depositMinor &&
+        stamp == widget.order.depositAt) {
       return;
     }
     setState(() => _saving = true);
@@ -875,11 +940,7 @@ class _DepositFieldState extends State<_DepositField> {
     } on Object {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Could not save the deposit. Check the connection and try again.',
-            ),
-          ),
+          SnackBar(content: Text(context.l10n.orderDepositSaveFailed)),
         );
       }
     } finally {
@@ -894,21 +955,22 @@ class _DepositFieldState extends State<_DepositField> {
     final order = widget.order;
     final balance = order.breakdown.totalMinor - order.depositMinor;
     final settled = order.status == OrderStatus.paid;
+    final l10n = context.l10n;
     final balanceLabel = settled
-        ? 'Marked paid'
+        ? l10n.orderMarkedPaid
         : balance <= 0
-        ? 'Deposit covers this quote'
-        : 'Still to pay ${formatMoney(balance, order.currencyCode)}';
+        ? l10n.orderDepositCovers
+        : l10n.orderStillToPay(context.money(balance, order.currencyCode));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextField(
           controller: _amount,
           decoration: InputDecoration(
-            labelText: 'Deposit paid (${order.currencyCode})',
+            labelText: l10n.orderDepositPaid(order.currencyCode),
             helperText: settled
-                ? 'The order is marked Paid. The deposit is what was paid before that.'
-                : 'Optional. Home counts this amount in the deposit month, and the rest when the order is printed or paid.',
+                ? l10n.orderDepositPaidHelp
+                : l10n.orderDepositOptionalHelp,
           ),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onSubmitted: (_) => _save(),
@@ -928,7 +990,7 @@ class _DepositFieldState extends State<_DepositField> {
             Expanded(child: Text(balanceLabel)),
             TextButton(
               onPressed: _saving ? null : _save,
-              child: Text(_saving ? 'Saving' : 'Save deposit'),
+              child: Text(_saving ? l10n.saving : l10n.orderSaveDeposit),
             ),
           ],
         ),
@@ -983,11 +1045,7 @@ class _OrderNoteFieldState extends State<_OrderNoteField> {
     } on Object {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Could not save the note. Check the connection and try again.',
-            ),
-          ),
+          SnackBar(content: Text(context.l10n.orderNoteSaveFailed)),
         );
       }
     } finally {
@@ -999,11 +1057,12 @@ class _OrderNoteFieldState extends State<_OrderNoteField> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return TextField(
       controller: _note,
       decoration: InputDecoration(
-        labelText: 'Note',
-        hintText: 'Internal reminder for this quote',
+        labelText: l10n.orderNoteLabel,
+        hintText: l10n.orderNoteHint,
         suffixIcon: _saving
             ? const Padding(
                 padding: EdgeInsets.all(12),
@@ -1014,7 +1073,7 @@ class _OrderNoteFieldState extends State<_OrderNoteField> {
                 ),
               )
             : IconButton(
-                tooltip: 'Save note',
+                tooltip: l10n.orderSaveNote,
                 onPressed: _save,
                 icon: const Icon(Icons.check),
               ),
@@ -1065,11 +1124,13 @@ class _PrintLineTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     line.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Save as product',
+                  tooltip: context.l10n.orderSaveAsProduct,
                   onPressed: () => saveLineAsProduct(
                     context: context,
                     store: store,
@@ -1080,13 +1141,13 @@ class _PrintLineTile extends StatelessWidget {
                 ),
                 if (!locked) ...[
                   IconButton(
-                    tooltip: 'Open calculation',
+                    tooltip: context.l10n.orderOpenCalculation,
                     onPressed: () => context.go(calculationRoute),
                     icon: const Icon(Icons.edit_outlined),
                   ),
                   if (prints.length > 1)
                     IconButton(
-                      tooltip: 'Remove print',
+                      tooltip: context.l10n.orderRemovePrint,
                       onPressed: () =>
                           _removePrint(context, store, order, line),
                       icon: const Icon(Icons.delete_outline),
@@ -1095,13 +1156,18 @@ class _PrintLineTile extends StatelessWidget {
               ],
             ),
             Text(
-              'Qty ${line.quantity} · ${formatDuration(line.printTimeSeconds)}',
+              context.l10n.orderLineQty(
+                line.quantity,
+                formatDuration(line.printTimeSeconds),
+              ),
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             ),
             Text(
-              '${formatMoney(line.breakdown.totalMinor, order.currencyCode)} incl. VAT',
+              context.l10n.orderInclVat(
+                context.money(line.breakdown.totalMinor, order.currencyCode),
+              ),
               style: Theme.of(
                 context,
               ).textTheme.titleSmall?.copyWith(color: scheme.primary),
@@ -1111,11 +1177,11 @@ class _PrintLineTile extends StatelessWidget {
               Text(printer.name),
             ],
             if (line.filaments.isEmpty)
-              const Text('No filament')
+              Text(context.l10n.orderNoFilament)
             else
               for (final usage in line.filaments)
                 Text(
-                  _filamentLine(usage, spools),
+                  _filamentLine(context, usage, spools),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
             if (line.sourceProfileTitle.isNotEmpty)
@@ -1139,7 +1205,7 @@ class _PrintLineTile extends StatelessWidget {
                   TextButton(
                     onPressed: () =>
                         launchUrl(source, mode: LaunchMode.externalApplication),
-                    child: const Text('Open model'),
+                    child: Text(context.l10n.orderOpenModel),
                   ),
                 ],
               ),
@@ -1156,11 +1222,13 @@ Future<void> _renameQuote(
   UserStore store,
   PrintOrder order,
 ) async {
+  final l10n = context.l10n;
   final next = await promptForText(
     context,
-    title: 'Quote title',
-    label: 'Title',
+    title: l10n.orderQuoteTitlePrompt,
+    label: l10n.orderTitleLabel,
     initialText: order.title,
+    confirmLabel: l10n.actionSave,
   );
   if (next == null || next.isEmpty) {
     return;
@@ -1177,10 +1245,11 @@ Future<void> _removePrint(
   if (order.stockDeducted) {
     return;
   }
+  final l10n = context.l10n;
   final confirmed = await confirmDelete(
     context,
-    title: 'Remove print',
-    message: 'Remove ${line.title} from this quote?',
+    title: l10n.orderRemovePrint,
+    message: l10n.orderRemovePrintMessage(line.title),
   );
   if (!confirmed) {
     return;
@@ -1200,7 +1269,11 @@ Future<void> _removePrint(
   );
 }
 
-String _filamentLine(FilamentUsage usage, List<FilamentSpool> spools) {
+String _filamentLine(
+  BuildContext context,
+  FilamentUsage usage,
+  List<FilamentSpool> spools,
+) {
   final spool = spools.where((item) => item.id == usage.filamentId).firstOrNull;
   final material = usage.material.isNotEmpty
       ? usage.material
@@ -1210,7 +1283,7 @@ String _filamentLine(FilamentUsage usage, List<FilamentSpool> spools) {
     material,
   ].where((part) => part.trim().isNotEmpty).join(' ');
   if (name.isEmpty) {
-    return formatGrams(usage.grams);
+    return context.gramsText(usage.grams);
   }
-  return '${formatGrams(usage.grams)} $name';
+  return '${context.gramsText(usage.grams)} $name';
 }

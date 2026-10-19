@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/money.dart';
 import '../../../core/text_prompt.dart';
 import '../../../core/user_store.dart';
+import '../../../l10n/l10n.dart';
 import '../../catalog/domain/catalog_product.dart';
 import '../../catalog/presentation/product_picker.dart';
 import '../../filaments/domain/filament_spool.dart';
@@ -22,19 +23,20 @@ Future<String?> duplicateQuoteAsNew({
   required List<FilamentSpool> spools,
   required List<PrinterProfile> printers,
 }) async {
+  final l10n = context.l10n;
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Duplicate as new quote'),
-      content: const Text(duplicateQuoteExplanation),
+      title: Text(l10n.orderDuplicateAction),
+      content: Text(duplicateQuoteExplanation(l10n)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(l10n.actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Create quote'),
+          child: Text(l10n.orderCreateQuote),
         ),
       ],
     ),
@@ -59,11 +61,7 @@ Future<String?> duplicateQuoteAsNew({
         ? ''
         : ' ${duplicated.warnings.join(' ')}';
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Created quote $number. Prices were recalculated from current spools, the printer, and workshop rates. Stock was not copied.$warning',
-        ),
-      ),
+      SnackBar(content: Text(context.l10n.orderCreatedQuote(number, warning))),
     );
   }
   return duplicated.order.id;
@@ -81,12 +79,11 @@ Future<void> addProductToQuote({
   if (order.stockDeducted) {
     return;
   }
+  final l10n = context.l10n;
   if (products.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('No saved products yet. Save one from a print first.'),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.orderNoProducts)));
     return;
   }
   final product = await pickCatalogProduct(context, products);
@@ -96,9 +93,9 @@ Future<void> addProductToQuote({
   final raw = await promptForText(
     context,
     title: product.name,
-    label: 'Quantity',
+    label: context.l10n.fieldQuantity,
     initialText: '1',
-    confirmLabel: 'Add',
+    confirmLabel: context.l10n.orderAdd,
     keyboardType: TextInputType.number,
   );
   final quantity = parsePositiveInt(raw ?? '') ?? 0;
@@ -106,6 +103,7 @@ Future<void> addProductToQuote({
     return;
   }
   final priced = priceProduct(
+    l10n: context.l10n,
     product: product,
     lineId: const Uuid().v4(),
     quantity: quantity,
@@ -124,9 +122,11 @@ Future<void> addProductToQuote({
     final warning = priced.warnings.isEmpty
         ? ''
         : ' ${priced.warnings.join(' ')}';
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$productPriceExplanation$warning')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${productPriceExplanation(l10n: context.l10n)}$warning'),
+      ),
+    );
   }
 }
 
@@ -155,7 +155,10 @@ Future<void> saveLineAsProduct({
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Saved “${product.name}” to products. $productPriceExplanation',
+          context.l10n.orderSavedProduct(
+            product.name,
+            productPriceExplanation(l10n: context.l10n),
+          ),
         ),
       ),
     );

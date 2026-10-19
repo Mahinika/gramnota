@@ -3,8 +3,13 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gramnota/features/auth/data/desktop_google_sign_in_io.dart';
+import 'package:intl/intl.dart';
 
 void main() {
+  setUp(() {
+    Intl.defaultLocale = 'en';
+  });
+
   test('sign-in page embeds Firebase web config and the nonce', () {
     final page = desktopGoogleSignInPage(
       apiKey: 'key-<not-html>',

@@ -100,7 +100,8 @@ _PrintOrder _$PrintOrderFromJson(Map<String, dynamic> json) => _PrintOrder(
   markupBasisPoints: (json['markupBasisPoints'] as num).toInt(),
   failureBasisPoints: (json['failureBasisPoints'] as num).toInt(),
   vatBasisPoints: (json['vatBasisPoints'] as num).toInt(),
-  currencyCode: json['currencyCode'] as String,
+  currencyCode: readCurrencyCode(json, 'currencyCode') as String? ?? 'SEK',
+  quoteLanguage: json['quoteLanguage'] as String? ?? '',
   breakdown: PriceBreakdown.fromJson(json['breakdown'] as Map<String, dynamic>),
   stockDeducted: json['stockDeducted'] as bool? ?? false,
   deductedGrams:
@@ -144,6 +145,7 @@ Map<String, dynamic> _$PrintOrderToJson(_PrintOrder instance) =>
       'failureBasisPoints': instance.failureBasisPoints,
       'vatBasisPoints': instance.vatBasisPoints,
       'currencyCode': instance.currencyCode,
+      'quoteLanguage': instance.quoteLanguage,
       'breakdown': instance.breakdown.toJson(),
       'stockDeducted': instance.stockDeducted,
       'deductedGrams': instance.deductedGrams,

@@ -10,6 +10,7 @@ import 'package:gramnota/features/catalog/presentation/products_screen.dart';
 import 'package:gramnota/features/filaments/domain/filament_spool.dart';
 import 'package:gramnota/features/orders/domain/print_order.dart';
 import 'package:gramnota/features/pricing/domain/live_quote.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:gramnota/features/pricing/presentation/calculator_screen.dart';
 import 'package:gramnota/features/settings/domain/workshop_settings.dart';
 
@@ -41,6 +42,7 @@ void main() {
       vatBasisPoints: 2500,
     );
     final cheap = priceProduct(
+      l10n: activeGramnotaL10n,
       product: product,
       lineId: 'line',
       quantity: 2,
@@ -63,6 +65,7 @@ void main() {
     expect(cheap.line.sourceUrl, 'https://example.com/stand');
 
     final dear = priceProduct(
+      l10n: activeGramnotaL10n,
       product: product,
       lineId: 'line-2',
       quantity: 2,
@@ -149,7 +152,12 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [userStoreProvider.overrideWithValue(store)],
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          locale: const Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          routerConfig: router,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -172,7 +180,12 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [userStoreProvider.overrideWithValue(store)],
-        child: const MaterialApp(home: CalculatorScreen()),
+        child: const MaterialApp(
+          locale: Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: CalculatorScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();

@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/app_language_controller.dart';
+import '../../../core/app_languages.dart';
 import '../../../core/brand_icon.dart';
+import '../../../core/currencies.dart';
 import '../../../core/format.dart';
+import '../../../core/locale_pickers.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
+import '../../../l10n/l10n.dart';
 import '../../customers/domain/customer.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
@@ -23,9 +28,10 @@ class MoreScreen extends ConsumerWidget {
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName?.trim();
     final email = user?.email;
+    final l10n = context.l10n;
     final title = displayName != null && displayName.isNotEmpty
         ? displayName
-        : 'Signed in';
+        : l10n.moreSignedIn;
     final initialsSource = displayName != null && displayName.isNotEmpty
         ? displayName
         : (email?.split('@').first ?? '');
@@ -35,7 +41,7 @@ class MoreScreen extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('More')),
+      appBar: AppBar(title: Text(l10n.navMore)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         children: [
@@ -67,31 +73,31 @@ class MoreScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const SectionHeading('App'),
+          SectionHeading(l10n.moreApp),
           const UpdateSection(),
           const SizedBox(height: 16),
-          const SectionHeading('Workshop'),
+          SectionHeading(l10n.moreWorkshop),
           _MoreDestination(
-            label: 'Products',
+            label: l10n.moreProducts,
             icon: 'products',
             onTap: () => context.go('/more/products'),
           ),
           TappableListCard.listSeparator,
           _MoreDestination(
-            label: 'Printers',
+            label: l10n.morePrinters,
             icon: 'printer',
             onTap: () => context.go('/more/printers'),
           ),
           TappableListCard.listSeparator,
           _MoreDestination(
-            label: 'Settings',
+            label: l10n.moreSettings,
             icon: 'sliders',
             onTap: () => context.go('/more/settings'),
           ),
           const SizedBox(height: 16),
-          const SectionHeading('Sharing'),
+          SectionHeading(l10n.moreSharing),
           _MoreDestination(
-            label: 'Inbox',
+            label: l10n.moreInbox,
             icon: 'inbox',
             onTap: () => context.go('/more/inbox'),
           ),
@@ -103,7 +109,7 @@ class MoreScreen extends ConsumerWidget {
                 const BrandIconWell(child: Icon(Icons.logout)),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text('Sign out', style: theme.textTheme.titleMedium),
+                  child: Text(l10n.moreSignOut, style: theme.textTheme.titleMedium),
                 ),
               ],
             ),
@@ -154,7 +160,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  final _currency = TextEditingController(text: 'SEK');
   final _electricity = TextEditingController();
   final _labor = TextEditingController();
   final _markup = TextEditingController();
@@ -172,12 +177,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   var _loaded = false;
   var _setupCompleted = true;
   var _nextQuote = 1;
+  var _languageCode = defaultLanguageCode;
+  var _currencyCode = defaultCurrencyCode;
   String? _message;
 
   @override
   void dispose() {
     for (final controller in [
-      _currency,
       _electricity,
       _labor,
       _markup,
@@ -202,12 +208,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (_loaded) {
       return;
     }
-    _currency.text = settings.currencyCode;
-    _electricity.text = formatMinorField(settings.electricityMinorPerKwh);
-    _labor.text = formatMinorField(settings.laborMinorPerHour);
-    _markup.text = basisPointsLabel(settings.defaultMarkupBasisPoints);
-    _vat.text = basisPointsLabel(settings.vatBasisPoints);
-    _failure.text = basisPointsLabel(settings.defaultFailureBasisPoints);
+    _languageCode = settings.languageCode;
+    _currencyCode = normalizeCurrencyCode(settings.currencyCode);
+    final locale = context.formattingLocale;
+    _electricity.text = formatMinorField(
+      settings.electricityMinorPerKwh,
+      locale: locale,
+    );
+    _labor.text = formatMinorField(settings.laborMinorPerHour, locale: locale);
+    _markup.text = basisPointsLabel(
+      settings.defaultMarkupBasisPoints,
+      locale: locale,
+    );
+    _vat.text = basisPointsLabel(settings.vatBasisPoints, locale: locale);
+    _failure.text = basisPointsLabel(
+      settings.defaultFailureBasisPoints,
+      locale: locale,
+    );
     _business.text = settings.businessName;
     _street.text = settings.street;
     _postal.text = settings.postalCode;
@@ -227,11 +244,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(
-        body: EmptyView(message: 'Sign in to edit settings.'),
-      );
+      return Scaffold(body: EmptyView(message: l10n.settingsSignIn));
     }
     final settings = ref.watch(settingsProvider(store));
     final current = settings.asData?.value;
@@ -239,109 +255,114 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _load(current);
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(l10n.moreSettings)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const SectionHeading('App'),
+          SectionHeading(l10n.moreApp),
           const UpdateSection(),
           const SizedBox(height: 16),
           if (_message != null) Text(_message!),
-          TextField(
-            controller: _currency,
-            decoration: const InputDecoration(labelText: 'Currency'),
+          LanguageMenu(
+            languageCode: _languageCode,
+            onChanged: (code) => setState(() => _languageCode = code),
+          ),
+          const SizedBox(height: 12),
+          CurrencyField(
+            currencyCode: _currencyCode,
+            onChanged: (code) => setState(() => _currencyCode = code),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.currencyChangedHint,
+            style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _electricity,
-            decoration: const InputDecoration(
-              labelText: 'Electricity price per kWh',
-            ),
+            decoration: InputDecoration(labelText: l10n.settingsElectricity),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _labor,
-            decoration: const InputDecoration(labelText: 'Labor per hour'),
+            decoration: InputDecoration(labelText: l10n.settingsLabor),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _markup,
-            decoration: const InputDecoration(labelText: 'Default markup %'),
+            decoration: InputDecoration(labelText: l10n.settingsMarkup),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _vat,
-            decoration: const InputDecoration(
-              labelText: 'VAT % (0 if not registered)',
-            ),
+            decoration: InputDecoration(labelText: l10n.settingsVatOptional),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _failure,
-            decoration: const InputDecoration(labelText: 'Default failure %'),
+            decoration: InputDecoration(labelText: l10n.settingsFailure),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _validity,
-            decoration: const InputDecoration(labelText: 'Quote validity days'),
+            decoration: InputDecoration(labelText: l10n.settingsValidityDays),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _lowStock,
-            decoration: const InputDecoration(
-              labelText: 'Low stock warning (g)',
-              helperText:
-                  'Spools can use this workshop default or their own threshold.',
+            decoration: InputDecoration(
+              labelText: l10n.settingsLowStock,
+              helperText: l10n.settingsLowStockHelp,
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
           const SizedBox(height: 16),
           Text(
-            'Business profile',
+            l10n.settingsBusinessProfile,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _business,
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: InputDecoration(labelText: l10n.fieldName),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _street,
-            decoration: const InputDecoration(labelText: 'Street'),
+            decoration: InputDecoration(labelText: l10n.fieldStreet),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _postal,
-            decoration: const InputDecoration(labelText: 'Postal code'),
+            decoration: InputDecoration(labelText: l10n.fieldPostalCode),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _city,
-            decoration: const InputDecoration(labelText: 'City'),
+            decoration: InputDecoration(labelText: l10n.fieldCity),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _org,
-            decoration: const InputDecoration(labelText: 'Org. number'),
+            decoration: InputDecoration(labelText: l10n.fieldOrgNumber),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _phone,
-            decoration: const InputDecoration(labelText: 'Phone'),
+            decoration: InputDecoration(labelText: l10n.fieldPhone),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _email,
-            decoration: const InputDecoration(labelText: 'Email'),
+            decoration: InputDecoration(labelText: l10n.fieldEmail),
           ),
-          Text('Next quote number $_nextQuote'),
+          Text(l10n.settingsNextQuote(_nextQuote)),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: () async {
@@ -352,50 +373,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               final labor = parseMinor(_labor.text);
               final validity = parsePositiveInt(_validity.text);
               final lowStock = parseNonNegativeDouble(_lowStock.text);
-              final currency = _currency.text.trim().toUpperCase();
+              final currency = normalizeCurrencyCode(_currencyCode);
               if (electricity == null) {
-                setState(
-                  () => _message =
-                      'Enter the electricity price. Use 0 if you do not charge for power.',
-                );
+                setState(() => _message = l10n.settingsElectricityRequired);
                 return;
               }
               if (labor == null) {
-                setState(
-                  () => _message =
-                      'Enter the labor rate. Use 0 if you do not charge for labor.',
-                );
+                setState(() => _message = l10n.settingsLaborRequired);
                 return;
               }
               if (markup == null || vat == null || failure == null) {
-                setState(
-                  () => _message = 'Markup, VAT, and failure must be numbers.',
-                );
-                return;
-              }
-              if (!RegExp(r'^[A-Z]{3}$').hasMatch(currency)) {
-                setState(
-                  () =>
-                      _message = 'Enter a 3-letter currency code, such as SEK.',
-                );
+                setState(() => _message = l10n.settingsPercentsRequired);
                 return;
               }
               if (validity == null || validity < 1) {
-                setState(
-                  () => _message = 'Enter how many days a quote stays valid.',
-                );
+                setState(() => _message = l10n.settingsValidityRequired);
                 return;
               }
               if (lowStock == null) {
-                setState(
-                  () => _message =
-                      'Enter the low-stock warning in grams. Use 0 to warn only when a spool is empty.',
-                );
+                setState(() => _message = l10n.settingsLowStockRequired);
                 return;
               }
               await store.saveSettings(
                 WorkshopSettings(
                   setupCompleted: _setupCompleted,
+                  languageCode: _languageCode,
                   currencyCode: currency,
                   electricityMinorPerKwh: electricity,
                   laborMinorPerHour: labor,
@@ -414,9 +416,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   defaultLowStockGrams: lowStock,
                 ),
               );
-              setState(() => _message = 'Settings saved.');
+              await ref.read(appLanguageProvider.notifier).setLanguage(_languageCode);
+              if (mounted) {
+                setState(() => _message = l10n.settingsSaved);
+              }
             },
-            child: const Text('Save'),
+            child: Text(l10n.actionSave),
           ),
           const SizedBox(height: 24),
           OutlinedButton(
@@ -424,18 +429,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('Delete account'),
-                  content: const Text(
-                    'This deletes your workshop data and Google sign-in for Gramnota.',
-                  ),
+                  title: Text(l10n.settingsDeleteAccount),
+                  content: Text(l10n.settingsDeleteAccountBody),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Cancel'),
+                      child: Text(l10n.actionCancel),
                     ),
                     FilledButton(
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('Delete'),
+                      child: Text(l10n.actionDelete),
                     ),
                   ],
                 ),
@@ -453,15 +456,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               } on FirebaseAuthException catch (error) {
                 if (error.code == 'requires-recent-login') {
                   setState(
-                    () => _message =
-                        'Sign in again, then delete the account. Google asked for a fresh login.',
+                    () => _message = l10n.settingsRecentLogin,
                   );
                   return;
                 }
                 setState(() => _message = error.message ?? error.code);
               }
             },
-            child: const Text('Delete account'),
+            child: Text(l10n.settingsDeleteAccount),
           ),
         ],
       ),

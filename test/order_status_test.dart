@@ -1,6 +1,8 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gramnota/features/orders/domain/print_order.dart';
 import 'package:gramnota/features/pricing/domain/price_breakdown.dart';
+import 'package:gramnota/l10n/l10n.dart';
 
 void main() {
   test('old delivered status becomes paid without dropping fields', () {
@@ -44,9 +46,10 @@ void main() {
   });
 
   test('status labels and stock explanations follow the workflow', () {
-    expect(orderStatusLabel(OrderStatus.sent), 'Sent');
-    expect(orderStatusLabel(OrderStatus.paid), 'Paid');
-    expect(orderStatusLabel(OrderStatus.declined), 'Declined');
+    final l10n = lookupAppLocalizations(const Locale('en'));
+    expect(orderStatusLabel(OrderStatus.sent, l10n), 'Sent');
+    expect(orderStatusLabel(OrderStatus.paid, l10n), 'Paid');
+    expect(orderStatusLabel(OrderStatus.declined, l10n), 'Declined');
     expect(statusHoldsStock(OrderStatus.printed), isTrue);
     expect(statusHoldsStock(OrderStatus.paid), isTrue);
     expect(statusHoldsStock(OrderStatus.sent), isFalse);
@@ -54,22 +57,25 @@ void main() {
     expect(statusIsInProgress(OrderStatus.sent), isTrue);
     expect(statusIsInProgress(OrderStatus.paid), isFalse);
     expect(
-      stockChangeExplanation(OrderStatus.printed, OrderStatus.paid),
-      stockStaysDeductedExplanation,
+      stockChangeExplanation(OrderStatus.printed, OrderStatus.paid, l10n),
+      stockStaysDeductedExplanation(l10n),
     );
     expect(
-      stockChangeExplanation(OrderStatus.paid, OrderStatus.cancelled),
-      stockReturnedOnCloseExplanation,
+      stockChangeExplanation(OrderStatus.paid, OrderStatus.cancelled, l10n),
+      stockReturnedOnCloseExplanation(l10n),
     );
     expect(
-      stockChangeExplanation(OrderStatus.printed, OrderStatus.accepted),
-      stockReturnedOnRevertExplanation,
+      stockChangeExplanation(OrderStatus.printed, OrderStatus.accepted, l10n),
+      stockReturnedOnRevertExplanation(l10n),
     );
     expect(
-      stockChangeExplanation(OrderStatus.accepted, OrderStatus.printed),
-      stockTakenOnPrintExplanation,
+      stockChangeExplanation(OrderStatus.accepted, OrderStatus.printed, l10n),
+      stockTakenOnPrintExplanation(l10n),
     );
-    expect(stockChangeExplanation(OrderStatus.quote, OrderStatus.sent), isNull);
+    expect(
+      stockChangeExplanation(OrderStatus.quote, OrderStatus.sent, l10n),
+      isNull,
+    );
   });
 
   test('a sent quote expires the day after valid until', () {

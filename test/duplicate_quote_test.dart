@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gramnota/core/format.dart';
 import 'package:gramnota/core/providers.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:gramnota/core/user_store.dart';
 import 'package:gramnota/features/customers/domain/customer.dart';
 import 'package:gramnota/features/filaments/domain/filament_spool.dart';
@@ -106,6 +108,7 @@ void main() {
     expect(order.customerId, 'ada');
     expect(order.note, 'Rush');
     expect(order.currencyCode, 'SEK');
+    expect(order.quoteLanguage, isEmpty);
     expect(order.stockDeducted, isFalse);
     expect(order.deductedGrams, isEmpty);
     expect(order.stockWarning, isEmpty);
@@ -228,7 +231,12 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [userStoreProvider.overrideWithValue(store)],
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          routerConfig: router,
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -246,7 +254,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Quote 4'), findsOneWidget);
-    expect(find.textContaining('40,00 kr'), findsWidgets);
+    expect(
+      find.textContaining(formatMoney(4000, 'SEK', locale: 'en')),
+      findsWidgets,
+    );
     final original = await store.orders.doc('order-1').get();
     expect(original.data()!['stockDeducted'], isTrue);
     expect(original.data()!['status'], 'printed');
@@ -259,5 +270,7 @@ void main() {
     expect(created.data()['stockDeducted'], isFalse);
     expect(created.data()['deductedGrams'], isEmpty);
     expect(created.data()['stockWarning'], '');
+    expect(created.data()['quoteLanguage'], '');
+    expect(created.data()['currencyCode'], 'SEK');
   });
 }

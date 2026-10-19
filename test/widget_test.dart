@@ -4,11 +4,15 @@ import 'package:gramnota/core/format.dart';
 import 'package:gramnota/core/theme.dart';
 import 'package:gramnota/features/pricing/domain/price_breakdown.dart';
 import 'package:gramnota/features/pricing/presentation/breakdown_card.dart';
+import 'package:gramnota/l10n/l10n.dart';
 
 void main() {
   testWidgets('shows every cost line and the total', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
+        locale: Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: BreakdownCard(
             currencyCode: 'SEK',
@@ -41,6 +45,9 @@ void main() {
   testWidgets('hides the unit price on a combined quote', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
+        locale: Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: BreakdownCard(
             currencyCode: 'SEK',
@@ -78,6 +85,9 @@ void main() {
         ),
       ),
     );
-    expect(tester.getSize(find.byType(FilledButton)).height, greaterThanOrEqualTo(48));
+    expect(
+      tester.getSize(find.byType(FilledButton)).height,
+      greaterThanOrEqualTo(48),
+    );
   });
 }

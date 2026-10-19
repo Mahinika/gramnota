@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../domain/update_check.dart';
@@ -22,7 +23,8 @@ class UpdateSection extends StatefulWidget {
 }
 
 class _UpdateSectionState extends State<UpdateSection> {
-  String _label = 'Version';
+  String? _version;
+  int? _build;
   String? _message;
   var _busy = false;
   var _checking = false;
@@ -30,9 +32,7 @@ class _UpdateSectionState extends State<UpdateSection> {
   @override
   void initState() {
     super.initState();
-    final injected = widget.versionLabel;
-    if (injected != null) {
-      _label = injected;
+    if (widget.versionLabel != null) {
       return;
     }
     _load();
@@ -48,12 +48,18 @@ class _UpdateSectionState extends State<UpdateSection> {
           ? '1.0.0'
           : info.version.trim();
       final build = parseInstalledBuild(info.buildNumber);
-      setState(() => _label = 'Version $version (build $build)');
+      setState(() {
+        _version = version;
+        _build = build;
+      });
     } on Object {
       if (!mounted) {
         return;
       }
-      setState(() => _label = 'Version');
+      setState(() {
+        _version = null;
+        _build = null;
+      });
     }
   }
 
@@ -80,7 +86,7 @@ class _UpdateSectionState extends State<UpdateSection> {
       if (!mounted) {
         return;
       }
-      setState(() => _message = updateFailureMessage(error));
+      setState(() => _message = updateFailureMessage(error, context.l10n));
     } finally {
       if (mounted) {
         setState(() {
@@ -105,11 +111,20 @@ class _UpdateSectionState extends State<UpdateSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
+    final injected = widget.versionLabel;
+    final version = _version;
+    final build = _build;
+    final label =
+        injected ??
+        (version != null && build != null
+            ? l10n.versionWithBuild(version, build)
+            : l10n.versionLabel);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(_label, style: theme.textTheme.bodyMedium),
+        Text(label, style: theme.textTheme.bodyMedium),
         const SizedBox(height: 8),
         FilledButton(
           onPressed: _busy ? null : _search,
@@ -126,10 +141,10 @@ class _UpdateSectionState extends State<UpdateSection> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Text('Söker…'),
+                    Text(l10n.updateSearching),
                   ],
                 )
-              : const Text('Sök efter uppdateringar'),
+              : Text(l10n.updateSearch),
         ),
         if (_message != null) ...[const SizedBox(height: 8), Text(_message!)],
       ],

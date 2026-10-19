@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gramnota/l10n/l10n.dart';
 
 import '../domain/update_check.dart';
 import 'update_dialogs.dart';
@@ -15,7 +16,7 @@ Future<UpdatePromptResult> promptForUpdate(
   if (!manual || !context.mounted) {
     return const UpdatePromptResult();
   }
-  const message = 'Uppdateringar finns för Android och Windows.';
+  final message = context.l10n.updatePlatformsOnly;
   await showUpdateMessage(context, message);
-  return const UpdatePromptResult(message: message);
+  return UpdatePromptResult(message: message);
 }

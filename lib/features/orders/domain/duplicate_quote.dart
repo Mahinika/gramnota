@@ -1,3 +1,4 @@
+import '../../../l10n/l10n.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../pricing/domain/live_quote.dart';
 import '../../pricing/domain/price_breakdown.dart';
@@ -34,6 +35,7 @@ DuplicatedQuote duplicateAsNewQuote({
   final lines = <QuoteLine>[];
   for (final line in orderPrints(source)) {
     final priced = pricePrint(
+      l10n: activeGramnotaL10n,
       id: newLineId(),
       title: line.title,
       quantity: line.quantity,
@@ -83,6 +85,7 @@ DuplicatedQuote duplicateAsNewQuote({
     printTimeSeconds: 0,
     filaments: const [],
     currencyCode: settings.currencyCode,
+    quoteLanguage: '',
     markupBasisPoints: lines.first.markupBasisPoints,
     failureBasisPoints: lines.first.failureBasisPoints,
     vatBasisPoints: lines.first.vatBasisPoints,
@@ -97,13 +100,8 @@ DuplicatedQuote duplicateAsNewQuote({
   );
 }
 
-const duplicateQuoteSummary =
-    'Copies these prints and this customer into a new quote with status Quote, a new number, and new dates. '
-    'Stock stays on this order. Prices are recalculated from current spools, the printer, and workshop rates.';
+String duplicateQuoteSummary(AppLocalizations l10n) =>
+    l10n.orderDuplicateSummary;
 
-const duplicateQuoteExplanation =
-    'This copies the prints, the customer, and the print settings into a new quote. '
-    'The new quote gets status Quote, a new number, and new dates. '
-    'Filament already taken out of stock stays on this order and is not copied. '
-    'Prices are calculated again from the current spool prices, printer, electricity, and labor rate. '
-    'Markup, failure, and VAT stay as they are on each print.';
+String duplicateQuoteExplanation(AppLocalizations l10n) =>
+    l10n.orderDuplicateExplanation;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gramnota/l10n/l10n.dart';
 
 /// Asks for one line of text. The field's controller lives on the dialog
 /// state, so closing the route cannot use a controller that was already
@@ -8,16 +9,17 @@ Future<String?> promptForText(
   required String title,
   required String label,
   String initialText = '',
-  String confirmLabel = 'Save',
+  String? confirmLabel,
   TextInputType? keyboardType,
 }) {
+  final resolvedConfirm = confirmLabel ?? context.l10n.actionSave;
   return showDialog<String>(
     context: context,
     builder: (context) => _TextPromptDialog(
       title: title,
       label: label,
       initialText: initialText,
-      confirmLabel: confirmLabel,
+      confirmLabel: resolvedConfirm,
       keyboardType: keyboardType,
     ),
   );
@@ -72,7 +74,7 @@ class _TextPromptDialogState extends State<_TextPromptDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.actionCancel),
         ),
         FilledButton(onPressed: _save, child: Text(widget.confirmLabel)),
       ],

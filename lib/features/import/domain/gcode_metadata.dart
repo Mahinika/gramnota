@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import '../../../l10n/l10n.dart';
+
 class GcodeFilament {
   const GcodeFilament({
     required this.grams,
@@ -68,30 +70,25 @@ GcodePlate parseGcodeText(String text, {String name = ''}) {
   return parser.finish(name: name);
 }
 
-String gcodePlateNote(GcodePlate plate, {int plateCount = 1}) {
+String gcodePlateNote(
+  GcodePlate plate, {
+  required AppLocalizations l10n,
+  int plateCount = 1,
+}) {
   if (!plate.hasData) {
-    return 'No print time or filament weight was found. '
-        'If this is a project file, export G-code from the slicer first.';
+    return l10n.gcodeNoData;
   }
-  final buffer = StringBuffer();
-  if (plate.slicer.isEmpty) {
-    buffer.write('Filled print time and filament grams from the file.');
-  } else {
-    buffer.write('Filled print time and filament grams from ${plate.slicer}.');
-  }
-  buffer.write(' The sale price still uses your current spools.');
-  if (plate.filaments.length > 1) {
-    buffer.write(
-      ' ${plate.filaments.length} filaments were listed — match each one to a spool.',
-    );
-  }
-  for (final note in plate.notes) {
-    buffer.write(' $note');
-  }
-  if (plateCount > 1) {
-    buffer.write(' This file has $plateCount plates.');
-  }
-  return buffer.toString();
+  final parts = <String>[
+    plate.slicer.isEmpty
+        ? l10n.gcodeFilledFromFile
+        : l10n.gcodeFilledFromSlicer(plate.slicer),
+    l10n.gcodeSalePriceUsesSpools,
+    if (plate.filaments.length > 1)
+      l10n.gcodeFilamentsListed(plate.filaments.length),
+    ...plate.notes,
+    if (plateCount > 1) l10n.gcodeFilePlateCount(plateCount),
+  ];
+  return parts.join(' ');
 }
 
 class _GcodeCommentParser {
@@ -300,10 +297,11 @@ class _GcodeCommentParser {
     }
     final notes = <String>[];
     if (estimated && filaments.isNotEmpty) {
+      final l10n = activeGramnotaL10n;
       notes.add(
         usedDefaultDensity
-            ? 'Filament grams were estimated from extrusion length at 1.75 mm and 1.24 g/cm³.'
-            : 'Filament grams were estimated from extrusion length using the diameter and density in the file.',
+            ? l10n.gcodeGramsEstimatedDefault
+            : l10n.gcodeGramsEstimatedFromFile,
       );
     }
     return (filaments: filaments, notes: notes);

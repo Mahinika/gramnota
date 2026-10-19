@@ -1,3 +1,5 @@
+import 'package:gramnota/l10n/l10n.dart';
+
 import '../domain/sign_in_failed.dart';
 
 export '../domain/sign_in_failed.dart';
@@ -11,8 +13,7 @@ Future<DesktopGoogleCredential> requestDesktopGoogleCredential({
   String? storageBucket,
   Future<bool> Function(Uri url)? openBrowser,
   Duration timeout = const Duration(minutes: 5),
+  AppLocalizations? l10n,
 }) async {
-  throw const SignInFailed(
-    'Google sign-in is available in the Android and Windows apps.',
-  );
+  throw SignInFailed((l10n ?? activeGramnotaL10n).authGooglePlatforms);
 }

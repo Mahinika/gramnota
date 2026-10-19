@@ -1,5 +1,6 @@
 import '../../../core/format.dart';
 import '../../../core/user_store.dart';
+import '../../../l10n/l10n.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../settings/domain/workshop_settings.dart';
 import '../domain/print_order.dart';
@@ -22,7 +23,9 @@ class OrderStock {
       final settings = snapshot.exists && snapshot.data() != null
           ? WorkshopSettings.fromJson(snapshot.data()!)
           : const WorkshopSettings();
-      final number = settings.nextQuoteNumber < 1 ? 1 : settings.nextQuoteNumber;
+      final number = settings.nextQuoteNumber < 1
+          ? 1
+          : settings.nextQuoteNumber;
       transaction.set(
         store.settingsDoc,
         settings.copyWith(nextQuoteNumber: number + 1).toJson(),
@@ -44,7 +47,8 @@ class OrderStock {
       if (current.status == next) {
         return StockChange(order: current, warning: '');
       }
-      final holdsNow = statusHoldsStock(current.status) && current.stockDeducted;
+      final holdsNow =
+          statusHoldsStock(current.status) && current.stockDeducted;
       final holdsNext = statusHoldsStock(next);
       final now = DateTime.now().toUtc().toIso8601String();
       var updated = current.copyWith(status: next, updatedAt: now);
@@ -58,16 +62,23 @@ class OrderStock {
               continue;
             }
             requested[usage.filamentId] =
-                (requested[usage.filamentId] ?? 0) + usage.grams * line.quantity;
+                (requested[usage.filamentId] ?? 0) +
+                usage.grams * line.quantity;
           }
         }
         final deducted = <String, double>{};
         final shortfalls = <String>[];
+        final l10n = activeGramnotaL10n;
+        final gramsLocale = l10n.localeName;
         for (final entry in requested.entries) {
           final ref = store.filaments.doc(entry.key);
           final snapshot = await transaction.get(ref);
           if (!snapshot.exists || snapshot.data() == null) {
-            shortfalls.add('${formatGrams(entry.value)} (missing spool)');
+            shortfalls.add(
+              l10n.stockMissingGrams(
+                formatGrams(entry.value, locale: gramsLocale),
+              ),
+            );
             continue;
           }
           final spool = FilamentSpool.fromJson({
@@ -86,12 +97,14 @@ class OrderStock {
           }
           if (short > 0.0001) {
             final label = '${spool.brand} ${spool.material}'.trim();
-            shortfalls.add('${formatGrams(short)} of $label');
+            shortfalls.add(
+              l10n.stockShortOf(formatGrams(short, locale: gramsLocale), label),
+            );
           }
         }
         warning = shortfalls.isEmpty
             ? ''
-            : 'Stock was short: ${shortfalls.join(', ')}. Remaining was set to 0 g.';
+            : l10n.stockWasShort(shortfalls.join(', '));
         updated = updated.copyWith(
           stockDeducted: true,
           deductedGrams: deducted,

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/providers.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/shell.dart';
+import '../../../l10n/l10n.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../data/orders_providers.dart';
 import '../domain/dashboard.dart';
@@ -42,21 +42,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(body: EmptyView(message: 'Sign in to see the workshop.'));
+      return Scaffold(body: EmptyView(message: l10n.dashSignIn));
     }
     final orders = ref.watch(ordersProvider(store));
-    final customers = ref.watch(customersProvider(store)).asData?.value ?? const [];
-    final spools = ref.watch(filamentsProvider(store)).asData?.value ?? const <FilamentSpool>[];
+    final customers =
+        ref.watch(customersProvider(store)).asData?.value ?? const [];
+    final spools =
+        ref.watch(filamentsProvider(store)).asData?.value ??
+        const <FilamentSpool>[];
     final products =
         ref.watch(productsProvider(store)).asData?.value ?? const [];
     final settings = ref.watch(settingsProvider(store)).asData?.value;
     final currency = settings?.currencyCode ?? 'SEK';
-    final names = {for (final customer in customers) customer.id: customer.name};
-    final productNames = {for (final product in products) product.id: product.name};
+    final names = {
+      for (final customer in customers) customer.id: customer.name,
+    };
+    final productNames = {
+      for (final product in products) product.id: product.name,
+    };
     return Scaffold(
-      appBar: AppBar(title: const Text('Home')),
+      appBar: AppBar(title: Text(l10n.navHome)),
       body: orders.when(
         data: (list) {
           final snapshot = buildDashboard(
@@ -67,6 +75,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             customerNames: names,
             productNames: productNames,
             workshopLowStockGrams: settings?.defaultLowStockGrams ?? 100,
+            l10n: l10n,
           );
           return DashboardView(
             snapshot: snapshot,
@@ -105,29 +114,57 @@ class DashboardView extends StatelessWidget {
   final ValueChanged<String>? onOpenSpool;
   final ValueChanged<String>? onOpenCustomer;
 
+  List<CurrencyTotals> get _blocks {
+    if (snapshot.currencyTotals.isNotEmpty) {
+      return snapshot.currencyTotals;
+    }
+    return [
+      CurrencyTotals(
+        currencyCode: currencyCode,
+        orderCount: snapshot.orderCount,
+        revenueInclVatMinor: snapshot.revenueInclVatMinor,
+        revenueExclVatMinor: snapshot.revenueExclVatMinor,
+        costMinor: snapshot.costMinor,
+        profitMinor: snapshot.profitMinor,
+        pipelineOrderCount: snapshot.pipelineOrderCount,
+        pipelineInclVatMinor: snapshot.pipelineInclVatMinor,
+        openDepositMinor: snapshot.openDepositMinor,
+        depositsReceivedMinor: snapshot.depositsReceivedMinor,
+        finalPaymentsMinor: snapshot.finalPaymentsMinor,
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final blocks = _blocks;
+    final multi = snapshot.currencyTotals.length > 1;
+    final noFinished = blocks.every((item) => item.orderCount == 0);
+    final anyDeposits = blocks.any((item) => item.depositsReceivedMinor != 0);
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         Row(
           children: [
             IconButton(
-              tooltip: 'Previous month',
+              tooltip: l10n.dashPreviousMonth,
               onPressed: onPreviousMonth,
               icon: const Icon(Icons.chevron_left),
             ),
             Expanded(
               child: Text(
-                snapshot.monthLabel,
+                snapshot.monthLabel(Localizations.localeOf(context).toString()),
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleLarge,
               ),
             ),
             IconButton(
-              tooltip: 'Next month',
+              tooltip: l10n.dashNextMonth,
               onPressed: onNextMonth,
               icon: const Icon(Icons.chevron_right),
             ),
@@ -135,111 +172,98 @@ class DashboardView extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Deposits count on the date you record. The rest counts when the order is printed or paid. Profit is revenue excl. VAT minus the cost of work finished this month.',
-          style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-        ),
-        const SizedBox(height: 12),
-        TappableListCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DetailRow(
-                label: 'Orders',
-                value: '${snapshot.orderCount}',
-              ),
-              DetailRow(
-                label: 'Revenue incl. VAT',
-                value: formatMoney(snapshot.revenueInclVatMinor, currencyCode),
-              ),
-              DetailRow(
-                label: 'Revenue excl. VAT',
-                value: formatMoney(snapshot.revenueExclVatMinor, currencyCode),
-              ),
-              DetailRow(
-                label: 'Cost',
-                value: formatMoney(snapshot.costMinor, currencyCode),
-              ),
-              DetailRow(
-                label: 'Profit',
-                value: formatMoney(snapshot.profitMinor, currencyCode),
-              ),
-              DetailRow(
-                label: 'Deposits received',
-                value: formatMoney(snapshot.depositsReceivedMinor, currencyCode),
-              ),
-              DetailRow(
-                label: 'Final payments',
-                value: formatMoney(snapshot.finalPaymentsMinor, currencyCode),
-              ),
-              const SizedBox(height: 12),
-              MoneyBarChart(
-                currencyCode: currencyCode,
-                bars: [
-                  MoneyBar(label: 'Incl. VAT', minor: snapshot.revenueInclVatMinor),
-                  MoneyBar(label: 'Excl. VAT', minor: snapshot.revenueExclVatMinor),
-                  MoneyBar(label: 'Cost', minor: snapshot.costMinor),
-                  MoneyBar(label: 'Profit', minor: snapshot.profitMinor),
-                ],
-              ),
-            ],
+          l10n.dashDepositHint,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
           ),
         ),
-        if (snapshot.orderCount == 0) ...[
+        const SizedBox(height: 12),
+        for (var i = 0; i < blocks.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          if (multi) ...[
+            Text(blocks[i].currencyCode, style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+          ],
+          _MoneyBlock(totals: blocks[i]),
+        ],
+        if (noFinished) ...[
           const SizedBox(height: 8),
           Text(
-            snapshot.depositsReceivedMinor == 0
-                ? 'No printed or paid orders this month.'
-                : 'No printed or paid orders this month. Deposits received are included above.',
-            style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+            anyDeposits ? l10n.dashNoRevenueDeposits : l10n.dashNoRevenue,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           ),
         ],
         const SectionRule(),
-        const SectionHeading('Open pipeline'),
+        SectionHeading(l10n.dashOpenPipeline),
         Text(
-          'Sent and accepted quotes, not limited to this month.',
-          style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          l10n.dashPipelineHint,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 8),
         TappableListCard(
           child: Column(
             children: [
               DetailRow(
-                label: 'Quotes',
+                label: l10n.dashQuotes,
                 value: '${snapshot.pipelineOrderCount}',
               ),
+              for (final totals in blocks) ...[
+                if (multi)
+                  DetailRow(
+                    label: l10n.currencyLabel,
+                    value: totals.currencyCode,
+                  ),
+                DetailRow(
+                  label: l10n.dashValueIncl,
+                  value: context.money(
+                    totals.pipelineInclVatMinor,
+                    totals.currencyCode,
+                  ),
+                ),
+                DetailRow(
+                  label: l10n.dashOpenDeposits,
+                  value: context.money(
+                    totals.openDepositMinor,
+                    totals.currencyCode,
+                  ),
+                ),
+              ],
               DetailRow(
-                label: 'Value incl. VAT',
-                value: formatMoney(snapshot.pipelineInclVatMinor, currencyCode),
-              ),
-              DetailRow(
-                label: 'Deposits on open orders',
-                value: formatMoney(snapshot.openDepositMinor, currencyCode),
-              ),
-              DetailRow(
-                label: 'Overdue quotes',
+                label: l10n.dashOverdueQuotes,
                 value: '${snapshot.overdueCount}',
               ),
             ],
           ),
         ),
         const SectionRule(),
-        const SectionHeading('Filament used'),
+        SectionHeading(l10n.dashFilamentUsed),
         if (snapshot.materials.isEmpty)
           Text(
-            'No filament recorded on printed or paid orders this month.',
-            style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+            l10n.dashNoFilament,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           )
         else
           for (final material in snapshot.materials) ...[
-            _MaterialBar(material: material, maxGrams: snapshot.materials.first.grams),
+            _MaterialBar(
+              material: material,
+              maxGrams: snapshot.materials.first.grams,
+            ),
             const SizedBox(height: 8),
           ],
         const SectionRule(),
-        const SectionHeading('Top customers'),
+        SectionHeading(l10n.dashTopCustomers),
         if (snapshot.topCustomers.isEmpty)
           Text(
-            'No customer revenue this month.',
-            style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+            l10n.dashNoCustomers,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           )
         else
           for (final rank in snapshot.topCustomers) ...[
@@ -249,19 +273,34 @@ class DashboardView extends StatelessWidget {
                   : () => onOpenCustomer!(rank.id),
               child: Row(
                 children: [
-                  Expanded(child: Text(rank.label)),
-                  Text(formatMoney(rank.totalMinor, currencyCode)),
+                  Expanded(
+                    child: Text(
+                      rank.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      context.money(rank.totalMinor, rank.currencyCode),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
             ),
             TappableListCard.listSeparator,
           ],
         const SectionRule(),
-        const SectionHeading('Top products'),
+        SectionHeading(l10n.dashTopProducts),
         if (snapshot.topProducts.isEmpty)
           Text(
-            'No products on printed or paid orders this month.',
-            style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+            l10n.dashNoProducts,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           )
         else
           for (final rank in snapshot.topProducts) ...[
@@ -270,10 +309,19 @@ class DashboardView extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      rank.count == 1 ? rank.label : '${rank.label} · ${rank.count}',
+                      l10n.dashProductCount(rank.count, rank.label),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Text(formatMoney(rank.totalMinor, currencyCode)),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      context.money(rank.totalMinor, rank.currencyCode),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -281,7 +329,7 @@ class DashboardView extends StatelessWidget {
           ],
         if (snapshot.revenueOrders.isNotEmpty) ...[
           const SectionRule(),
-          const SectionHeading('Orders this month'),
+          SectionHeading(l10n.dashOrdersThisMonth),
           for (final row in snapshot.revenueOrders) ...[
             TappableListCard(
               onTap: onOpenOrder == null ? null : () => onOpenOrder!(row.id),
@@ -291,9 +339,16 @@ class DashboardView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(row.title, style: theme.textTheme.titleMedium),
+                        Text(
+                          row.title,
+                          style: theme.textTheme.titleMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         Text(
                           row.customerLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                           ),
@@ -302,13 +357,19 @@ class DashboardView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(formatMoney(row.totalMinor, currencyCode)),
-                      const SizedBox(height: 4),
-                      OrderStatusChip(status: row.status),
-                    ],
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          context.money(row.totalMinor, row.currencyCode),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        OrderStatusChip(status: row.status),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -317,11 +378,13 @@ class DashboardView extends StatelessWidget {
           ],
         ],
         const SectionRule(),
-        const SectionHeading('Low spools'),
+        SectionHeading(l10n.dashLowSpools),
         if (snapshot.lowSpools.isEmpty)
           Text(
-            'No spool is at or under its warning threshold.',
-            style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+            l10n.dashNoLowSpools,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           )
         else
           for (final spool in snapshot.lowSpools) ...[
@@ -335,10 +398,22 @@ class DashboardView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(spool.label, style: theme.textTheme.titleMedium),
                         Text(
-                          '${formatGrams(spool.remainingGrams)} left · warns at ${formatGrams(spool.thresholdGrams)}',
-                          style: theme.textTheme.bodySmall?.copyWith(color: scheme.error),
+                          spool.label,
+                          style: theme.textTheme.titleMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          l10n.dashSpoolLeft(
+                            context.gramsText(spool.remainingGrams),
+                            context.gramsText(spool.thresholdGrams),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.error,
+                          ),
                         ),
                       ],
                     ),
@@ -353,6 +428,77 @@ class DashboardView extends StatelessWidget {
   }
 }
 
+class _MoneyBlock extends StatelessWidget {
+  const _MoneyBlock({required this.totals});
+
+  final CurrencyTotals totals;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return TappableListCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DetailRow(label: l10n.dashOrders, value: '${totals.orderCount}'),
+          DetailRow(
+            label: l10n.dashRevenueIncl,
+            value: context.money(
+              totals.revenueInclVatMinor,
+              totals.currencyCode,
+            ),
+          ),
+          DetailRow(
+            label: l10n.dashRevenueExcl,
+            value: context.money(
+              totals.revenueExclVatMinor,
+              totals.currencyCode,
+            ),
+          ),
+          DetailRow(
+            label: l10n.dashCost,
+            value: context.money(totals.costMinor, totals.currencyCode),
+          ),
+          DetailRow(
+            label: l10n.dashProfit,
+            value: context.money(totals.profitMinor, totals.currencyCode),
+          ),
+          DetailRow(
+            label: l10n.dashDepositsReceived,
+            value: context.money(
+              totals.depositsReceivedMinor,
+              totals.currencyCode,
+            ),
+          ),
+          DetailRow(
+            label: l10n.dashFinalPayments,
+            value: context.money(
+              totals.finalPaymentsMinor,
+              totals.currencyCode,
+            ),
+          ),
+          const SizedBox(height: 12),
+          MoneyBarChart(
+            currencyCode: totals.currencyCode,
+            bars: [
+              MoneyBar(
+                label: l10n.dashInclVat,
+                minor: totals.revenueInclVatMinor,
+              ),
+              MoneyBar(
+                label: l10n.dashExclVat,
+                minor: totals.revenueExclVatMinor,
+              ),
+              MoneyBar(label: l10n.dashCost, minor: totals.costMinor),
+              MoneyBar(label: l10n.dashProfit, minor: totals.profitMinor),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MaterialBar extends StatelessWidget {
   const _MaterialBar({required this.material, required this.maxGrams});
 
@@ -362,14 +508,23 @@ class _MaterialBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final fraction = maxGrams <= 0 ? 0.0 : (material.grams / maxGrams).clamp(0.0, 1.0);
+    final fraction = maxGrams <= 0
+        ? 0.0
+        : (material.grams / maxGrams).clamp(0.0, 1.0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Expanded(child: Text(material.material)),
-            Text(formatGrams(material.grams)),
+            Expanded(
+              child: Text(
+                material.material,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(context.gramsText(material.grams)),
           ],
         ),
         const SizedBox(height: 4),

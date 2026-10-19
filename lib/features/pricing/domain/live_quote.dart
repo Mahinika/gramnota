@@ -1,3 +1,5 @@
+import '../../../l10n/l10n.dart';
+
 import '../../catalog/domain/catalog_product.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../orders/domain/print_order.dart';
@@ -18,6 +20,7 @@ class PricedPrint {
 /// come from the current spool, printer, and settings. The print keeps its own
 /// markup, failure buffer, and VAT.
 PricedPrint pricePrint({
+  required AppLocalizations l10n,
   required String id,
   required String title,
   required int quantity,
@@ -47,9 +50,7 @@ PricedPrint pricePrint({
       }
     }
     if (printer == null) {
-      warnings.add(
-        'Printer for “$title” is no longer in the workshop, so electricity and machine wear are 0.',
-      );
+      warnings.add(l10n.calcPrinterMissing(title));
     }
   }
   final materials = <MaterialUse>[];
@@ -63,11 +64,9 @@ PricedPrint pricePrint({
       }
       if (spool == null) {
         final label = usage.material.trim().isEmpty
-            ? 'filament'
+            ? l10n.calcFilamentFallback
             : usage.material.trim();
-        warnings.add(
-          'Spool for “$title” ($label) is missing, so that filament is priced at 0.',
-        );
+        warnings.add(l10n.calcSpoolMissing(title, label));
       }
     }
     materials.add(
@@ -121,6 +120,7 @@ PricedPrint pricePrint({
 }
 
 PricedPrint priceProduct({
+  required AppLocalizations l10n,
   required CatalogProduct product,
   required String lineId,
   required int quantity,
@@ -129,6 +129,7 @@ PricedPrint priceProduct({
   required List<PrinterProfile> printers,
 }) {
   return pricePrint(
+    l10n: l10n,
     id: lineId,
     title: product.name,
     quantity: quantity,
@@ -176,5 +177,5 @@ CatalogProduct productFromLine(
   );
 }
 
-const productPriceExplanation =
-    'The price is calculated from the current spool prices, printer, electricity, and labor rate. Markup, failure, and VAT stay as saved on the product.';
+String productPriceExplanation({required AppLocalizations l10n}) =>
+    l10n.calcProductPriceExplanation;

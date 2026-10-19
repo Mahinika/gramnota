@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gramnota/l10n/l10n.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/providers.dart';
@@ -37,7 +37,9 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(body: EmptyView(message: 'Sign in to see customers.'));
+      return Scaffold(
+        body: EmptyView(message: context.l10n.customerSignInList),
+      );
     }
     final customers = ref.watch(customersProvider(store));
     final orders = ref.watch(ordersProvider(store));
@@ -45,7 +47,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         ? const <String, int>{}
         : _quoteCounts(orders.asData!.value);
     return Scaffold(
-      appBar: AppBar(title: const Text('Customers')),
+      appBar: AppBar(title: Text(context.l10n.navCustomers)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.go('/customers/new'),
         child: const Icon(Icons.add),
@@ -54,10 +56,14 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         data: (list) {
           if (list.isEmpty) {
             return EmptyView(
-              message: 'No customers yet.',
+              message: context.l10n.customerNoneYet,
               action: FilledButton(
                 onPressed: () => context.go('/customers/new'),
-                child: const Text('Add customer'),
+                child: Text(
+                  context.l10n.customerAdd,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             );
           }
@@ -67,17 +73,16 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 '${customer.name} ${customer.city} ${customer.phone} ${customer.email}'
                     .toLowerCase();
             return query.isEmpty || haystack.contains(query);
-          }).toList()
-            ..sort((a, b) => a.name.compareTo(b.name));
+          }).toList()..sort((a, b) => a.name.compareTo(b.name));
           return Column(
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: TextField(
                   controller: _search,
-                  decoration: const InputDecoration(
-                    hintText: 'Name, city, phone, or email',
-                    prefixIcon: Icon(Icons.search),
+                  decoration: InputDecoration(
+                    hintText: context.l10n.customerSearchHint,
+                    prefixIcon: const Icon(Icons.search),
                     filled: true,
                   ),
                   onChanged: (_) => setState(() {}),
@@ -85,19 +90,19 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
               ),
               Expanded(
                 child: visible.isEmpty
-                    ? const EmptyView(
-                        message: 'No customers match your search.',
-                      )
+                    ? EmptyView(message: context.l10n.customerSearchEmpty)
                     : ListView.separated(
                         padding: TappableListCard.listPadding,
                         itemCount: visible.length,
-                        separatorBuilder: (_, _) => TappableListCard.listSeparator,
+                        separatorBuilder: (_, _) =>
+                            TappableListCard.listSeparator,
                         itemBuilder: (context, index) {
                           final customer = visible[index];
                           return _CustomerListCard(
                             customer: customer,
                             quoteCount: quoteCounts[customer.id] ?? 0,
-                            onTap: () => context.go('/customers/${customer.id}'),
+                            onTap: () =>
+                                context.go('/customers/${customer.id}'),
                           );
                         },
                       ),
@@ -145,8 +150,8 @@ class _CustomerListCard extends StatelessWidget {
     final subtitle = city.isNotEmpty
         ? city
         : email.isNotEmpty
-            ? email
-            : phone;
+        ? email
+        : phone;
     return TappableListCard(
       onTap: onTap,
       child: Row(
@@ -172,6 +177,8 @@ class _CustomerListCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -183,7 +190,7 @@ class _CustomerListCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     customer.addressLine,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
@@ -192,11 +199,9 @@ class _CustomerListCard extends StatelessWidget {
                 ],
                 const SizedBox(height: 6),
                 Text(
-                  quoteCount == 0
-                      ? 'No quotes'
-                      : quoteCount == 1
-                          ? '1 quote'
-                          : '$quoteCount quotes',
+                  context.l10n.customerQuoteCount(quoteCount),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: quoteCount == 0
                         ? scheme.onSurfaceVariant
@@ -208,13 +213,13 @@ class _CustomerListCard extends StatelessWidget {
           ),
           if (phone.isNotEmpty)
             IconButton(
-              tooltip: 'Call',
+              tooltip: context.l10n.customerCall,
               onPressed: () => launchUrl(Uri.parse('tel:$phone')),
               icon: const Icon(Icons.phone_outlined),
             ),
           if (email.isNotEmpty)
             IconButton(
-              tooltip: 'Email',
+              tooltip: context.l10n.fieldEmail,
               onPressed: () => launchUrl(Uri.parse('mailto:$email')),
               icon: const Icon(Icons.mail_outline),
             ),
@@ -279,7 +284,7 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
 
   Future<void> _save(UserStore store) async {
     if (_name.text.trim().isEmpty) {
-      setState(() => _error = 'Name is required.');
+      setState(() => _error = context.l10n.customerNameRequired);
       return;
     }
     final customer = Customer(
@@ -297,10 +302,7 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
       await store.saveCustomer(customer);
     } on Object {
       if (mounted) {
-        setState(
-          () => _error =
-              'Could not save the customer. Check the connection and try again.',
-        );
+        setState(() => _error = context.l10n.customerSaveFailed);
       }
       return;
     }
@@ -313,12 +315,16 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
   Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
     if (store == null) {
-      return const Scaffold(body: EmptyView(message: 'Sign in to edit customers.'));
+      return Scaffold(
+        body: EmptyView(message: context.l10n.customerSignInEdit),
+      );
     }
     final existing = ref.watch(customersProvider(store));
     final orders = ref.watch(ordersProvider(store));
     if (widget.id != 'new') {
-      final match = existing.asData?.value.where((item) => item.id == widget.id);
+      final match = existing.asData?.value.where(
+        (item) => item.id == widget.id,
+      );
       if (match != null && match.isNotEmpty) {
         _load(match.first);
       }
@@ -331,11 +337,11 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
     final isNew = widget.id == 'new';
     return Scaffold(
       appBar: AppBar(
-        title: Text(isNew ? 'New customer' : _name.text),
+        title: Text(isNew ? context.l10n.customerNew : _name.text),
         actions: [
           if (!isNew)
             IconButton(
-              tooltip: 'Send to user',
+              tooltip: context.l10n.inboxSendToUser,
               onPressed: () => sendItem(
                 context: context,
                 store: store,
@@ -382,12 +388,16 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
                         children: [
                           Text(
                             _name.text.trim(),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleLarge,
                           ),
                           if (_phone.text.trim().isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Text(
                               _phone.text.trim(),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: scheme.onSurfaceVariant,
                               ),
@@ -397,6 +407,8 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
                             const SizedBox(height: 2),
                             Text(
                               _email.text.trim(),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: scheme.onSurfaceVariant,
                               ),
@@ -418,6 +430,8 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
                                 city: _city.text,
                                 country: _country.text,
                               ).addressLine,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
                               ),
@@ -432,48 +446,52 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
             ),
           TextField(
             controller: _name,
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: InputDecoration(labelText: context.l10n.fieldName),
             textCapitalization: TextCapitalization.words,
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _street,
-            decoration: const InputDecoration(labelText: 'Street'),
+            decoration: InputDecoration(labelText: context.l10n.fieldStreet),
             textCapitalization: TextCapitalization.words,
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _postal,
-            decoration: const InputDecoration(labelText: 'Postal code'),
+            decoration: InputDecoration(
+              labelText: context.l10n.fieldPostalCode,
+            ),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _city,
-            decoration: const InputDecoration(labelText: 'City'),
+            decoration: InputDecoration(labelText: context.l10n.fieldCity),
             textCapitalization: TextCapitalization.words,
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _country,
-            decoration: const InputDecoration(labelText: 'Country'),
+            decoration: InputDecoration(
+              labelText: context.l10n.customerCountry,
+            ),
             textCapitalization: TextCapitalization.words,
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _phone,
-            decoration: const InputDecoration(labelText: 'Phone'),
+            decoration: InputDecoration(labelText: context.l10n.fieldPhone),
             keyboardType: TextInputType.phone,
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _email,
-            decoration: const InputDecoration(labelText: 'Email'),
+            decoration: InputDecoration(labelText: context.l10n.fieldEmail),
             keyboardType: TextInputType.emailAddress,
             autocorrect: false,
             onChanged: (_) => setState(() {}),
@@ -481,7 +499,7 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _notes,
-            decoration: const InputDecoration(labelText: 'Notes'),
+            decoration: InputDecoration(labelText: context.l10n.fieldNotes),
             minLines: 2,
             maxLines: 4,
           ),
@@ -495,24 +513,32 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
                     ? null
                     : () => launchUrl(Uri.parse('tel:${_phone.text.trim()}')),
                 icon: const Icon(Icons.phone_outlined),
-                label: const Text('Call'),
+                label: Text(
+                  context.l10n.customerCall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               OutlinedButton.icon(
                 onPressed: _email.text.trim().isEmpty
                     ? null
-                    : () => launchUrl(
-                          Uri.parse('mailto:${_email.text.trim()}'),
-                        ),
+                    : () =>
+                          launchUrl(Uri.parse('mailto:${_email.text.trim()}')),
                 icon: const Icon(Icons.mail_outline),
-                label: const Text('Email'),
+                label: Text(
+                  context.l10n.fieldEmail,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               OutlinedButton.icon(
-                onPressed: [
-                  _street.text,
-                  _postal.text,
-                  _city.text,
-                  _country.text,
-                ].every((part) => part.trim().isEmpty)
+                onPressed:
+                    [
+                      _street.text,
+                      _postal.text,
+                      _city.text,
+                      _country.text,
+                    ].every((part) => part.trim().isEmpty)
                     ? null
                     : () {
                         final query = [
@@ -528,26 +554,33 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
                         );
                       },
                 icon: const Icon(Icons.map_outlined),
-                label: const Text('Map'),
+                label: Text(
+                  context.l10n.customerMap,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          FilledButton(onPressed: () => _save(store), child: const Text('Save')),
+          FilledButton(
+            onPressed: () => _save(store),
+            child: Text(
+              context.l10n.actionSave,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
           if (!isNew)
             TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: scheme.error,
-              ),
+              style: TextButton.styleFrom(foregroundColor: scheme.error),
               onPressed: () async {
                 final name = _name.text.trim();
                 final quotes = customerOrders.length;
                 final confirmed = await confirmDelete(
                   context,
-                  title: 'Delete customer',
-                  message: quotes == 0
-                      ? 'This removes $name.'
-                      : 'This removes $name. ${quotes == 1 ? '1 quote stays' : '$quotes quotes stay'}, without this customer.',
+                  title: context.l10n.customerDeleteTitle,
+                  message: context.l10n.customerDeleteMessage(quotes, name),
                 );
                 if (!confirmed || !context.mounted) {
                   return;
@@ -557,14 +590,16 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
                   context.go('/customers');
                 }
               },
-              child: const Text('Delete customer'),
+              child: Text(
+                context.l10n.customerDeleteTitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           if (customerOrders.isNotEmpty) ...[
             const SectionRule(),
             SectionHeading(
-              customerOrders.length == 1
-                  ? '1 quote'
-                  : '${customerOrders.length} quotes',
+              context.l10n.customerQuoteCount(customerOrders.length),
             ),
             for (final order in customerOrders) ...[
               _CustomerOrderCard(
@@ -581,10 +616,7 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
 }
 
 class _CustomerOrderCard extends StatelessWidget {
-  const _CustomerOrderCard({
-    required this.order,
-    required this.onTap,
-  });
+  const _CustomerOrderCard({required this.order, required this.onTap});
 
   final PrintOrder order;
   final VoidCallback onTap;
@@ -594,6 +626,16 @@ class _CustomerOrderCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final statusColor = orderStatusColor(order.status, scheme);
+    final l10n = context.l10n;
+    final statusLabel = switch (order.status) {
+      OrderStatus.quote => l10n.statusQuote,
+      OrderStatus.sent => l10n.statusSent,
+      OrderStatus.accepted => l10n.statusAccepted,
+      OrderStatus.printed => l10n.statusPrinted,
+      OrderStatus.paid => l10n.statusPaid,
+      OrderStatus.declined => l10n.statusDeclined,
+      OrderStatus.cancelled => l10n.statusCancelled,
+    };
     return TappableListCard(
       onTap: onTap,
       child: Column(
@@ -601,13 +643,16 @@ class _CustomerOrderCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'Quote ${order.quoteNumber}',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
+              Expanded(
+                child: Text(
+                  l10n.customerQuoteNumber(order.quoteNumber),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-              const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
@@ -615,7 +660,9 @@ class _CustomerOrderCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  orderStatusLabel(order.status),
+                  statusLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: statusColor,
                   ),
@@ -632,7 +679,9 @@ class _CustomerOrderCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            formatMoney(order.breakdown.totalMinor, order.currencyCode),
+            context.money(order.breakdown.totalMinor, order.currencyCode),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
             ),

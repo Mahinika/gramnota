@@ -12,6 +12,7 @@ import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
+import '../../../l10n/l10n.dart';
 import '../../catalog/presentation/product_picker.dart';
 import '../../customers/domain/customer.dart';
 import '../../customers/presentation/customer_quote_picker.dart';
@@ -201,7 +202,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (trimmed.isEmpty || parseNonNegativeDouble(trimmed) != null) {
       return null;
     }
-    return 'Could not read $label. Use a number, 0 or more.';
+    return context.l10n.calcReadNumber(label);
   }
 
   String? _wholeNumberError(String label, String text) {
@@ -209,7 +210,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (trimmed.isEmpty || parsePositiveInt(trimmed) != null) {
       return null;
     }
-    return '$label must be a whole number of 0 or more.';
+    return context.l10n.calcReadWholeNumber(label);
   }
 
   String? _moneyError(String label, String text) {
@@ -217,7 +218,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (trimmed.isEmpty || parseMinor(trimmed) != null) {
       return null;
     }
-    return 'Could not read $label. Use a number, 0 or more.';
+    return context.l10n.calcReadNumber(label);
   }
 
   String? _percentError(String label, String text) {
@@ -225,14 +226,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (trimmed.isEmpty || parseBasisPoints(trimmed) != null) {
       return null;
     }
-    return 'Could not read $label. Use a percent, 0 or more.';
+    return context.l10n.calcReadPercent(label);
   }
 
   String? _defaultPercentHint(String text, int workshopBasisPoints) {
     if (text.trim().isNotEmpty) {
       return null;
     }
-    return 'Using workshop default ${formatPercent(workshopBasisPoints)}';
+    return context.l10n.calcUsingWorkshopDefault(
+      context.percentText(workshopBasisPoints),
+    );
   }
 
   String? _roundedMinutesNote(TextEditingController controller) {
@@ -240,22 +243,24 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (value == null || value == value.roundToDouble()) {
       return null;
     }
-    return 'Priced as ${value.round()} minutes.';
+    return context.l10n.calcPricedAsMinutes(value.round());
   }
 
   List<String> _inputProblems() {
+    final l10n = context.l10n;
     return [
-      ?_decimalError('hours', _hours.text),
-      ?_decimalError('minutes', _minutes.text),
-      ?_decimalError('prep minutes', _prep.text),
-      ?_decimalError('post minutes', _post.text),
-      ?_wholeNumberError('Quantity', _quantity.text),
-      ?_percentError('markup', _markup.text),
-      ?_percentError('failure', _failure.text),
-      ?_percentError('VAT', _vat.text),
-      for (final row in _rows) ?_decimalError('grams', row.grams.text),
+      ?_decimalError(l10n.calcErrHours, _hours.text),
+      ?_decimalError(l10n.calcErrMinutes, _minutes.text),
+      ?_decimalError(l10n.calcErrPrepMinutes, _prep.text),
+      ?_decimalError(l10n.calcErrPostMinutes, _post.text),
+      ?_wholeNumberError(l10n.fieldQuantity, _quantity.text),
+      ?_percentError(l10n.calcErrMarkup, _markup.text),
+      ?_percentError(l10n.calcErrFailure, _failure.text),
+      ?_percentError(l10n.calcErrVat, _vat.text),
+      for (final row in _rows)
+        ?_decimalError(l10n.calcErrGrams, row.grams.text),
       for (final extra in _extras)
-        ?_moneyError('the extra cost', extra.cost.text),
+        ?_moneyError(l10n.calcErrExtraCost, extra.cost.text),
     ];
   }
 
@@ -358,7 +363,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _profileTitle = profile.title;
   }
 
-  String _gramsField(double grams) => formatDecimalField(grams, fractionDigits: 3);
+  String _gramsField(double grams) =>
+      formatDecimalField(grams, fractionDigits: 3);
 
   bool _namesMatch(String saved, String incoming) {
     final left = saved.trim().toLowerCase();
@@ -421,18 +427,25 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       } else if (result.profiles.length > 1) {
         final picked = await showDialog<ImportedProfile>(
           context: context,
-          builder: (context) => SimpleDialog(
-            title: const Text('Choose a print profile'),
-            children: [
-              for (final profile in result.profiles)
-                SimpleDialogOption(
-                  onPressed: () => Navigator.pop(context, profile),
-                  child: Text(
-                    profile.title.isEmpty ? 'Print profile' : profile.title,
+          builder: (context) {
+            final l10n = context.l10n;
+            return SimpleDialog(
+              title: Text(l10n.calcChooseProfile),
+              children: [
+                for (final profile in result.profiles)
+                  SimpleDialogOption(
+                    onPressed: () => Navigator.pop(context, profile),
+                    child: Text(
+                      profile.title.isEmpty
+                          ? l10n.calcPrintProfile
+                          : profile.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            );
+          },
         );
         if (picked != null) {
           _applyProfile(picked, printers, spools);
@@ -440,10 +453,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       }
       setState(() => _importNote = result.note.isEmpty ? null : result.note);
     } on Object catch (error) {
-      setState(
-        () => _importNote =
-            'The link could not be read ($error). Enter the print by hand.',
-      );
+      setState(() => _importNote = context.l10n.calcLinkReadFailed('$error'));
     } finally {
       if (mounted) {
         setState(() => _importing = false);
@@ -470,7 +480,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       final file = picked.single;
       final name = file.name;
       if (!isSliceFileName(name)) {
-        setState(() => _importNote = 'Choose a .gcode or .3mf file.');
+        setState(() => _importNote = context.l10n.calcChooseSliceFile);
         return;
       }
       final GcodeImport result;
@@ -489,7 +499,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       await _applyGcode(store, result);
     } on Object catch (error) {
       if (mounted) {
-        setState(() => _importNote = 'The file could not be read ($error).');
+        setState(
+          () => _importNote = context.l10n.calcFileReadFailed(
+            describeGcodeError(error, context.l10n),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -512,7 +526,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     } on Object catch (error) {
       if (mounted) {
         setState(
-          () => _importNote = 'The shared file could not be read ($error).',
+          () => _importNote = context.l10n.calcSharedFileReadFailed(
+            describeGcodeError(error, context.l10n),
+          ),
         );
       }
     } finally {
@@ -545,7 +561,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         return;
       }
       if (choice == null) {
-        setState(() => _importNote = 'No plate was imported.');
+        setState(() => _importNote = context.l10n.calcNoPlateImported);
         return;
       }
       if (choice.importAll) {
@@ -579,7 +595,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         spools,
         keepExistingWhenMissing: true,
       );
-      _importNote = gcodePlateNote(plate, plateCount: result.plates.length);
+      _importNote = gcodePlateNote(
+        plate,
+        l10n: context.l10n,
+        plateCount: result.plates.length,
+      );
     });
   }
 
@@ -597,6 +617,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       return;
     }
     final lines = quoteLinesFromPlates(
+      l10n: context.l10n,
       plates: plates,
       newId: () => const Uuid().v4(),
       settings: settings,
@@ -612,7 +633,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       vatBasisPoints: parseBasisPoints(_vat.text) ?? settings.vatBasisPoints,
     );
     if (lines.isEmpty) {
-      setState(() => _importNote = 'No plate had print time or filament weight.');
+      setState(() => _importNote = context.l10n.calcNoPlateData);
       return;
     }
     if (widget.orderId != null) {
@@ -627,11 +648,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         return;
       }
       if (target == null) {
-        setState(() => _importNote = 'Quote not found.');
+        setState(() => _importNote = context.l10n.calcQuoteNotFound);
         return;
       }
       if (target.stockDeducted) {
-        setState(() => _importNote = printsLockedMessage);
+        setState(() => _importNote = context.l10n.calcPrintsLocked);
         return;
       }
       final next = [...orderPrints(target), ...lines];
@@ -653,10 +674,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       context,
       store,
       customers,
-      title: 'Save as quote',
+      title: context.l10n.calcSaveAsQuote,
     );
     if (resolvedCustomer == null || !mounted) {
-      setState(() => _importNote = 'No plate was imported.');
+      setState(() => _importNote = context.l10n.calcNoPlateImported);
       return;
     }
     setState(() => _saving = true);
@@ -696,10 +717,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       }
     } on Object {
       if (mounted) {
-        setState(
-          () => _importNote =
-              'Could not save the quote. Check the connection and try again.',
-        );
+        setState(() => _importNote = context.l10n.calcSaveQuoteFailed);
       }
     } finally {
       if (mounted) {
@@ -719,10 +737,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       return;
     }
     if (products.isEmpty) {
-      setState(
-        () => _importNote =
-            'No saved products yet. Save this print as a product, or add one under More.',
-      );
+      setState(() => _importNote = context.l10n.calcNoProductsYet);
       return;
     }
     final picked = await pickCatalogProduct(context, products);
@@ -730,6 +745,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       return;
     }
     final priced = priceProduct(
+      l10n: context.l10n,
       product: picked,
       lineId: 'draft',
       quantity: _quantityValue(),
@@ -742,7 +758,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       final warning = priced.warnings.isEmpty
           ? ''
           : ' ${priced.warnings.join(' ')}';
-      _importNote = '$productPriceExplanation$warning';
+      _importNote = '${productPriceExplanation(l10n: context.l10n)}$warning';
     });
   }
 
@@ -758,7 +774,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       return;
     }
     if (_title.text.trim().isEmpty) {
-      setState(() => _importNote = 'Add a title before saving a product.');
+      setState(() => _importNote = context.l10n.calcAddTitleBeforeProduct);
       return;
     }
     final line = _captureLine('draft', input, breakdown, spools);
@@ -772,10 +788,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       await store.saveProduct(product);
     } on Object {
       if (mounted) {
-        setState(
-          () => _importNote =
-              'Could not save the product. Check the connection and try again.',
-        );
+        setState(() => _importNote = context.l10n.calcSaveProductFailed);
       }
       return;
     }
@@ -783,7 +796,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       setState(() {
         _productId = product.id;
         _importNote =
-            'Saved “${product.name}” as a product. $productPriceExplanation';
+            '${context.l10n.calcSavedAsProduct(product.name)} ${productPriceExplanation(l10n: context.l10n)}';
       });
     }
   }
@@ -871,7 +884,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         return;
       }
     }
-    _importNote = 'That print is no longer on the quote.';
+    _importNote = context.l10n.calcPrintGone;
   }
 
   void _clearForm(WorkshopSettings? settings) {
@@ -1007,7 +1020,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               (parseMinor(extra.cost.text) ?? 0) > 0)
             ExtraCost(
               name: extra.name.text.trim().isEmpty
-                  ? 'Extra'
+                  ? context.l10n.calcExtra
                   : extra.name.text.trim(),
               costMinor: parseMinor(extra.cost.text) ?? 0,
             ),
@@ -1035,7 +1048,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       return;
     }
     if (_title.text.trim().isEmpty) {
-      setState(() => _importNote = 'Add a title before saving the quote.');
+      setState(() => _importNote = context.l10n.calcAddTitleBeforeQuote);
       return;
     }
     if (widget.orderId != null) {
@@ -1086,10 +1099,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       }
     } on Object {
       if (mounted) {
-        setState(
-          () => _importNote =
-              'Could not save the quote. Check the connection and try again.',
-        );
+        setState(() => _importNote = context.l10n.calcSaveQuoteFailed);
       }
     } finally {
       if (mounted) {
@@ -1105,14 +1115,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     PrintOrder? target,
   ) async {
     if (target == null) {
-      setState(() => _importNote = 'Quote not found.');
+      setState(() => _importNote = context.l10n.calcQuoteNotFound);
       return;
     }
     if (target.stockDeducted) {
-      setState(
-        () => _importNote =
-            printsLockedMessage,
-      );
+      setState(() => _importNote = context.l10n.calcPrintsLocked);
       return;
     }
     setState(() => _saving = true);
@@ -1153,10 +1160,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       }
     } on Object {
       if (mounted) {
-        setState(
-          () => _importNote =
-              'Could not save the print. Check the connection and try again.',
-        );
+        setState(() => _importNote = context.l10n.calcSavePrintFailed);
       }
     } finally {
       if (mounted) {
@@ -1209,18 +1213,19 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   String _quoteCustomerLabel(List<Customer> customers) {
+    final l10n = context.l10n;
     if (!_quoteCustomerChosen) {
-      return 'Tap to choose before saving';
+      return l10n.calcTapToChooseCustomer;
     }
     if (_quoteCustomerId.isEmpty) {
-      return 'No customer';
+      return l10n.noCustomer;
     }
     for (final customer in customers) {
       if (customer.id == _quoteCustomerId) {
         return customer.name;
       }
     }
-    return 'Customer';
+    return l10n.calcCustomer;
   }
 
   Future<void> _chooseQuoteCustomer(
@@ -1249,7 +1254,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       context,
       store,
       customers,
-      title: 'Save as quote',
+      title: context.l10n.calcSaveAsQuote,
     );
     if (picked == null || !mounted) {
       return null;
@@ -1289,7 +1294,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       });
     }
     if (store == null) {
-      return const Scaffold(body: EmptyView(message: 'Sign in to calculate.'));
+      return Scaffold(body: EmptyView(message: context.l10n.calcSignIn));
     }
     final settings = ref.watch(settingsProvider(store)).asData?.value;
     final printers =
@@ -1327,19 +1332,22 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     );
     final breakdown = const PriceCalculator().calculate(input);
     final locked = target != null && target.stockDeducted;
+    final l10n = context.l10n;
     final saveLabel = widget.lineId != null
-        ? 'Update print'
+        ? l10n.calcUpdatePrint
         : widget.orderId != null
-        ? 'Add print'
-        : 'Save as quote';
+        ? l10n.calcAddPrint
+        : l10n.calcSaveAsQuote;
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.lineId != null
-              ? 'Edit print'
+              ? l10n.calcEditPrint
               : widget.orderId != null
-              ? 'Add print'
-              : 'Calculator',
+              ? l10n.calcAddPrint
+              : l10n.navCalculator,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
       body: LayoutBuilder(
@@ -1351,8 +1359,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                     .take(5)
                     .toList()
               : const <PrintOrder>[];
+          final l10n = context.l10n;
           final summary = [
-            const SectionHeading('Price'),
+            SectionHeading(l10n.calcPrice),
             BreakdownCard(
               breakdown: breakdown,
               currencyCode: activeSettings.currencyCode,
@@ -1362,12 +1371,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               onPressed: _saving || locked
                   ? null
                   : () => _save(store, activeSettings, input, spools, target),
-              child: Text(_saving ? 'Saving…' : saveLabel),
+              child: Text(
+                _saving ? l10n.saving : saveLabel,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             if (isNewQuote) ...[
               const SizedBox(height: 8),
               Text(
-                'Valid for ${activeSettings.quoteValidityDays} days after save',
+                l10n.calcValidForDays(activeSettings.quoteValidityDays),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1378,7 +1391,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           final recent = <Widget>[
             if (recentQuotes.isNotEmpty) ...[
               const SectionRule(),
-              const SectionHeading('Recent quotes'),
+              SectionHeading(l10n.calcRecentQuotes),
               for (final order in recentQuotes) ...[
                 _RecentQuoteCard(
                   order: order,
@@ -1392,27 +1405,30 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             if (target != null) ...[
               Text(
                 widget.lineId == null
-                    ? 'Adding a print to ${target.title}'
-                    : 'Editing a print on ${target.title}',
+                    ? l10n.calcAddingPrintTo(target.title)
+                    : l10n.calcEditingPrintOn(target.title),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   onPressed: () => context.go('/calculator'),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.actionCancel),
                 ),
               ),
             ],
             if (locked)
-              const Text(
-                printsLockedMessage,
+              Text(
+                l10n.calcPrintsLocked,
+                maxLines: 6,
+                overflow: TextOverflow.ellipsis,
               ),
             TextField(
               controller: _link,
-              decoration: const InputDecoration(
-                labelText: 'Model link',
-                hintText:
-                    'MakerWorld, Printables, Creality Cloud, or another site',
+              decoration: InputDecoration(
+                label: _clipLabel(l10n.calcModelLink),
+                hintText: l10n.calcModelLinkHint,
               ),
             ),
             const SizedBox(height: 8),
@@ -1422,11 +1438,19 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               children: [
                 FilledButton.tonal(
                   onPressed: _importing ? null : () => _import(store),
-                  child: Text(_importing ? 'Reading…' : 'Fill from link'),
+                  child: Text(
+                    _importing ? l10n.calcReading : l10n.calcFillFromLink,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 FilledButton.tonal(
                   onPressed: _importing ? null : () => _pickGcode(store),
-                  child: const Text('Import G-code'),
+                  child: Text(
+                    l10n.calcImportGcode,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 TextButton(
                   onPressed: _importing
@@ -1437,13 +1461,21 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                           printers,
                           spools,
                         ),
-                  child: const Text('Add from catalog'),
+                  child: Text(
+                    l10n.calcAddFromCatalog,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 TextButton(
                   onPressed: _importing || _saving
                       ? null
                       : () => _saveAsProduct(store, input, breakdown, spools),
-                  child: const Text('Save as product'),
+                  child: Text(
+                    l10n.calcSaveAsProduct,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -1454,12 +1486,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _title,
-              decoration: const InputDecoration(labelText: 'Title'),
+              decoration: InputDecoration(label: _clipLabel(l10n.calcTitle)),
               onChanged: (value) {
                 if (value.trim().isNotEmpty &&
-                    (_importNote == 'Add a title before saving the quote.' ||
-                        _importNote ==
-                            'Add a title before saving a product.')) {
+                    (_importNote == l10n.calcAddTitleBeforeQuote ||
+                        _importNote == l10n.calcAddTitleBeforeProduct)) {
                   setState(() => _importNote = null);
                 }
               },
@@ -1495,11 +1526,15 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Customer',
+                            l10n.calcCustomer,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.labelMedium,
                           ),
                           Text(
                             _quoteCustomerLabel(customers),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ],
@@ -1512,24 +1547,23 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ],
             if (printers.isEmpty) ...[
               const SizedBox(height: 12),
-              const _SetupHint(
-                title: 'No printers',
-                message: 'Electricity and machine wear need a printer profile.',
-                primaryLabel: 'Open Printers',
+              _SetupHint(
+                title: l10n.calcNoPrinters,
+                message: l10n.calcNoPrintersMessage,
+                primaryLabel: l10n.calcOpenPrinters,
                 primaryRoute: '/more/printers',
-                secondaryLabel: 'Add printer',
+                secondaryLabel: l10n.calcAddPrinter,
                 secondaryRoute: '/more/printers/new',
               ),
             ],
             if (spools.isEmpty) ...[
               const SizedBox(height: 12),
-              const _SetupHint(
-                title: 'No filament spools',
-                message:
-                    'Material cost needs at least one spool. Add a standard spool or enter your own.',
-                primaryLabel: 'Open Filament',
+              _SetupHint(
+                title: l10n.calcNoSpools,
+                message: l10n.calcNoSpoolsMessage,
+                primaryLabel: l10n.calcOpenFilament,
                 primaryRoute: '/filaments',
-                secondaryLabel: 'Custom spool',
+                secondaryLabel: l10n.calcCustomSpool,
                 secondaryRoute: '/filaments/new',
               ),
             ],
@@ -1540,13 +1574,23 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               initialValue: printers.any((printer) => printer.id == _printerId)
                   ? _printerId
                   : null,
-              decoration: const InputDecoration(labelText: 'Printer'),
+              decoration: InputDecoration(label: _clipLabel(l10n.calcPrinter)),
               items: [
-                const DropdownMenuItem(child: Text('No printer')),
+                DropdownMenuItem(
+                  child: Text(
+                    l10n.noPrinter,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 for (final printer in printers)
                   DropdownMenuItem(
                     value: printer.id,
-                    child: Text(printer.name, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      printer.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
               onChanged: (value) => setState(() => _printerId = value),
@@ -1554,7 +1598,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             if (_selectedPrinter(printers) == null) ...[
               const SizedBox(height: 4),
               Text(
-                'No printer selected, so electricity and machine wear stay at 0.',
+                l10n.calcNoPrinterSelected,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -1574,7 +1618,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   row.grams.addListener(_refresh);
                   _rows.add(row);
                 }),
-                child: const Text('Add filament'),
+                child: Text(l10n.calcAddFilament),
               ),
             ),
             Row(
@@ -1583,8 +1627,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   child: TextField(
                     controller: _hours,
                     decoration: InputDecoration(
-                      labelText: 'Hours',
-                      errorText: _decimalError('hours', _hours.text),
+                      label: _clipLabel(l10n.fieldHours),
+                      errorText: _decimalError(l10n.calcErrHours, _hours.text),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -1596,8 +1640,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   child: TextField(
                     controller: _minutes,
                     decoration: InputDecoration(
-                      labelText: 'Minutes',
-                      errorText: _decimalError('minutes', _minutes.text),
+                      label: _clipLabel(l10n.fieldMinutes),
+                      errorText: _decimalError(
+                        l10n.calcErrMinutes,
+                        _minutes.text,
+                      ),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -1613,9 +1660,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   child: TextField(
                     controller: _prep,
                     decoration: InputDecoration(
-                      labelText: 'Prep minutes',
+                      label: _clipLabel(l10n.calcPrepMinutes),
                       helperText: _roundedMinutesNote(_prep),
-                      errorText: _decimalError('prep minutes', _prep.text),
+                      errorText: _decimalError(
+                        l10n.calcErrPrepMinutes,
+                        _prep.text,
+                      ),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -1627,9 +1677,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   child: TextField(
                     controller: _post,
                     decoration: InputDecoration(
-                      labelText: 'Post minutes',
+                      label: _clipLabel(l10n.calcPostMinutes),
                       helperText: _roundedMinutesNote(_post),
-                      errorText: _decimalError('post minutes', _post.text),
+                      errorText: _decimalError(
+                        l10n.calcErrPostMinutes,
+                        _post.text,
+                      ),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -1642,11 +1695,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             TextField(
               controller: _quantity,
               decoration: InputDecoration(
-                labelText: 'Quantity',
+                label: _clipLabel(l10n.fieldQuantity),
                 helperText: (parsePositiveInt(_quantity.text) ?? 1) < 1
-                    ? 'Quantity below 1 is priced as 1.'
-                    : 'Material, time, and post-processing scale with quantity. Prep is charged once.',
-                errorText: _wholeNumberError('Quantity', _quantity.text),
+                    ? l10n.calcQuantityPricedAsOne
+                    : l10n.calcQuantityScales,
+                errorText: _wholeNumberError(
+                  l10n.fieldQuantity,
+                  _quantity.text,
+                ),
               ),
               keyboardType: TextInputType.number,
             ),
@@ -1657,12 +1713,15 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   child: TextField(
                     controller: _markup,
                     decoration: InputDecoration(
-                      labelText: 'Markup %',
+                      label: _clipLabel(l10n.calcMarkupPercent),
                       helperText: _defaultPercentHint(
                         _markup.text,
                         activeSettings.defaultMarkupBasisPoints,
                       ),
-                      errorText: _percentError('markup', _markup.text),
+                      errorText: _percentError(
+                        l10n.calcErrMarkup,
+                        _markup.text,
+                      ),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -1674,12 +1733,15 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   child: TextField(
                     controller: _failure,
                     decoration: InputDecoration(
-                      labelText: 'Failure %',
+                      label: _clipLabel(l10n.calcFailurePercent),
                       helperText: _defaultPercentHint(
                         _failure.text,
                         activeSettings.defaultFailureBasisPoints,
                       ),
-                      errorText: _percentError('failure', _failure.text),
+                      errorText: _percentError(
+                        l10n.calcErrFailure,
+                        _failure.text,
+                      ),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -1691,12 +1753,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   child: TextField(
                     controller: _vat,
                     decoration: InputDecoration(
-                      labelText: 'VAT %',
+                      label: _clipLabel(l10n.calcVatPercent),
                       helperText: _defaultPercentHint(
                         _vat.text,
                         activeSettings.vatBasisPoints,
                       ),
-                      errorText: _percentError('VAT', _vat.text),
+                      errorText: _percentError(l10n.calcErrVat, _vat.text),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
@@ -1714,7 +1776,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                     Expanded(
                       child: TextField(
                         controller: _extras[index].name,
-                        decoration: const InputDecoration(labelText: 'Extra'),
+                        decoration: InputDecoration(
+                          label: _clipLabel(l10n.calcExtra),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1722,9 +1786,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       child: TextField(
                         controller: _extras[index].cost,
                         decoration: InputDecoration(
-                          labelText: 'Cost',
+                          label: _clipLabel(l10n.calcCost),
                           errorText: _moneyError(
-                            'the extra cost',
+                            l10n.calcErrExtraCost,
                             _extras[index].cost.text,
                           ),
                         ),
@@ -1734,7 +1798,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Remove extra',
+                      tooltip: l10n.calcRemoveExtra,
                       onPressed: () => setState(() {
                         final extra = _extras.removeAt(index);
                         extra.cost.removeListener(_refresh);
@@ -1754,15 +1818,18 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   extra.cost.addListener(_refresh);
                   _extras.add(extra);
                 }),
-                child: const Text('Add extra cost'),
+                child: Text(l10n.calcAddExtraCost),
               ),
             ),
             if (_extras.isNotEmpty)
               Text(
-                'Extras are a flat amount for the whole print, not per unit. A cost without a name is saved as Extra.',
+                l10n.calcExtrasFlat(l10n.calcExtra),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-            DetailRow(label: 'Print time', value: formatDuration(_seconds())),
+            DetailRow(
+              label: l10n.calcPrintTime,
+              value: formatDuration(_seconds()),
+            ),
           ];
           if (!wide) {
             return ListView(
@@ -1821,6 +1888,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final needed = grams == null ? null : grams * quantity;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Column(
@@ -1837,19 +1905,30 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       ? row.filamentId
                       : null,
                   decoration: InputDecoration(
-                    labelText: row.material.isEmpty
-                        ? 'Spool'
-                        : 'Spool (${row.material})',
+                    label: _clipLabel(
+                      row.material.isEmpty
+                          ? l10n.calcSpool
+                          : l10n.calcSpoolWithMaterial(row.material),
+                    ),
                   ),
                   items: [
-                    const DropdownMenuItem(child: Text('No spool')),
+                    DropdownMenuItem(
+                      child: Text(
+                        l10n.noSpool,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                     for (final item in spools)
                       DropdownMenuItem(
                         value: item.id,
                         child: Text(
                           item.isLowStock
-                              ? '${item.brand} ${item.material} · low'
+                              ? l10n.calcSpoolLow(
+                                  '${item.brand} ${item.material}',
+                                )
                               : '${item.brand} ${item.material}',
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -1862,8 +1941,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 child: TextField(
                   controller: row.grams,
                   decoration: InputDecoration(
-                    labelText: 'Grams',
-                    errorText: _decimalError('grams', row.grams.text),
+                    label: _clipLabel(l10n.fieldGrams),
+                    errorText: _decimalError(l10n.calcErrGrams, row.grams.text),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
@@ -1873,7 +1952,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               ),
               if (_rows.length > 1)
                 IconButton(
-                  tooltip: 'Remove filament',
+                  tooltip: l10n.calcRemoveFilament,
                   onPressed: () => setState(() {
                     final removed = _rows.removeAt(index);
                     removed.grams.removeListener(_refresh);
@@ -1886,21 +1965,23 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           if (grams != null && grams > 0 && spool == null) ...[
             const SizedBox(height: 4),
             Text(
-              'Pick a spool. These grams are priced at 0.',
+              l10n.calcPickSpool,
               style: theme.textTheme.bodySmall?.copyWith(color: scheme.error),
             ),
           ],
           if (spool != null) ...[
             const SizedBox(height: 4),
             Text(
-              '${formatMoney(spool.pricePerKgMinor, currencyCode)} / kg',
+              l10n.calcPricePerKg(
+                context.money(spool.pricePerKgMinor, currencyCode),
+              ),
               style: theme.textTheme.bodySmall,
             ),
           ],
           if (spool != null && spool.isLowStock) ...[
             const SizedBox(height: 4),
             Text(
-              'Low stock: ${formatGrams(spool.remainingGrams)} left on this spool.',
+              l10n.calcLowStock(context.gramsText(spool.remainingGrams)),
               style: theme.textTheme.bodySmall?.copyWith(color: scheme.error),
             ),
           ],
@@ -1910,8 +1991,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             const SizedBox(height: 4),
             Text(
               quantity > 1
-                  ? 'This print needs ${formatGrams(needed)} (${formatGrams(grams!)} × $quantity) but only ${formatGrams(spool.remainingGrams)} remains.'
-                  : 'This line uses ${formatGrams(needed)} but only ${formatGrams(spool.remainingGrams)} remains.',
+                  ? l10n.calcPrintNeedsGrams(
+                      context.gramsText(needed),
+                      context.gramsText(grams!),
+                      quantity,
+                      context.gramsText(spool.remainingGrams),
+                    )
+                  : l10n.calcLineUsesGrams(
+                      context.gramsText(needed),
+                      context.gramsText(spool.remainingGrams),
+                    ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: scheme.tertiary,
               ),
@@ -1947,7 +2036,12 @@ class _SetupHint extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: theme.textTheme.titleMedium),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleMedium,
+          ),
           const SizedBox(height: 4),
           Text(
             message,
@@ -1962,11 +2056,19 @@ class _SetupHint extends StatelessWidget {
             children: [
               FilledButton.tonal(
                 onPressed: () => context.go(primaryRoute),
-                child: Text(primaryLabel),
+                child: Text(
+                  primaryLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               OutlinedButton(
                 onPressed: () => context.go(secondaryRoute),
-                child: Text(secondaryLabel),
+                child: Text(
+                  secondaryLabel,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -1974,6 +2076,22 @@ class _SetupHint extends StatelessWidget {
       ),
     );
   }
+}
+
+Text _clipLabel(String text) {
+  return Text(text, maxLines: 1, overflow: TextOverflow.ellipsis);
+}
+
+String _quoteStatusLabel(AppLocalizations l10n, OrderStatus status) {
+  return switch (status) {
+    OrderStatus.quote => l10n.statusQuote,
+    OrderStatus.sent => l10n.statusSent,
+    OrderStatus.accepted => l10n.statusAccepted,
+    OrderStatus.printed => l10n.statusPrinted,
+    OrderStatus.paid => l10n.statusPaid,
+    OrderStatus.declined => l10n.statusDeclined,
+    OrderStatus.cancelled => l10n.statusCancelled,
+  };
 }
 
 class _RecentQuoteCard extends StatelessWidget {
@@ -1995,7 +2113,12 @@ class _RecentQuoteCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Quote ${order.quoteNumber} · ${orderStatusLabel(order.status)}',
+                  context.l10n.calcRecentQuoteMeta(
+                    order.quoteNumber,
+                    _quoteStatusLabel(context.l10n, order.status),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -2022,9 +2145,15 @@ class _RecentQuoteCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            formatMoney(order.breakdown.totalMinor, order.currencyCode),
-            style: theme.textTheme.labelLarge?.copyWith(color: scheme.primary),
+          Flexible(
+            child: Text(
+              context.money(order.breakdown.totalMinor, order.currencyCode),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: scheme.primary,
+              ),
+            ),
           ),
         ],
       ),

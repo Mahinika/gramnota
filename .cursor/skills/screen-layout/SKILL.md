@@ -8,7 +8,7 @@ description: >-
 
 # Screen layout
 
-UI copy is English. List chrome lives in two core widgets. Do not invent a second card style.
+UI copy comes from the ARB catalogs (`lib/l10n`). List chrome lives in two core widgets. Do not invent a second card style. Long translations ellipsize on list rows and wrap on the navigation rail.
 
 ## List rows — `lib/core/menu_card.dart`
 

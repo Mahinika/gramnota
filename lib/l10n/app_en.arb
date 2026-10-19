@@ -1,0 +1,2854 @@
+{
+  "@@locale": "en",
+  "appTitle": "Gramnota",
+  "@appTitle": {
+    "description": "Application name"
+  },
+  "languageLabel": "Language",
+  "@languageLabel": {
+    "description": "Settings field for the app language"
+  },
+  "languageSystem": "System default",
+  "@languageSystem": {
+    "description": "Language option that follows the device language"
+  },
+  "currencyLabel": "Currency",
+  "@currencyLabel": {
+    "description": "Settings field for the workshop currency"
+  },
+  "currencySearch": "Search currencies",
+  "@currencySearch": {
+    "description": "Search field in the currency picker"
+  },
+  "quoteLanguageLabel": "Quote language",
+  "@quoteLanguageLabel": {
+    "description": "Language used on the customer PDF for this quote"
+  },
+  "quoteLanguageApp": "App language",
+  "@quoteLanguageApp": {
+    "description": "Quote language option that follows the app language"
+  },
+  "currencyChangedHint": "Changing currency does not convert existing quotes. New quotes use the new currency. Older quotes keep the currency they were saved with.",
+  "@currencyChangedHint": {
+    "description": "Explains that currency changes do not convert stored amounts"
+  },
+  "actionCancel": "Cancel",
+  "actionDelete": "Delete",
+  "actionSave": "Save",
+  "actionClose": "Close",
+  "actionContinue": "Continue",
+  "saving": "Saving…",
+  "navHome": "Home",
+  "navCalculator": "Calculator",
+  "navOrders": "Orders",
+  "navCustomers": "Customers",
+  "navFilament": "Filament",
+  "navMore": "More",
+  "statusQuote": "Quote",
+  "statusSent": "Sent",
+  "statusAccepted": "Accepted",
+  "statusPrinted": "Printed",
+  "statusPaid": "Paid",
+  "statusDeclined": "Declined",
+  "statusCancelled": "Cancelled",
+  "fieldName": "Name",
+  "fieldNotes": "Notes",
+  "fieldPhone": "Phone",
+  "fieldEmail": "Email",
+  "fieldStreet": "Street",
+  "fieldCity": "City",
+  "fieldPostalCode": "Postal code",
+  "fieldHours": "Hours",
+  "fieldMinutes": "Minutes",
+  "fieldGrams": "Grams",
+  "fieldQuantity": "Quantity",
+  "noPrinter": "No printer",
+  "noSpool": "No spool",
+  "noCustomer": "No customer",
+  "moreSignedIn": "Signed in",
+  "@moreSignedIn": {
+    "description": "moreSignedIn"
+  },
+  "moreApp": "App",
+  "@moreApp": {
+    "description": "moreApp"
+  },
+  "moreWorkshop": "Workshop",
+  "@moreWorkshop": {
+    "description": "moreWorkshop"
+  },
+  "moreProducts": "Products",
+  "@moreProducts": {
+    "description": "moreProducts"
+  },
+  "morePrinters": "Printers",
+  "@morePrinters": {
+    "description": "morePrinters"
+  },
+  "moreSettings": "Settings",
+  "@moreSettings": {
+    "description": "moreSettings"
+  },
+  "moreSharing": "Sharing",
+  "@moreSharing": {
+    "description": "moreSharing"
+  },
+  "moreInbox": "Inbox",
+  "@moreInbox": {
+    "description": "moreInbox"
+  },
+  "moreSignOut": "Sign out",
+  "@moreSignOut": {
+    "description": "moreSignOut"
+  },
+  "settingsSignIn": "Sign in to edit settings.",
+  "@settingsSignIn": {
+    "description": "settingsSignIn"
+  },
+  "settingsElectricity": "Electricity price per kWh",
+  "@settingsElectricity": {
+    "description": "settingsElectricity"
+  },
+  "settingsLabor": "Labor per hour",
+  "@settingsLabor": {
+    "description": "settingsLabor"
+  },
+  "settingsMarkup": "Default markup %",
+  "@settingsMarkup": {
+    "description": "settingsMarkup"
+  },
+  "settingsVatOptional": "VAT % (0 if not registered)",
+  "@settingsVatOptional": {
+    "description": "settingsVatOptional"
+  },
+  "settingsFailure": "Default failure %",
+  "@settingsFailure": {
+    "description": "settingsFailure"
+  },
+  "settingsValidityDays": "Quote validity days",
+  "@settingsValidityDays": {
+    "description": "settingsValidityDays"
+  },
+  "settingsLowStock": "Low stock warning (g)",
+  "@settingsLowStock": {
+    "description": "settingsLowStock"
+  },
+  "settingsLowStockHelp": "Spools can use this workshop default or their own threshold.",
+  "@settingsLowStockHelp": {
+    "description": "settingsLowStockHelp"
+  },
+  "settingsBusinessProfile": "Business profile",
+  "@settingsBusinessProfile": {
+    "description": "settingsBusinessProfile"
+  },
+  "settingsOrgNumber": "Org. number",
+  "@settingsOrgNumber": {
+    "description": "settingsOrgNumber"
+  },
+  "settingsNextQuote": "Next quote number {number}",
+  "@settingsNextQuote": {
+    "description": "settingsNextQuote",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsElectricityRequired": "Enter the electricity price. Use 0 if you do not charge for power.",
+  "@settingsElectricityRequired": {
+    "description": "settingsElectricityRequired"
+  },
+  "settingsLaborRequired": "Enter the labor rate. Use 0 if you do not charge for labor.",
+  "@settingsLaborRequired": {
+    "description": "settingsLaborRequired"
+  },
+  "settingsPercentsRequired": "Markup, VAT, and failure must be numbers.",
+  "@settingsPercentsRequired": {
+    "description": "settingsPercentsRequired"
+  },
+  "settingsValidityRequired": "Enter how many days a quote stays valid.",
+  "@settingsValidityRequired": {
+    "description": "settingsValidityRequired"
+  },
+  "settingsLowStockRequired": "Enter the low-stock warning in grams. Use 0 to warn only when a spool is empty.",
+  "@settingsLowStockRequired": {
+    "description": "settingsLowStockRequired"
+  },
+  "settingsSaved": "Settings saved.",
+  "@settingsSaved": {
+    "description": "settingsSaved"
+  },
+  "settingsDeleteAccount": "Delete account",
+  "@settingsDeleteAccount": {
+    "description": "settingsDeleteAccount"
+  },
+  "settingsDeleteAccountBody": "This deletes your workshop data and Google sign-in for Gramnota.",
+  "@settingsDeleteAccountBody": {
+    "description": "settingsDeleteAccountBody"
+  },
+  "settingsRecentLogin": "Sign in again, then delete the account. Google asked for a fresh login.",
+  "@settingsRecentLogin": {
+    "description": "settingsRecentLogin"
+  },
+  "setupSignIn": "Sign in to set up your workshop.",
+  "@setupSignIn": {
+    "description": "setupSignIn"
+  },
+  "setupTitle": "Set up your workshop",
+  "@setupTitle": {
+    "description": "setupTitle"
+  },
+  "setupElectricityTitle": "Electricity",
+  "@setupElectricityTitle": {
+    "description": "setupElectricityTitle"
+  },
+  "setupLaborTitle": "Labor",
+  "@setupLaborTitle": {
+    "description": "setupLaborTitle"
+  },
+  "setupRatesTitle": "Markup, failure, and VAT",
+  "@setupRatesTitle": {
+    "description": "setupRatesTitle"
+  },
+  "setupQuotesTitle": "Quotes",
+  "@setupQuotesTitle": {
+    "description": "setupQuotesTitle"
+  },
+  "setupPrinterTitle": "Printer",
+  "@setupPrinterTitle": {
+    "description": "setupPrinterTitle"
+  },
+  "setupSpoolTitle": "Filament spool",
+  "@setupSpoolTitle": {
+    "description": "setupSpoolTitle"
+  },
+  "setupReviewTitle": "Review",
+  "@setupReviewTitle": {
+    "description": "setupReviewTitle"
+  },
+  "setupStep": "Step {step} of {total}",
+  "@setupStep": {
+    "description": "setupStep",
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "setupSkip": "Skip for now",
+  "@setupSkip": {
+    "description": "setupSkip"
+  },
+  "setupBack": "Back",
+  "@setupBack": {
+    "description": "setupBack"
+  },
+  "setupSaveStart": "Save and start",
+  "@setupSaveStart": {
+    "description": "setupSaveStart"
+  },
+  "setupStart": "Start",
+  "@setupStart": {
+    "description": "setupStart"
+  },
+  "setupNext": "Next",
+  "@setupNext": {
+    "description": "setupNext"
+  },
+  "setupIntro": "Quotes use your printer, your electricity price, and your labor rate. This setup asks for each of those once. You can change every answer later in Settings.",
+  "@setupIntro": {
+    "description": "setupIntro"
+  },
+  "setupSkipHint": "Skip keeps electricity and labor at zero, with 30% markup and 25% VAT, until you fill them in.",
+  "@setupSkipHint": {
+    "description": "setupSkipHint"
+  },
+  "setupProfileHint": "This name and address appear on the quote PDF.",
+  "@setupProfileHint": {
+    "description": "setupProfileHint"
+  },
+  "setupBusinessName": "Business name",
+  "@setupBusinessName": {
+    "description": "setupBusinessName"
+  },
+  "setupElectricityHint": "Gramnota multiplies printer watts by the print time and this price. A 100 W printer running for one hour uses 0.1 kWh.",
+  "@setupElectricityHint": {
+    "description": "setupElectricityHint"
+  },
+  "setupLaborHint": "Prep and finishing time on each quote is multiplied by this hourly rate.",
+  "@setupLaborHint": {
+    "description": "setupLaborHint"
+  },
+  "setupRatesHint": "Markup is added on top of the full cost. Failure is a percent of material, electricity, and machine wear. VAT is added on the net price. Enter 0 for VAT if you are not registered.",
+  "@setupRatesHint": {
+    "description": "setupRatesHint"
+  },
+  "setupVat": "VAT %",
+  "@setupVat": {
+    "description": "setupVat"
+  },
+  "setupQuotesHint": "Currency is shown on quotes. A quote stays valid for the number of days below. The next quote number is {number}.",
+  "@setupQuotesHint": {
+    "description": "setupQuotesHint",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "setupPrinterHint": "Pick a common machine or type your own. The price should be what you paid. Power is the average while printing, not the power supply rating.",
+  "@setupPrinterHint": {
+    "description": "setupPrinterHint"
+  },
+  "setupFindPrinter": "Find a printer",
+  "@setupFindPrinter": {
+    "description": "setupFindPrinter"
+  },
+  "setupNoPrinterMatch": "No printer with that name.",
+  "@setupNoPrinterMatch": {
+    "description": "setupNoPrinterMatch"
+  },
+  "setupCommonPrinter": "Common printer",
+  "@setupCommonPrinter": {
+    "description": "setupCommonPrinter"
+  },
+  "setupPrinterWatts": "{name} · {watts} W",
+  "@setupPrinterWatts": {
+    "description": "setupPrinterWatts",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "watts": {
+        "type": "int"
+      }
+    }
+  },
+  "setupPower": "Power W",
+  "@setupPower": {
+    "description": "setupPower"
+  },
+  "setupPurchasePrice": "Purchase price",
+  "@setupPurchasePrice": {
+    "description": "setupPurchasePrice"
+  },
+  "setupLifetime": "Lifetime hours",
+  "@setupLifetime": {
+    "description": "setupLifetime"
+  },
+  "setupLifetimeHelp": "Use 0 if you do not charge for machine wear.",
+  "@setupLifetimeHelp": {
+    "description": "setupLifetimeHelp"
+  },
+  "setupMaintenance": "Maintenance per hour",
+  "@setupMaintenance": {
+    "description": "setupMaintenance"
+  },
+  "setupSpoolHint": "Pick a standard spool for pricing. You can add more spools later from the Filament tab.",
+  "@setupSpoolHint": {
+    "description": "setupSpoolHint"
+  },
+  "setupFindSpool": "Find a spool",
+  "@setupFindSpool": {
+    "description": "setupFindSpool"
+  },
+  "setupNoSpoolMatch": "No standard spool with that name.",
+  "@setupNoSpoolMatch": {
+    "description": "setupNoSpoolMatch"
+  },
+  "setupStandardSpool": "Standard spool",
+  "@setupStandardSpool": {
+    "description": "setupStandardSpool"
+  },
+  "setupSpoolPriceLater": "You can set the spool price on the Filament tab after setup.",
+  "@setupSpoolPriceLater": {
+    "description": "setupSpoolPriceLater"
+  },
+  "setupSpoolPrice": "Indicative price {price}.",
+  "@setupSpoolPrice": {
+    "description": "setupSpoolPrice",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "setupReviewNeedSpool": "Save these answers, then add a filament spool from the Filament tab before you price a print.",
+  "@setupReviewNeedSpool": {
+    "description": "setupReviewNeedSpool"
+  },
+  "setupReviewReady": "Save these answers, then open the calculator to price your first print.",
+  "@setupReviewReady": {
+    "description": "setupReviewReady"
+  },
+  "setupBusiness": "Business",
+  "@setupBusiness": {
+    "description": "setupBusiness"
+  },
+  "setupElectricity": "Electricity",
+  "@setupElectricity": {
+    "description": "setupElectricity"
+  },
+  "setupLabor": "Labor",
+  "@setupLabor": {
+    "description": "setupLabor"
+  },
+  "setupMarkup": "Markup",
+  "@setupMarkup": {
+    "description": "setupMarkup"
+  },
+  "setupFailure": "Failure",
+  "@setupFailure": {
+    "description": "setupFailure"
+  },
+  "setupVatShort": "VAT",
+  "@setupVatShort": {
+    "description": "setupVatShort"
+  },
+  "setupValidityValue": "{days} days",
+  "@setupValidityValue": {
+    "description": "setupValidityValue",
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "setupNextQuote": "Next quote",
+  "@setupNextQuote": {
+    "description": "setupNextQuote"
+  },
+  "setupPowerValue": "{watts} W",
+  "@setupPowerValue": {
+    "description": "setupPowerValue",
+    "placeholders": {
+      "watts": {
+        "type": "String"
+      }
+    }
+  },
+  "setupLifetimeValue": "{hours} h",
+  "@setupLifetimeValue": {
+    "description": "setupLifetimeValue",
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "setupNameRequired": "Enter the name that should appear on quotes.",
+  "@setupNameRequired": {
+    "description": "setupNameRequired"
+  },
+  "setupRatesRequired": "Markup, failure, and VAT must be numbers.",
+  "@setupRatesRequired": {
+    "description": "setupRatesRequired"
+  },
+  "setupPrinterRequired": "Choose or name the printer you price with.",
+  "@setupPrinterRequired": {
+    "description": "setupPrinterRequired"
+  },
+  "setupWattsRequired": "Enter the average power in watts.",
+  "@setupWattsRequired": {
+    "description": "setupWattsRequired"
+  },
+  "setupPriceRequired": "Enter the purchase price. Use 0 if you do not count machine wear.",
+  "@setupPriceRequired": {
+    "description": "setupPriceRequired"
+  },
+  "setupLifeRequired": "Enter the lifetime in hours. Use 0 if you do not charge for machine wear.",
+  "@setupLifeRequired": {
+    "description": "setupLifeRequired"
+  },
+  "setupMaintenanceRequired": "Enter maintenance per hour. Use 0 if you have none.",
+  "@setupMaintenanceRequired": {
+    "description": "setupMaintenanceRequired"
+  },
+  "fieldOrgNumber": "Org. number",
+  "@fieldOrgNumber": {
+    "description": "fieldOrgNumber"
+  },
+  "calcReadNumber": "Could not read {label}. Use a number, 0 or more.",
+  "@calcReadNumber": {
+    "description": "Calculator validation when a number field cannot be parsed",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "hours"
+      }
+    }
+  },
+  "calcReadWholeNumber": "{label} must be a whole number of 0 or more.",
+  "@calcReadWholeNumber": {
+    "description": "Calculator validation when a whole-number field cannot be parsed",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "Quantity"
+      }
+    }
+  },
+  "calcReadPercent": "Could not read {label}. Use a percent, 0 or more.",
+  "@calcReadPercent": {
+    "description": "Calculator validation when a percent field cannot be parsed",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "markup"
+      }
+    }
+  },
+  "calcErrHours": "hours",
+  "@calcErrHours": {
+    "description": "Lowercase field name inside a calculator number error"
+  },
+  "calcErrMinutes": "minutes",
+  "@calcErrMinutes": {
+    "description": "Lowercase field name inside a calculator number error"
+  },
+  "calcErrPrepMinutes": "prep minutes",
+  "@calcErrPrepMinutes": {
+    "description": "Lowercase field name inside a calculator number error"
+  },
+  "calcErrPostMinutes": "post minutes",
+  "@calcErrPostMinutes": {
+    "description": "Lowercase field name inside a calculator number error"
+  },
+  "calcErrGrams": "grams",
+  "@calcErrGrams": {
+    "description": "Lowercase field name inside a calculator number error"
+  },
+  "calcErrExtraCost": "the extra cost",
+  "@calcErrExtraCost": {
+    "description": "Field name inside a calculator money error"
+  },
+  "calcErrMarkup": "markup",
+  "@calcErrMarkup": {
+    "description": "Lowercase field name inside a calculator percent error"
+  },
+  "calcErrFailure": "failure",
+  "@calcErrFailure": {
+    "description": "Lowercase field name inside a calculator percent error"
+  },
+  "calcErrVat": "VAT",
+  "@calcErrVat": {
+    "description": "Field name inside a calculator percent error"
+  },
+  "calcUsingWorkshopDefault": "Using workshop default {percent}",
+  "@calcUsingWorkshopDefault": {
+    "description": "Hint shown when a percent field is left empty",
+    "placeholders": {
+      "percent": {
+        "type": "String",
+        "example": "30%"
+      }
+    }
+  },
+  "calcPricedAsMinutes": "{count, plural, =1{Priced as 1 minute.} other{Priced as {count} minutes.}}",
+  "@calcPricedAsMinutes": {
+    "description": "Hint when prep or post time has a fractional minute",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "calcQuantityPricedAsOne": "Quantity below 1 is priced as 1.",
+  "@calcQuantityPricedAsOne": {
+    "description": "Hint when the typed quantity is below 1"
+  },
+  "calcQuantityScales": "Material, time, and post-processing scale with quantity. Prep is charged once.",
+  "@calcQuantityScales": {
+    "description": "Hint explaining how quantity affects the quote"
+  },
+  "calcChooseProfile": "Choose a print profile",
+  "@calcChooseProfile": {
+    "description": "Dialog title when a model link has several print profiles"
+  },
+  "calcPrintProfile": "Print profile",
+  "@calcPrintProfile": {
+    "description": "Fallback label for a print profile with no title"
+  },
+  "calcLinkReadFailed": "The link could not be read ({error}). Enter the print by hand.",
+  "@calcLinkReadFailed": {
+    "description": "Shown when a model link cannot be imported",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "SocketException"
+      }
+    }
+  },
+  "calcChooseSliceFile": "Choose a .gcode or .3mf file.",
+  "@calcChooseSliceFile": {
+    "description": "Shown when the picked file is not G-code or 3MF"
+  },
+  "calcFileReadFailed": "The file could not be read ({error}).",
+  "@calcFileReadFailed": {
+    "description": "Shown when a picked slice file cannot be read",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "FormatException"
+      }
+    }
+  },
+  "calcSharedFileReadFailed": "The shared file could not be read ({error}).",
+  "@calcSharedFileReadFailed": {
+    "description": "Shown when a file shared into the app cannot be read",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "FileSystemException"
+      }
+    }
+  },
+  "calcNoPlateImported": "No plate was imported.",
+  "@calcNoPlateImported": {
+    "description": "Shown when the user dismisses plate import or customer choice"
+  },
+  "calcNoPlateData": "No plate had print time or filament weight.",
+  "@calcNoPlateData": {
+    "description": "Shown when every plate in a file lacks print data"
+  },
+  "calcQuoteNotFound": "Quote not found.",
+  "@calcQuoteNotFound": {
+    "description": "Shown when the quote being edited no longer exists"
+  },
+  "calcSaveQuoteFailed": "Could not save the quote. Check the connection and try again.",
+  "@calcSaveQuoteFailed": {
+    "description": "Shown when saving a new quote fails"
+  },
+  "calcNoProductsYet": "No saved products yet. Save this print as a product, or add one under More.",
+  "@calcNoProductsYet": {
+    "description": "Shown when Add from catalog is used with an empty catalog"
+  },
+  "calcAddTitleBeforeProduct": "Add a title before saving a product.",
+  "@calcAddTitleBeforeProduct": {
+    "description": "Shown when saving a product without a title"
+  },
+  "calcSaveProductFailed": "Could not save the product. Check the connection and try again.",
+  "@calcSaveProductFailed": {
+    "description": "Shown when saving a product from the calculator fails"
+  },
+  "calcSavedAsProduct": "Saved “{name}” as a product.",
+  "@calcSavedAsProduct": {
+    "description": "Confirmation after saving the current print as a product",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Hook"
+      }
+    }
+  },
+  "calcPrintGone": "That print is no longer on the quote.",
+  "@calcPrintGone": {
+    "description": "Shown when a deep-linked print line is missing"
+  },
+  "calcAddTitleBeforeQuote": "Add a title before saving the quote.",
+  "@calcAddTitleBeforeQuote": {
+    "description": "Shown when saving a quote without a title"
+  },
+  "calcSavePrintFailed": "Could not save the print. Check the connection and try again.",
+  "@calcSavePrintFailed": {
+    "description": "Shown when saving a print onto an existing quote fails"
+  },
+  "calcTapToChooseCustomer": "Tap to choose before saving",
+  "@calcTapToChooseCustomer": {
+    "description": "Customer row before a customer is chosen"
+  },
+  "calcCustomer": "Customer",
+  "@calcCustomer": {
+    "description": "Customer field label and fallback when the customer is missing"
+  },
+  "calcSignIn": "Sign in to calculate.",
+  "@calcSignIn": {
+    "description": "Empty calculator state when nobody is signed in"
+  },
+  "calcUpdatePrint": "Update print",
+  "@calcUpdatePrint": {
+    "description": "Save button when editing a print on a quote"
+  },
+  "calcAddPrint": "Add print",
+  "@calcAddPrint": {
+    "description": "Title and save button when adding a print to a quote"
+  },
+  "calcSaveAsQuote": "Save as quote",
+  "@calcSaveAsQuote": {
+    "description": "Save button and customer picker title for a new quote"
+  },
+  "calcEditPrint": "Edit print",
+  "@calcEditPrint": {
+    "description": "App bar title when editing a print"
+  },
+  "calcPrice": "Price",
+  "@calcPrice": {
+    "description": "Section heading above the price breakdown"
+  },
+  "calcValidForDays": "{days, plural, =1{Valid for 1 day after save} other{Valid for {days} days after save}}",
+  "@calcValidForDays": {
+    "description": "How long a new quote stays valid",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "14"
+      }
+    }
+  },
+  "calcRecentQuotes": "Recent quotes",
+  "@calcRecentQuotes": {
+    "description": "Section heading above recent quotes on the calculator"
+  },
+  "calcAddingPrintTo": "Adding a print to {title}",
+  "@calcAddingPrintTo": {
+    "description": "Banner when adding a print to an existing quote",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Phone stand"
+      }
+    }
+  },
+  "calcEditingPrintOn": "Editing a print on {title}",
+  "@calcEditingPrintOn": {
+    "description": "Banner when editing a print on an existing quote",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Phone stand"
+      }
+    }
+  },
+  "calcModelLink": "Model link",
+  "@calcModelLink": {
+    "description": "Field for the model page URL"
+  },
+  "calcModelLinkHint": "MakerWorld, Printables, Creality Cloud, or another site",
+  "@calcModelLinkHint": {
+    "description": "Hint under the model link field"
+  },
+  "calcReading": "Reading…",
+  "@calcReading": {
+    "description": "Button label while a link or file is being read"
+  },
+  "calcFillFromLink": "Fill from link",
+  "@calcFillFromLink": {
+    "description": "Button that imports a model link"
+  },
+  "calcImportGcode": "Import G-code",
+  "@calcImportGcode": {
+    "description": "Button that imports a G-code or 3MF file"
+  },
+  "calcAddFromCatalog": "Add from catalog",
+  "@calcAddFromCatalog": {
+    "description": "Button that fills the form from a saved product"
+  },
+  "calcSaveAsProduct": "Save as product",
+  "@calcSaveAsProduct": {
+    "description": "Button that saves the current print as a product"
+  },
+  "calcTitle": "Title",
+  "@calcTitle": {
+    "description": "Print title field"
+  },
+  "calcNoPrinters": "No printers",
+  "@calcNoPrinters": {
+    "description": "Setup card title when the workshop has no printers"
+  },
+  "calcNoPrintersMessage": "Electricity and machine wear need a printer profile.",
+  "@calcNoPrintersMessage": {
+    "description": "Setup card body when the workshop has no printers"
+  },
+  "calcOpenPrinters": "Open Printers",
+  "@calcOpenPrinters": {
+    "description": "Button that opens the printers list"
+  },
+  "calcAddPrinter": "Add printer",
+  "@calcAddPrinter": {
+    "description": "Button that opens the new printer form"
+  },
+  "calcNoSpools": "No filament spools",
+  "@calcNoSpools": {
+    "description": "Setup card title when the workshop has no spools"
+  },
+  "calcNoSpoolsMessage": "Material cost needs at least one spool. Add a standard spool or enter your own.",
+  "@calcNoSpoolsMessage": {
+    "description": "Setup card body when the workshop has no spools"
+  },
+  "calcOpenFilament": "Open Filament",
+  "@calcOpenFilament": {
+    "description": "Button that opens the filament list"
+  },
+  "calcCustomSpool": "Custom spool",
+  "@calcCustomSpool": {
+    "description": "Button that opens the new spool form"
+  },
+  "calcPrinter": "Printer",
+  "@calcPrinter": {
+    "description": "Printer dropdown label on the calculator"
+  },
+  "calcNoPrinterSelected": "No printer selected, so electricity and machine wear stay at 0.",
+  "@calcNoPrinterSelected": {
+    "description": "Hint when the calculator has no printer selected"
+  },
+  "calcAddFilament": "Add filament",
+  "@calcAddFilament": {
+    "description": "Button that adds another filament row"
+  },
+  "calcPrepMinutes": "Prep minutes",
+  "@calcPrepMinutes": {
+    "description": "Prep labor minutes field"
+  },
+  "calcPostMinutes": "Post minutes",
+  "@calcPostMinutes": {
+    "description": "Post-processing minutes field"
+  },
+  "calcMarkupPercent": "Markup %",
+  "@calcMarkupPercent": {
+    "description": "Markup percent field"
+  },
+  "calcFailurePercent": "Failure %",
+  "@calcFailurePercent": {
+    "description": "Failure buffer percent field"
+  },
+  "calcVatPercent": "VAT %",
+  "@calcVatPercent": {
+    "description": "VAT percent field"
+  },
+  "calcExtra": "Extra",
+  "@calcExtra": {
+    "description": "Extra cost name field and the name saved when the field is empty"
+  },
+  "calcCost": "Cost",
+  "@calcCost": {
+    "description": "Extra cost amount field and the cost row in the breakdown"
+  },
+  "calcRemoveExtra": "Remove extra",
+  "@calcRemoveExtra": {
+    "description": "Tooltip for removing an extra cost row"
+  },
+  "calcAddExtraCost": "Add extra cost",
+  "@calcAddExtraCost": {
+    "description": "Button that adds an extra cost row"
+  },
+  "calcExtrasFlat": "Extras are a flat amount for the whole print, not per unit. A cost without a name is saved as {extra}.",
+  "@calcExtrasFlat": {
+    "description": "Explains that extras are not multiplied by quantity",
+    "placeholders": {
+      "extra": {
+        "type": "String",
+        "example": "Extra"
+      }
+    }
+  },
+  "calcPrintTime": "Print time",
+  "@calcPrintTime": {
+    "description": "Label beside the calculated print duration"
+  },
+  "calcSpool": "Spool",
+  "@calcSpool": {
+    "description": "Filament spool dropdown label"
+  },
+  "calcSpoolWithMaterial": "Spool ({material})",
+  "@calcSpoolWithMaterial": {
+    "description": "Spool dropdown label when the import named a material",
+    "placeholders": {
+      "material": {
+        "type": "String",
+        "example": "PLA"
+      }
+    }
+  },
+  "calcSpoolLow": "{name} · low",
+  "@calcSpoolLow": {
+    "description": "Spool dropdown row when that spool is low on stock",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Bambu PLA"
+      }
+    }
+  },
+  "calcRemoveFilament": "Remove filament",
+  "@calcRemoveFilament": {
+    "description": "Tooltip for removing a filament row"
+  },
+  "calcPickSpool": "Pick a spool. These grams are priced at 0.",
+  "@calcPickSpool": {
+    "description": "Warning when grams are entered without a spool"
+  },
+  "calcPricePerKg": "{price} / kg",
+  "@calcPricePerKg": {
+    "description": "Filament price per kilogram under a spool row",
+    "placeholders": {
+      "price": {
+        "type": "String",
+        "example": "200 kr"
+      }
+    }
+  },
+  "calcLowStock": "Low stock: {grams} left on this spool.",
+  "@calcLowStock": {
+    "description": "Warning when the selected spool is low on stock",
+    "placeholders": {
+      "grams": {
+        "type": "String",
+        "example": "40 g"
+      }
+    }
+  },
+  "calcPrintNeedsGrams": "This print needs {needed} ({each} × {quantity}) but only {remaining} remains.",
+  "@calcPrintNeedsGrams": {
+    "description": "Warning when quantity times grams exceeds the spool",
+    "placeholders": {
+      "needed": {
+        "type": "String",
+        "example": "30 g"
+      },
+      "each": {
+        "type": "String",
+        "example": "10 g"
+      },
+      "quantity": {
+        "type": "int",
+        "example": "3"
+      },
+      "remaining": {
+        "type": "String",
+        "example": "12 g"
+      }
+    }
+  },
+  "calcLineUsesGrams": "This line uses {needed} but only {remaining} remains.",
+  "@calcLineUsesGrams": {
+    "description": "Warning when one unit needs more filament than the spool has",
+    "placeholders": {
+      "needed": {
+        "type": "String",
+        "example": "30 g"
+      },
+      "remaining": {
+        "type": "String",
+        "example": "12 g"
+      }
+    }
+  },
+  "calcRecentQuoteMeta": "Quote {number} · {status}",
+  "@calcRecentQuoteMeta": {
+    "description": "Quote number and status on a recent quote card",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "12"
+      },
+      "status": {
+        "type": "String",
+        "example": "Sent"
+      }
+    }
+  },
+  "calcPrinterMissing": "Printer for “{title}” is no longer in the workshop, so electricity and machine wear are 0.",
+  "@calcPrinterMissing": {
+    "description": "Warning when a saved print refers to a deleted printer",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Phone stand"
+      }
+    }
+  },
+  "calcFilamentFallback": "filament",
+  "@calcFilamentFallback": {
+    "description": "Generic filament name when a missing spool has no material label"
+  },
+  "calcSpoolMissing": "Spool for “{title}” ({label}) is missing, so that filament is priced at 0.",
+  "@calcSpoolMissing": {
+    "description": "Warning when a saved print refers to a deleted spool",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "example": "Phone stand"
+      },
+      "label": {
+        "type": "String",
+        "example": "PLA"
+      }
+    }
+  },
+  "calcProductPriceExplanation": "The price is calculated from the current spool prices, printer, electricity, and labor rate. Markup, failure, and VAT stay as saved on the product.",
+  "@calcProductPriceExplanation": {
+    "description": "Explains that a product price is recalculated from current workshop rates"
+  },
+  "calcMaterial": "Material",
+  "@calcMaterial": {
+    "description": "Material row in the price breakdown"
+  },
+  "calcMachineWear": "Machine wear",
+  "@calcMachineWear": {
+    "description": "Machine wear row in the price breakdown"
+  },
+  "calcFailureBuffer": "Failure buffer",
+  "@calcFailureBuffer": {
+    "description": "Failure buffer row in the price breakdown"
+  },
+  "calcExtras": "Extras",
+  "@calcExtras": {
+    "description": "Extras row in the price breakdown"
+  },
+  "calcNet": "Net",
+  "@calcNet": {
+    "description": "Net row in the price breakdown"
+  },
+  "calcTotal": "Total",
+  "@calcTotal": {
+    "description": "Total row in the price breakdown"
+  },
+  "calcPerUnit": "{price} per unit · qty {quantity}",
+  "@calcPerUnit": {
+    "description": "Unit price under the breakdown total",
+    "placeholders": {
+      "price": {
+        "type": "String",
+        "example": "150 kr"
+      },
+      "quantity": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "productSignIn": "Sign in to see products.",
+  "@productSignIn": {
+    "description": "Empty products list when nobody is signed in"
+  },
+  "productNewTooltip": "New product",
+  "@productNewTooltip": {
+    "description": "Tooltip for the new product button"
+  },
+  "productEmpty": "No saved products yet. Save a print from the calculator or a quote, then add it again at today’s spool and printer prices.",
+  "@productEmpty": {
+    "description": "Empty products list"
+  },
+  "productNew": "New product",
+  "@productNew": {
+    "description": "Button and title for creating a product"
+  },
+  "productSearch": "Search products",
+  "@productSearch": {
+    "description": "Search field on the products list"
+  },
+  "productSignInEdit": "Sign in to edit products.",
+  "@productSignInEdit": {
+    "description": "Product editor when nobody is signed in"
+  },
+  "productNotFound": "Product not found.",
+  "@productNotFound": {
+    "description": "Product editor when the product no longer exists"
+  },
+  "productEdit": "Edit product",
+  "@productEdit": {
+    "description": "Title when editing a saved product"
+  },
+  "productDeleteTooltip": "Delete product",
+  "@productDeleteTooltip": {
+    "description": "Tooltip for the delete product button"
+  },
+  "productDeleteTitle": "Delete product",
+  "@productDeleteTitle": {
+    "description": "Confirmation dialog title when deleting a product"
+  },
+  "productThisProduct": "this product",
+  "@productThisProduct": {
+    "description": "Fallback name in the delete confirmation when the product has no name"
+  },
+  "productDeleteMessage": "Delete {name}? Quotes that already use it stay as they are.",
+  "@productDeleteMessage": {
+    "description": "Confirmation when deleting a product",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Phone stand"
+      }
+    }
+  },
+  "productAddName": "Add a name before saving the product.",
+  "@productAddName": {
+    "description": "Shown when saving a product without a name"
+  },
+  "productSave": "Save product",
+  "@productSave": {
+    "description": "Button that saves a product"
+  },
+  "productAddFilament": "Add filament",
+  "@productAddFilament": {
+    "description": "Button that adds a filament row on a product"
+  },
+  "productAddExtra": "Add extra",
+  "@productAddExtra": {
+    "description": "Button that adds an extra cost on a product"
+  },
+  "productPrinter": "Printer",
+  "@productPrinter": {
+    "description": "Printer dropdown label on a product"
+  },
+  "productSpool": "Spool",
+  "@productSpool": {
+    "description": "Spool dropdown label on a product"
+  },
+  "productPrepMinutes": "Prep minutes",
+  "@productPrepMinutes": {
+    "description": "Prep minutes field on a product"
+  },
+  "productPostMinutes": "Post minutes",
+  "@productPostMinutes": {
+    "description": "Post minutes field on a product"
+  },
+  "productMarkupPercent": "Markup %",
+  "@productMarkupPercent": {
+    "description": "Markup percent field on a product"
+  },
+  "productFailurePercent": "Failure %",
+  "@productFailurePercent": {
+    "description": "Failure percent field on a product"
+  },
+  "productVatPercent": "VAT %",
+  "@productVatPercent": {
+    "description": "VAT percent field on a product"
+  },
+  "productModelLink": "Model link",
+  "@productModelLink": {
+    "description": "Model link field on a product"
+  },
+  "productExtra": "Extra",
+  "@productExtra": {
+    "description": "Extra cost name field and the name saved when the field is empty"
+  },
+  "productCost": "Cost",
+  "@productCost": {
+    "description": "Extra cost amount field on a product"
+  },
+  "productRemoveFilament": "Remove filament",
+  "@productRemoveFilament": {
+    "description": "Tooltip for removing a filament row on a product"
+  },
+  "productRemoveExtra": "Remove extra",
+  "@productRemoveExtra": {
+    "description": "Tooltip for removing an extra cost on a product"
+  },
+  "productNoPrintTime": "No print time yet",
+  "@productNoPrintTime": {
+    "description": "Product summary when time and grams are both empty"
+  },
+  "productAddProduct": "Add a product",
+  "@productAddProduct": {
+    "description": "Title of the product picker sheet"
+  },
+  "productReadNumber": "Could not read {label}. Use a number, 0 or more.",
+  "@productReadNumber": {
+    "description": "Product validation when a number field cannot be parsed",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "hours"
+      }
+    }
+  },
+  "productReadPercent": "Could not read {label}. Use a percent, 0 or more.",
+  "@productReadPercent": {
+    "description": "Product validation when a percent field cannot be parsed",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "markup"
+      }
+    }
+  },
+  "productReadExtraCost": "Could not read the extra cost. Use a number, 0 or more.",
+  "@productReadExtraCost": {
+    "description": "Product validation when an extra cost cannot be parsed"
+  },
+  "productErrHours": "hours",
+  "@productErrHours": {
+    "description": "Lowercase field name inside a product number error"
+  },
+  "productErrMinutes": "minutes",
+  "@productErrMinutes": {
+    "description": "Lowercase field name inside a product number error"
+  },
+  "productErrPrepMinutes": "prep minutes",
+  "@productErrPrepMinutes": {
+    "description": "Lowercase field name inside a product number error"
+  },
+  "productErrPostMinutes": "post minutes",
+  "@productErrPostMinutes": {
+    "description": "Lowercase field name inside a product number error"
+  },
+  "productErrGrams": "grams",
+  "@productErrGrams": {
+    "description": "Lowercase field name inside a product number error"
+  },
+  "productErrMarkup": "markup",
+  "@productErrMarkup": {
+    "description": "Lowercase field name inside a product percent error"
+  },
+  "productErrFailure": "failure",
+  "@productErrFailure": {
+    "description": "Lowercase field name inside a product percent error"
+  },
+  "productErrVat": "VAT",
+  "@productErrVat": {
+    "description": "Field name inside a product percent error"
+  },
+  "plateDefaultName": "Plate",
+  "@plateDefaultName": {
+    "description": "Fallback name when a sliced plate has no name"
+  },
+  "plateCountTitle": "{count, plural, =1{1 plate} other{{count} plates}}",
+  "@plateCountTitle": {
+    "description": "Dialog title for how many plates a slice file contains",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "plateImportHelp": "Import all plates as separate prints on the quote, or fill this form from one plate.",
+  "@plateImportHelp": {
+    "description": "Explains the multi-plate import choice"
+  },
+  "plateImportAll": "{count, plural, =1{Import all 1 plate} other{Import all {count} plates}}",
+  "@plateImportAll": {
+    "description": "Button that imports every plate as its own print",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "plateMultiImportNote": "Imported every plate as its own print with quantity 1. The sale price uses your current spools. Match a filament by hand when the material was not found.",
+  "@plateMultiImportNote": {
+    "description": "Explanation after importing every plate on a file"
+  },
+  "gcodeNoData": "No print time or filament weight was found. If this is a project file, export G-code from the slicer first.",
+  "@gcodeNoData": {
+    "description": "Shown when a slice file has no print time or filament weight"
+  },
+  "gcodeFilledFromFile": "Filled print time and filament grams from the file.",
+  "@gcodeFilledFromFile": {
+    "description": "Shown when print data was read but the slicer name is unknown"
+  },
+  "gcodeFilledFromSlicer": "Filled print time and filament grams from {slicer}.",
+  "@gcodeFilledFromSlicer": {
+    "description": "Shown when print data was read from a named slicer",
+    "placeholders": {
+      "slicer": {
+        "type": "String",
+        "example": "PrusaSlicer"
+      }
+    }
+  },
+  "gcodeSalePriceUsesSpools": "The sale price still uses your current spools.",
+  "@gcodeSalePriceUsesSpools": {
+    "description": "Reminds the user that imported grams are priced from workshop spools"
+  },
+  "gcodeFilamentsListed": "{count, plural, =1{1 filament was listed — match it to a spool.} other{{count} filaments were listed — match each one to a spool.}}",
+  "@gcodeFilamentsListed": {
+    "description": "Shown when a plate lists more than one filament",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "gcodeFilePlateCount": "{count, plural, =1{This file has 1 plate.} other{This file has {count} plates.}}",
+  "@gcodeFilePlateCount": {
+    "description": "Shown when a slice file contains more than one plate",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "gcodeGramsEstimatedDefault": "Filament grams were estimated from extrusion length at 1.75 mm and 1.24 g/cm³.",
+  "@gcodeGramsEstimatedDefault": {
+    "description": "Shown when grams are estimated with the default diameter and density"
+  },
+  "gcodeGramsEstimatedFromFile": "Filament grams were estimated from extrusion length using the diameter and density in the file.",
+  "@gcodeGramsEstimatedFromFile": {
+    "description": "Shown when grams are estimated from diameter and density in the file"
+  },
+  "gcodePlateName": "Plate {number}",
+  "@gcodePlateName": {
+    "description": "Generated name for a numbered plate inside a 3MF",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "1"
+      }
+    }
+  },
+  "gcodeNotArchive": "Not a 3MF archive.",
+  "@gcodeNotArchive": {
+    "description": "Shown when a file is not a 3MF zip archive"
+  },
+  "gcodeZip64": "This 3MF uses Zip64, which Gramnota cannot read.",
+  "@gcodeZip64": {
+    "description": "Shown when a 3MF archive uses Zip64"
+  },
+  "gcodeArchiveIncomplete": "The 3MF archive is incomplete.",
+  "@gcodeArchiveIncomplete": {
+    "description": "Shown when a 3MF archive is truncated"
+  },
+  "gcodeMissingHeader": "The 3MF archive is missing a file header.",
+  "@gcodeMissingHeader": {
+    "description": "Shown when a 3MF member has no local file header"
+  },
+  "gcodeUnsupportedCompression": "Unsupported compression in {name} (method {method}).",
+  "@gcodeUnsupportedCompression": {
+    "description": "Shown when a 3MF member uses a compression method Gramnota cannot read",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Metadata/plate_1.gcode"
+      },
+      "method": {
+        "type": "String",
+        "example": "9"
+      }
+    }
+  },
+  "gcodeBrowserPath": "This browser build reads the file you pick, not a disk path.",
+  "@gcodeBrowserPath": {
+    "description": "Shown when a browser build is asked to read a disk path"
+  },
+  "calcPrintsLocked": "This order has already taken filament from the spool. Move it back before Printed to change prints. The grams that were taken go back on the spool.",
+  "@calcPrintsLocked": {
+    "description": "Shown when a quote that already took stock cannot be edited"
+  },
+  "orderSignIn": "Sign in to see orders.",
+  "@orderSignIn": {
+    "description": "Orders list when nobody is signed in"
+  },
+  "orderNewQuote": "New quote",
+  "@orderNewQuote": {
+    "description": "Action that opens the calculator to price a new quote"
+  },
+  "orderEmpty": "No quotes yet. Price a print in the calculator and save.",
+  "@orderEmpty": {
+    "description": "Empty orders list"
+  },
+  "orderOpenCalculator": "Open calculator",
+  "@orderOpenCalculator": {
+    "description": "Button on the empty orders list"
+  },
+  "orderSearchHint": "Title, quote no., customer, or note",
+  "@orderSearchHint": {
+    "description": "Search field on the orders list"
+  },
+  "orderFilterAll": "All",
+  "@orderFilterAll": {
+    "description": "Orders filter that shows every status"
+  },
+  "orderFilterInProgress": "In progress",
+  "@orderFilterInProgress": {
+    "description": "Orders filter for quotes that are not finished or closed"
+  },
+  "orderFilterOverdue": "Overdue",
+  "@orderFilterOverdue": {
+    "description": "Orders filter and badge for a quote past its valid-until date"
+  },
+  "orderQuoteCount": "{count, plural, =1{1 quote} other{{count} quotes}}",
+  "@orderQuoteCount": {
+    "description": "How many quotes match the orders search and filters",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orderNoMatch": "No orders match your search or filter.",
+  "@orderNoMatch": {
+    "description": "Orders list when the search or filter matches nothing"
+  },
+  "orderQuoteNumber": "Quote {number}",
+  "@orderQuoteNumber": {
+    "description": "Quote number label on lists, detail, and the PDF preview",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "orderPrintCount": "{count, plural, =1{1 print} other{{count} prints}}",
+  "@orderPrintCount": {
+    "description": "How many prints are on a quote",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orderUpdatedToday": "Updated today",
+  "@orderUpdatedToday": {
+    "description": "Order was last saved today"
+  },
+  "orderUpdatedYesterday": "Updated yesterday",
+  "@orderUpdatedYesterday": {
+    "description": "Order was last saved yesterday"
+  },
+  "orderUpdatedDaysAgo": "{count, plural, =1{Updated 1 day ago} other{Updated {count} days ago}}",
+  "@orderUpdatedDaysAgo": {
+    "description": "Order was last saved a few days ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "orderUpdatedOn": "Updated {date}",
+  "@orderUpdatedOn": {
+    "description": "Order was last saved on a calendar date",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "orderSignInQuote": "Sign in to see this quote.",
+  "@orderSignInQuote": {
+    "description": "Order detail when nobody is signed in"
+  },
+  "orderNotFound": "Quote not found.",
+  "@orderNotFound": {
+    "description": "Order detail when the quote id is missing"
+  },
+  "orderPreview": "Preview quote",
+  "@orderPreview": {
+    "description": "Button that opens the customer PDF preview"
+  },
+  "orderSendToUser": "Send to user",
+  "@orderSendToUser": {
+    "description": "Button that sends this quote to another Gramnota user"
+  },
+  "orderEditTitle": "Edit title",
+  "@orderEditTitle": {
+    "description": "Button that renames the quote"
+  },
+  "orderOverdueUntil": "Overdue · valid until {date}",
+  "@orderOverdueUntil": {
+    "description": "Expired quote with its valid-until date",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "orderValidUntil": "Valid until {date}",
+  "@orderValidUntil": {
+    "description": "Quote validity date on the order detail",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "orderNoCustomerLinked": "No customer linked",
+  "@orderNoCustomerLinked": {
+    "description": "Order detail when the quote has no customer"
+  },
+  "orderTapToLink": "Tap to link a customer",
+  "@orderTapToLink": {
+    "description": "Hint under an unlinked customer row"
+  },
+  "orderViewCustomer": "View customer",
+  "@orderViewCustomer": {
+    "description": "Hint under a linked customer who has no address"
+  },
+  "orderChangeCustomer": "Change customer",
+  "@orderChangeCustomer": {
+    "description": "Button that links a different customer"
+  },
+  "orderLinkCustomer": "Link customer",
+  "@orderLinkCustomer": {
+    "description": "Title of the sheet that links a customer to a quote"
+  },
+  "orderStatusHeading": "Status",
+  "@orderStatusHeading": {
+    "description": "Section heading for the order status path"
+  },
+  "orderDuplicateSummary": "Copies these prints and this customer into a new quote with status Quote, a new number, and new dates. Stock stays on this order. Prices are recalculated from current spools, the printer, and workshop rates.",
+  "@orderDuplicateSummary": {
+    "description": "Short explanation under the duplicate-quote button"
+  },
+  "orderDuplicateExplanation": "This copies the prints, the customer, and the print settings into a new quote. The new quote gets status Quote, a new number, and new dates. Filament already taken out of stock stays on this order and is not copied. Prices are calculated again from the current spool prices, printer, electricity, and labor rate. Markup, failure, and VAT stay as they are on each print.",
+  "@orderDuplicateExplanation": {
+    "description": "Dialog that confirms duplicating a quote"
+  },
+  "orderDuplicateAction": "Duplicate as new quote",
+  "@orderDuplicateAction": {
+    "description": "Button and dialog title for duplicating a quote"
+  },
+  "orderPrintsHeading": "Prints",
+  "@orderPrintsHeading": {
+    "description": "Section heading for the prints on a quote"
+  },
+  "orderAddPrint": "Add print",
+  "@orderAddPrint": {
+    "description": "Button that adds a print on the calculator"
+  },
+  "orderAddProduct": "Add product",
+  "@orderAddProduct": {
+    "description": "Button that adds a saved product to the quote"
+  },
+  "orderPriceBreakdown": "Price breakdown",
+  "@orderPriceBreakdown": {
+    "description": "Section heading for the seller price breakdown"
+  },
+  "orderMarkAs": "Mark as {status}?",
+  "@orderMarkAs": {
+    "description": "Dialog title before a status change that moves stock",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "orderUpdateStatus": "Update status",
+  "@orderUpdateStatus": {
+    "description": "Button that confirms a status change"
+  },
+  "orderDepositDate": "Deposit date",
+  "@orderDepositDate": {
+    "description": "Button label when no deposit date is chosen"
+  },
+  "orderDepositReceived": "Deposit received",
+  "@orderDepositReceived": {
+    "description": "Date picker title for the deposit date"
+  },
+  "orderDepositInvalid": "Enter the deposit with a comma or a dot.",
+  "@orderDepositInvalid": {
+    "description": "Shown when the deposit amount cannot be parsed"
+  },
+  "orderDepositSaveFailed": "Could not save the deposit. Check the connection and try again.",
+  "@orderDepositSaveFailed": {
+    "description": "Shown when saving the deposit fails"
+  },
+  "orderMarkedPaid": "Marked paid",
+  "@orderMarkedPaid": {
+    "description": "Balance line when the order status is Paid"
+  },
+  "orderDepositCovers": "Deposit covers this quote",
+  "@orderDepositCovers": {
+    "description": "Balance line when the deposit is at least the total"
+  },
+  "orderStillToPay": "Still to pay {amount}",
+  "@orderStillToPay": {
+    "description": "Remaining amount after the deposit",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "orderDepositPaid": "Deposit paid ({currency})",
+  "@orderDepositPaid": {
+    "description": "Label for the deposit amount field",
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "orderDepositPaidHelp": "The order is marked Paid. The deposit is what was paid before that.",
+  "@orderDepositPaidHelp": {
+    "description": "Help text for the deposit on a paid order"
+  },
+  "orderDepositOptionalHelp": "Optional. Home counts this amount in the deposit month, and the rest when the order is printed or paid.",
+  "@orderDepositOptionalHelp": {
+    "description": "Help text for an optional deposit"
+  },
+  "orderSaveDeposit": "Save deposit",
+  "@orderSaveDeposit": {
+    "description": "Button that saves the deposit amount and date"
+  },
+  "orderNoteSaveFailed": "Could not save the note. Check the connection and try again.",
+  "@orderNoteSaveFailed": {
+    "description": "Shown when saving the internal note fails"
+  },
+  "orderNoteLabel": "Note",
+  "@orderNoteLabel": {
+    "description": "Label for the internal quote note"
+  },
+  "orderNoteHint": "Internal reminder for this quote",
+  "@orderNoteHint": {
+    "description": "Hint for the internal quote note"
+  },
+  "orderSaveNote": "Save note",
+  "@orderSaveNote": {
+    "description": "Button that saves the internal note"
+  },
+  "orderLineQty": "Qty {quantity} · {duration}",
+  "@orderLineQty": {
+    "description": "Quantity and print time on a print row",
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "orderInclVat": "{amount} incl. VAT",
+  "@orderInclVat": {
+    "description": "Line total including VAT",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "orderNoFilament": "No filament",
+  "@orderNoFilament": {
+    "description": "Print row that has no filament"
+  },
+  "orderSaveAsProduct": "Save as product",
+  "@orderSaveAsProduct": {
+    "description": "Button that saves a print as a catalog product"
+  },
+  "orderOpenCalculation": "Open calculation",
+  "@orderOpenCalculation": {
+    "description": "Button that opens a print in the calculator"
+  },
+  "orderRemovePrint": "Remove print",
+  "@orderRemovePrint": {
+    "description": "Button and dialog title for removing a print"
+  },
+  "orderOpenModel": "Open model",
+  "@orderOpenModel": {
+    "description": "Button that opens the model link"
+  },
+  "orderQuoteTitlePrompt": "Quote title",
+  "@orderQuoteTitlePrompt": {
+    "description": "Dialog title when renaming a quote"
+  },
+  "orderTitleLabel": "Title",
+  "@orderTitleLabel": {
+    "description": "Field label when renaming a quote"
+  },
+  "orderRemovePrintMessage": "Remove {title} from this quote?",
+  "@orderRemovePrintMessage": {
+    "description": "Confirmation before removing a print",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "orderCreateQuote": "Create quote",
+  "@orderCreateQuote": {
+    "description": "Button that confirms the duplicate quote"
+  },
+  "orderCreatedQuote": "Created quote {number}. Prices were recalculated from current spools, the printer, and workshop rates. Stock was not copied.{warning}",
+  "@orderCreatedQuote": {
+    "description": "Snackbar after a quote is duplicated",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "warning": {
+        "type": "String"
+      }
+    }
+  },
+  "orderNoProducts": "No saved products yet. Save one from a print first.",
+  "@orderNoProducts": {
+    "description": "Snackbar when a quote has no catalog products to add"
+  },
+  "orderAdd": "Add",
+  "@orderAdd": {
+    "description": "Button that confirms the quantity when adding a product"
+  },
+  "orderSavedProduct": "Saved “{name}” to products. {explanation}",
+  "@orderSavedProduct": {
+    "description": "Snackbar after a print is saved as a product",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "explanation": {
+        "type": "String"
+      }
+    }
+  },
+  "orderShareQuote": "Share quote",
+  "@orderShareQuote": {
+    "description": "Button that shares the customer PDF"
+  },
+  "orderShareFailed": "Could not share the quote. {error}",
+  "@orderShareFailed": {
+    "description": "Snackbar when sharing the PDF fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfQuote": "Quote",
+  "@pdfQuote": {
+    "description": "Customer PDF word used when the workshop has no business name"
+  },
+  "pdfQuoteHeading": "QUOTE",
+  "@pdfQuoteHeading": {
+    "description": "Small heading above the quote number on the customer PDF"
+  },
+  "pdfOrgNo": "Org. no. {number}",
+  "@pdfOrgNo": {
+    "description": "Organization number on the customer PDF",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfNotSpecified": "Not specified",
+  "@pdfNotSpecified": {
+    "description": "Customer PDF party block when no address lines are filled"
+  },
+  "pdfPageOf": "Page {page} of {pages}",
+  "@pdfPageOf": {
+    "description": "Customer PDF page footer",
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfQuoteNo": "Quote no.",
+  "@pdfQuoteNo": {
+    "description": "Customer PDF label for the quote number"
+  },
+  "pdfIssued": "Issued",
+  "@pdfIssued": {
+    "description": "Customer PDF label for the issue date"
+  },
+  "pdfValidUntil": "Valid until",
+  "@pdfValidUntil": {
+    "description": "Customer PDF label for the valid-until date"
+  },
+  "pdfFrom": "From",
+  "@pdfFrom": {
+    "description": "Customer PDF label for the workshop address"
+  },
+  "pdfBillTo": "Bill to",
+  "@pdfBillTo": {
+    "description": "Customer PDF label for the customer address"
+  },
+  "pdfDescription": "Description",
+  "@pdfDescription": {
+    "description": "Customer PDF table column"
+  },
+  "pdfQty": "Qty",
+  "@pdfQty": {
+    "description": "Customer PDF quantity column"
+  },
+  "pdfUnitPrice": "Unit price",
+  "@pdfUnitPrice": {
+    "description": "Customer PDF unit price column"
+  },
+  "pdfAmount": "Amount",
+  "@pdfAmount": {
+    "description": "Customer PDF line amount column"
+  },
+  "pdfLineAmountsNote": "Line amounts exclude VAT. VAT is included in the total.",
+  "@pdfLineAmountsNote": {
+    "description": "Customer PDF note under the line table"
+  },
+  "pdfSubtotal": "Subtotal",
+  "@pdfSubtotal": {
+    "description": "Customer PDF summary label for the amount excluding VAT"
+  },
+  "pdfVat": "VAT",
+  "@pdfVat": {
+    "description": "Customer PDF VAT label when lines do not share one rate"
+  },
+  "pdfVatRate": "VAT {rate}",
+  "@pdfVatRate": {
+    "description": "Customer PDF VAT label including the shared rate",
+    "placeholders": {
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfTotal": "Total",
+  "@pdfTotal": {
+    "description": "Customer PDF highlighted total"
+  },
+  "pdfDeposit": "Deposit",
+  "@pdfDeposit": {
+    "description": "Customer PDF deposit row"
+  },
+  "pdfDepositDate": "Deposit date",
+  "@pdfDepositDate": {
+    "description": "Customer PDF deposit date row"
+  },
+  "pdfBalance": "Balance",
+  "@pdfBalance": {
+    "description": "Customer PDF remaining row when the order is paid"
+  },
+  "pdfStillToPay": "Still to pay",
+  "@pdfStillToPay": {
+    "description": "Customer PDF remaining row before the order is paid"
+  },
+  "pdfPerUnit": "{amount} per unit, incl. VAT",
+  "@pdfPerUnit": {
+    "description": "Customer PDF per-unit price when the quote has one print",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfValidUntilSentence": "This quote is valid until {date}.",
+  "@pdfValidUntilSentence": {
+    "description": "Customer PDF closing sentence",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "dashSignIn": "Sign in to see the workshop.",
+  "@dashSignIn": {
+    "description": "Home when nobody is signed in"
+  },
+  "dashPreviousMonth": "Previous month",
+  "@dashPreviousMonth": {
+    "description": "Button that shows the previous month on Home"
+  },
+  "dashNextMonth": "Next month",
+  "@dashNextMonth": {
+    "description": "Button that shows the next month on Home"
+  },
+  "dashDepositHint": "Deposits count on the date you record. The rest counts when the order is printed or paid. Profit is revenue excl. VAT minus the cost of work finished this month.",
+  "@dashDepositHint": {
+    "description": "Home explanation of deposits, revenue, and profit"
+  },
+  "dashOrders": "Orders",
+  "@dashOrders": {
+    "description": "Home count of printed and paid orders in the month"
+  },
+  "dashRevenueIncl": "Revenue incl. VAT",
+  "@dashRevenueIncl": {
+    "description": "Home revenue including VAT"
+  },
+  "dashRevenueExcl": "Revenue excl. VAT",
+  "@dashRevenueExcl": {
+    "description": "Home revenue excluding VAT"
+  },
+  "dashCost": "Cost",
+  "@dashCost": {
+    "description": "Home cost of work finished this month"
+  },
+  "dashProfit": "Profit",
+  "@dashProfit": {
+    "description": "Home profit for the month"
+  },
+  "dashDepositsReceived": "Deposits received",
+  "@dashDepositsReceived": {
+    "description": "Home deposits dated in this month"
+  },
+  "dashFinalPayments": "Final payments",
+  "@dashFinalPayments": {
+    "description": "Home remainder counted when the order is printed or paid"
+  },
+  "dashInclVat": "Incl. VAT",
+  "@dashInclVat": {
+    "description": "Home chart bar for revenue including VAT"
+  },
+  "dashExclVat": "Excl. VAT",
+  "@dashExclVat": {
+    "description": "Home chart bar for revenue excluding VAT"
+  },
+  "dashNoRevenue": "No printed or paid orders this month.",
+  "@dashNoRevenue": {
+    "description": "Home when the month has no finished orders and no deposits"
+  },
+  "dashNoRevenueDeposits": "No printed or paid orders this month. Deposits received are included above.",
+  "@dashNoRevenueDeposits": {
+    "description": "Home when the month has deposits but no finished orders"
+  },
+  "dashOpenPipeline": "Open pipeline",
+  "@dashOpenPipeline": {
+    "description": "Home section for sent and accepted quotes"
+  },
+  "dashPipelineHint": "Sent and accepted quotes, not limited to this month.",
+  "@dashPipelineHint": {
+    "description": "Home explanation under the open pipeline heading"
+  },
+  "dashQuotes": "Quotes",
+  "@dashQuotes": {
+    "description": "Home count of open pipeline quotes"
+  },
+  "dashValueIncl": "Value incl. VAT",
+  "@dashValueIncl": {
+    "description": "Home value of the open pipeline including VAT"
+  },
+  "dashOpenDeposits": "Deposits on open orders",
+  "@dashOpenDeposits": {
+    "description": "Home deposits sitting on orders that are not paid"
+  },
+  "dashOverdueQuotes": "Overdue quotes",
+  "@dashOverdueQuotes": {
+    "description": "Home count of quotes past their valid-until date"
+  },
+  "dashFilamentUsed": "Filament used",
+  "@dashFilamentUsed": {
+    "description": "Home section for filament on finished orders"
+  },
+  "dashNoFilament": "No filament recorded on printed or paid orders this month.",
+  "@dashNoFilament": {
+    "description": "Home when finished orders have no filament"
+  },
+  "dashTopCustomers": "Top customers",
+  "@dashTopCustomers": {
+    "description": "Home section for customers with the most revenue"
+  },
+  "dashNoCustomers": "No customer revenue this month.",
+  "@dashNoCustomers": {
+    "description": "Home when no customer has revenue this month"
+  },
+  "dashTopProducts": "Top products",
+  "@dashTopProducts": {
+    "description": "Home section for products on finished orders"
+  },
+  "dashNoProducts": "No products on printed or paid orders this month.",
+  "@dashNoProducts": {
+    "description": "Home when finished orders have no products"
+  },
+  "dashProductCount": "{count, plural, =1{{label}} other{{label} · {count}}}",
+  "@dashProductCount": {
+    "description": "Product name with how many were finished this month",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "dashOrdersThisMonth": "Orders this month",
+  "@dashOrdersThisMonth": {
+    "description": "Home section listing finished orders"
+  },
+  "dashLowSpools": "Low spools",
+  "@dashLowSpools": {
+    "description": "Home section for spools at or under their warning"
+  },
+  "dashNoLowSpools": "No spool is at or under its warning threshold.",
+  "@dashNoLowSpools": {
+    "description": "Home when every spool is above its warning"
+  },
+  "dashSpoolLeft": "{left} left · warns at {threshold}",
+  "@dashSpoolLeft": {
+    "description": "Remaining filament and the spool warning threshold",
+    "placeholders": {
+      "left": {
+        "type": "String"
+      },
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+  "dashNothingToChart": "Nothing to chart this month.",
+  "@dashNothingToChart": {
+    "description": "Home chart when every money total is zero"
+  },
+  "dashUntitled": "Untitled",
+  "@dashUntitled": {
+    "description": "Home label when a finished order or product has no title"
+  },
+  "dashCustomer": "Customer",
+  "@dashCustomer": {
+    "description": "Home label when an order is linked to a customer with no name"
+  },
+  "dashUnspecified": "Unspecified",
+  "@dashUnspecified": {
+    "description": "Home label when filament on a finished order has no material"
+  },
+  "dashSpool": "Spool",
+  "@dashSpool": {
+    "description": "Home label when a low spool has no brand or material"
+  },
+  "stockRuleSummary": "Filament is taken once, when the order is marked Printed or Paid. Moving from Printed to Paid does not take it again. Cancelling, declining, or moving the order back before Printed puts the taken grams back on the spool.",
+  "@stockRuleSummary": {
+    "description": "Standing explanation under the status path"
+  },
+  "stockTakenOnPrint": "Marking this order Printed or Paid takes filament off the spool once. A later change between Printed and Paid does not take filament again. If the spool is short, only what is left is taken and the order keeps a warning.",
+  "@stockTakenOnPrint": {
+    "description": "Status change that deducts filament"
+  },
+  "stockReturnedOnClose": "Cancelling or declining returns the filament that was taken for this order back onto the spool. Only the grams that were actually deducted are returned, including when the spool was short.",
+  "@stockReturnedOnClose": {
+    "description": "Status change that returns filament when the order is cancelled or declined"
+  },
+  "stockReturnedOnRevert": "Moving this order back before Printed returns the filament that was taken onto the spool. Only the grams that were actually deducted are returned.",
+  "@stockReturnedOnRevert": {
+    "description": "Status change that returns filament when the order leaves Printed or Paid"
+  },
+  "stockStaysDeducted": "Printed and Paid both keep the filament deducted. This change does not move stock.",
+  "@stockStaysDeducted": {
+    "description": "Status change between Printed and Paid"
+  },
+  "stockPrintsLocked": "This order has already taken filament from the spool. Move it back before Printed to change prints. The grams that were taken go back on the spool.",
+  "@stockPrintsLocked": {
+    "description": "Shown when prints cannot be edited because stock was taken"
+  },
+  "stockMissingSpoolName": "A missing spool",
+  "@stockMissingSpoolName": {
+    "description": "Name used when a quote refers to a spool that was deleted"
+  },
+  "stockSpoolFallback": "Spool",
+  "@stockSpoolFallback": {
+    "description": "Name used when a spool has no brand or material"
+  },
+  "stockMissingOnQuote": "{label} needs {grams} on this quote, but that spool is no longer in the workshop.",
+  "@stockMissingOnQuote": {
+    "description": "Coverage warning when the spool was deleted",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "stockShortReserved": "{label} needs {needed} for this quote. Another {reserved} is reserved on accepted quotes. {left} is left, so it is short by {short} before this order is marked Printed.",
+  "@stockShortReserved": {
+    "description": "Coverage warning including filament reserved on accepted quotes",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "needed": {
+        "type": "String"
+      },
+      "reserved": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      },
+      "short": {
+        "type": "String"
+      }
+    }
+  },
+  "stockShortPlain": "{label} needs {needed} for this quote. {left} is left, so it is short by {short} before this order is marked Printed.",
+  "@stockShortPlain": {
+    "description": "Coverage warning when no other accepted quote reserves this spool",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "needed": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      },
+      "short": {
+        "type": "String"
+      }
+    }
+  },
+  "stockMissingGrams": "{grams} (missing spool)",
+  "@stockMissingGrams": {
+    "description": "Part of the stock warning when the spool no longer exists",
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "stockShortOf": "{grams} of {name}",
+  "@stockShortOf": {
+    "description": "Part of the stock warning naming how much of a spool was missing",
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stockWasShort": "Stock was short: {details}. Remaining was set to 0 g.",
+  "@stockWasShort": {
+    "description": "Stored on the order when a spool could not cover the print",
+    "placeholders": {
+      "details": {
+        "type": "String"
+      }
+    }
+  },
+  "customerSignInList": "Sign in to see customers.",
+  "@customerSignInList": {
+    "description": "Empty state when the customer list is opened signed out"
+  },
+  "customerSignInEdit": "Sign in to edit customers.",
+  "@customerSignInEdit": {
+    "description": "Empty state when the customer form is opened signed out"
+  },
+  "customerNoneYet": "No customers yet.",
+  "@customerNoneYet": {
+    "description": "Empty state when the workshop has no customers"
+  },
+  "customerAdd": "Add customer",
+  "@customerAdd": {
+    "description": "Button that opens a new customer form"
+  },
+  "customerSearchHint": "Name, city, phone, or email",
+  "@customerSearchHint": {
+    "description": "Search hint on the customer list and the quote customer picker"
+  },
+  "customerSearchEmpty": "No customers match your search.",
+  "@customerSearchEmpty": {
+    "description": "Empty state when the customer search has no matches"
+  },
+  "customerQuoteCount": "{count, plural, =0{No quotes} =1{1 quote} other{{count} quotes}}",
+  "@customerQuoteCount": {
+    "description": "How many quotes are linked to a customer",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of quotes"
+      }
+    }
+  },
+  "customerCall": "Call",
+  "@customerCall": {
+    "description": "Button and tooltip that dials the customer phone number"
+  },
+  "customerNew": "New customer",
+  "@customerNew": {
+    "description": "Title for creating a customer"
+  },
+  "customerCountry": "Country",
+  "@customerCountry": {
+    "description": "Customer address field for the country"
+  },
+  "customerMap": "Map",
+  "@customerMap": {
+    "description": "Button that opens the customer address in a map"
+  },
+  "customerNameRequired": "Name is required.",
+  "@customerNameRequired": {
+    "description": "Validation when a customer is saved without a name"
+  },
+  "customerSaveFailed": "Could not save the customer. Check the connection and try again.",
+  "@customerSaveFailed": {
+    "description": "Error when saving a customer fails"
+  },
+  "customerDeleteTitle": "Delete customer",
+  "@customerDeleteTitle": {
+    "description": "Title and button for deleting a customer"
+  },
+  "customerDeleteMessage": "{count, plural, =0{This removes {name}.} =1{This removes {name}. 1 quote stays, without this customer.} other{This removes {name}. {count} quotes stay, without this customer.}}",
+  "@customerDeleteMessage": {
+    "description": "Confirmation when deleting a customer, including quotes that stay on file",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of quotes linked to the customer"
+      },
+      "name": {
+        "type": "String",
+        "description": "Customer name"
+      }
+    }
+  },
+  "customerQuoteNumber": "Quote {number}",
+  "@customerQuoteNumber": {
+    "description": "Quote number on a customer order row",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "description": "Saved quote number"
+      }
+    }
+  },
+  "customerLabel": "Customer",
+  "@customerLabel": {
+    "description": "Default title of the quote customer picker"
+  },
+  "customerPickerEmpty": "No customers yet. Add one above.",
+  "@customerPickerEmpty": {
+    "description": "Empty state in the customer picker when none exist"
+  },
+  "customerPickerNoMatch": "No customer with that name.",
+  "@customerPickerNoMatch": {
+    "description": "Empty state in the customer picker when the search matches nobody"
+  },
+  "filamentSignInList": "Sign in to see filament.",
+  "@filamentSignInList": {
+    "description": "Empty state when the filament list is opened signed out"
+  },
+  "filamentSignInEdit": "Sign in to edit filament.",
+  "@filamentSignInEdit": {
+    "description": "Empty state when the spool form is opened signed out"
+  },
+  "filamentAddStandard": "Add standard spool",
+  "@filamentAddStandard": {
+    "description": "Button and tooltip that open the standard spool catalog"
+  },
+  "filamentCustom": "Custom spool",
+  "@filamentCustom": {
+    "description": "Button and tooltip that open a blank spool form"
+  },
+  "filamentNoneYet": "No spools yet.",
+  "@filamentNoneYet": {
+    "description": "Empty state when the workshop has no filament spools"
+  },
+  "filamentSearchHint": "Brand, material, or notes",
+  "@filamentSearchHint": {
+    "description": "Search hint on the filament list"
+  },
+  "filamentFilterAll": "All",
+  "@filamentFilterAll": {
+    "description": "Filter that shows every spool"
+  },
+  "filamentFilterLow": "Low stock",
+  "@filamentFilterLow": {
+    "description": "Filter that shows only spools below the low-stock threshold"
+  },
+  "filamentCount": "{count, plural, =1{1 spool} other{{count} spools}}",
+  "@filamentCount": {
+    "description": "How many spools are visible in the filament list",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of spools"
+      }
+    }
+  },
+  "filamentSearchEmpty": "No spools match your search.",
+  "@filamentSearchEmpty": {
+    "description": "Empty state when the filament search or filter has no matches"
+  },
+  "filamentRemainingOf": "{remaining} of {capacity}",
+  "@filamentRemainingOf": {
+    "description": "Remaining filament compared with the full spool weight",
+    "placeholders": {
+      "remaining": {
+        "type": "String",
+        "description": "Formatted remaining weight",
+        "example": "750 g"
+      },
+      "capacity": {
+        "type": "String",
+        "description": "Formatted full spool weight",
+        "example": "1000 g"
+      }
+    }
+  },
+  "filamentLow": "Low",
+  "@filamentLow": {
+    "description": "Short label on a spool that is below its low-stock threshold"
+  },
+  "filamentListPrice": "{spoolPrice} · {perKg}/kg",
+  "@filamentListPrice": {
+    "description": "Spool price and derived price per kilogram on a filament row",
+    "placeholders": {
+      "spoolPrice": {
+        "type": "String",
+        "description": "Formatted price of one spool"
+      },
+      "perKg": {
+        "type": "String",
+        "description": "Formatted price per kilogram"
+      }
+    }
+  },
+  "filamentStandardTitle": "Standard spools",
+  "@filamentStandardTitle": {
+    "description": "Title of the standard spool catalog sheet"
+  },
+  "filamentStandardSearchHint": "Brand or material",
+  "@filamentStandardSearchHint": {
+    "description": "Search hint in the standard spool catalog"
+  },
+  "filamentSetPriceAfterAdding": "Set price after adding",
+  "@filamentSetPriceAfterAdding": {
+    "description": "Shown for a catalog spool that has no shop price yet"
+  },
+  "filamentPresetLine": "{weight} · {price}",
+  "@filamentPresetLine": {
+    "description": "Weight and price line for a standard spool preset",
+    "placeholders": {
+      "weight": {
+        "type": "String",
+        "description": "Formatted spool weight"
+      },
+      "price": {
+        "type": "String",
+        "description": "Formatted SEK price, or the set-price prompt"
+      }
+    }
+  },
+  "filamentAdded": "Added {label}.",
+  "@filamentAdded": {
+    "description": "Snackbar after a standard spool is added",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "description": "Preset label that was added"
+      }
+    }
+  },
+  "filamentEditPrice": "Edit price",
+  "@filamentEditPrice": {
+    "description": "Snackbar action that opens the new spool to set its price"
+  },
+  "filamentNew": "New spool",
+  "@filamentNew": {
+    "description": "Title of the form for a new filament spool"
+  },
+  "filamentFindStandard": "Find a standard spool",
+  "@filamentFindStandard": {
+    "description": "Search field on the new spool form"
+  },
+  "filamentSection": "Spool",
+  "@filamentSection": {
+    "description": "Section title for brand, material, and color"
+  },
+  "filamentColorHex": "Color hex",
+  "@filamentColorHex": {
+    "description": "Field for the spool color as a hex code"
+  },
+  "filamentBrand": "Brand",
+  "@filamentBrand": {
+    "description": "Filament brand field"
+  },
+  "filamentMaterial": "Material",
+  "@filamentMaterial": {
+    "description": "Filament material field"
+  },
+  "filamentDiameterMm": "Diameter mm",
+  "@filamentDiameterMm": {
+    "description": "Filament diameter field in millimeters"
+  },
+  "filamentStock": "Stock",
+  "@filamentStock": {
+    "description": "Section title for spool weight and remaining filament"
+  },
+  "filamentWeightLabel": "Spool weight g",
+  "@filamentWeightLabel": {
+    "description": "Field for the full spool weight in grams"
+  },
+  "filamentRemainingLabel": "Remaining g",
+  "@filamentRemainingLabel": {
+    "description": "Field for the filament still on the spool, in grams"
+  },
+  "filamentUseWorkshopLowStock": "Use workshop low-stock default",
+  "@filamentUseWorkshopLowStock": {
+    "description": "Switch that uses the workshop low-stock threshold for this spool"
+  },
+  "filamentWarnsAt": "Warns at {grams}.",
+  "@filamentWarnsAt": {
+    "description": "Explains the workshop low-stock threshold used by this spool",
+    "placeholders": {
+      "grams": {
+        "type": "String",
+        "description": "Formatted low-stock weight"
+      }
+    }
+  },
+  "filamentOwnThreshold": "This spool keeps its own threshold.",
+  "@filamentOwnThreshold": {
+    "description": "Explains that the spool does not use the workshop low-stock default"
+  },
+  "filamentLowStockThreshold": "Low stock threshold g",
+  "@filamentLowStockThreshold": {
+    "description": "Field for this spool's own low-stock weight in grams"
+  },
+  "filamentRefill": "Refill to full",
+  "@filamentRefill": {
+    "description": "Button that sets remaining filament back to the full spool weight"
+  },
+  "filamentPriceHeading": "Price",
+  "@filamentPriceHeading": {
+    "description": "Section title for the spool price"
+  },
+  "filamentPricePerSpool": "Price per spool ({currency})",
+  "@filamentPricePerSpool": {
+    "description": "Field label for the spool price in the workshop currency",
+    "placeholders": {
+      "currency": {
+        "type": "String",
+        "description": "Workshop currency code"
+      }
+    }
+  },
+  "filamentPricePerKg": "Price per kg",
+  "@filamentPricePerKg": {
+    "description": "Label for the derived price per kilogram"
+  },
+  "filamentRequired": "Brand, material, weight, and price are required.",
+  "@filamentRequired": {
+    "description": "Validation when a spool is saved with missing fields"
+  },
+  "filamentSaveFailed": "Could not save the spool. Check the connection and try again.",
+  "@filamentSaveFailed": {
+    "description": "Error when saving a spool fails"
+  },
+  "filamentDelete": "Delete spool",
+  "@filamentDelete": {
+    "description": "Title and button for deleting a spool"
+  },
+  "filamentDeleteMessage": "This removes the spool. Quotes keep their saved weights.",
+  "@filamentDeleteMessage": {
+    "description": "Confirmation when deleting a spool"
+  },
+  "filamentColorBlack": "Black",
+  "@filamentColorBlack": {
+    "description": "Generic catalog color name Black"
+  },
+  "filamentColorWhite": "White",
+  "@filamentColorWhite": {
+    "description": "Generic catalog color name White"
+  },
+  "filamentColorGray": "Gray",
+  "@filamentColorGray": {
+    "description": "Generic catalog color name Gray"
+  },
+  "filamentColorUnspecified": "Unspecified",
+  "@filamentColorUnspecified": {
+    "description": "Catalog color when the spool has no named color"
+  },
+  "filamentBrandGeneric": "Generic",
+  "@filamentBrandGeneric": {
+    "description": "Placeholder brand for a spool that is not a shop brand"
+  },
+  "printerSignInList": "Sign in to see printers.",
+  "@printerSignInList": {
+    "description": "Empty state when the printer list is opened signed out"
+  },
+  "printerSignInEdit": "Sign in to edit printers.",
+  "@printerSignInEdit": {
+    "description": "Empty state when the printer form is opened signed out"
+  },
+  "printerEmpty": "Add the printer you price with.",
+  "@printerEmpty": {
+    "description": "Empty state when the workshop has no printers"
+  },
+  "printerNew": "New printer",
+  "@printerNew": {
+    "description": "Title of the form for a new printer"
+  },
+  "printerCatalogNote": "The first printers use a maker PLA average and a Swedish shop price. The rest use a community catalog: euro prices converted on 15 October 2026, and power estimated from the heater because the catalog lists the power supply. Lifetime starts at 5,000 hours. Change the price and watts to your machine.",
+  "@printerCatalogNote": {
+    "description": "Explains how catalog printer prices and power were estimated"
+  },
+  "printerLifetime": "Expected lifetime hours",
+  "@printerLifetime": {
+    "description": "Field for how many hours the printer is expected to run"
+  },
+  "printerNameRequired": "Name is required.",
+  "@printerNameRequired": {
+    "description": "Validation when a printer is saved without a name"
+  },
+  "printerAmountRequired": "Purchase price and maintenance must be amounts, like 2495 or 0. Use a comma or a dot.",
+  "@printerAmountRequired": {
+    "description": "Validation when printer price fields are not amounts"
+  },
+  "printerLifetimeRequired": "Enter the expected lifetime in hours. Use 0 if you do not charge for machine wear.",
+  "@printerLifetimeRequired": {
+    "description": "Validation when printer lifetime hours are missing"
+  },
+  "printerSaveFailed": "Could not save the printer. Check the connection and try again.",
+  "@printerSaveFailed": {
+    "description": "Error when saving a printer fails"
+  },
+  "printerDelete": "Delete printer",
+  "@printerDelete": {
+    "description": "Title and button for deleting a printer"
+  },
+  "printerDeleteMessage": "This removes the printer. Saved quotes keep their prices.",
+  "@printerDeleteMessage": {
+    "description": "Confirmation when deleting a printer"
+  },
+  "inboxSendToUser": "Send to user",
+  "@inboxSendToUser": {
+    "description": "Title and tooltip for sending a workshop item to another user"
+  },
+  "inboxRecipientEmail": "Their email",
+  "@inboxRecipientEmail": {
+    "description": "Field for the recipient email when sending an item"
+  },
+  "inboxSend": "Send",
+  "@inboxSend": {
+    "description": "Button that sends an item to another user"
+  },
+  "inboxUserNotFound": "No Gramnota user with that email.",
+  "@inboxUserNotFound": {
+    "description": "Snackbar when the recipient email is not a Gramnota user"
+  },
+  "inboxOwnAccount": "That email is your own account.",
+  "@inboxOwnAccount": {
+    "description": "Snackbar when the sender picks their own email"
+  },
+  "inboxTooLarge": "That item is too large to send.",
+  "@inboxTooLarge": {
+    "description": "Snackbar when a shared item exceeds the inbox size limit"
+  },
+  "inboxSentTo": "Sent to {name}.",
+  "@inboxSentTo": {
+    "description": "Snackbar after an item is sent",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Recipient display name"
+      }
+    }
+  },
+  "inboxSenderFallback": "Gramnota user",
+  "@inboxSenderFallback": {
+    "description": "Sender name used when the account has no display name or email"
+  },
+  "inboxSignIn": "Sign in to see inbox.",
+  "@inboxSignIn": {
+    "description": "Empty state when the inbox is opened signed out"
+  },
+  "inboxEmpty": "Nothing shared with you yet.",
+  "@inboxEmpty": {
+    "description": "Empty state when the inbox has no items"
+  },
+  "inboxSentFilament": "{sender} sent a filament",
+  "@inboxSentFilament": {
+    "description": "Inbox row when someone shared a filament spool",
+    "placeholders": {
+      "sender": {
+        "type": "String",
+        "description": "Sender display name"
+      }
+    }
+  },
+  "inboxSentCustomer": "{sender} sent a customer",
+  "@inboxSentCustomer": {
+    "description": "Inbox row when someone shared a customer",
+    "placeholders": {
+      "sender": {
+        "type": "String",
+        "description": "Sender display name"
+      }
+    }
+  },
+  "inboxSentPrinter": "{sender} sent a printer",
+  "@inboxSentPrinter": {
+    "description": "Inbox row when someone shared a printer",
+    "placeholders": {
+      "sender": {
+        "type": "String",
+        "description": "Sender display name"
+      }
+    }
+  },
+  "inboxSentOrder": "{sender} sent an order",
+  "@inboxSentOrder": {
+    "description": "Inbox row when someone shared an order",
+    "placeholders": {
+      "sender": {
+        "type": "String",
+        "description": "Sender display name"
+      }
+    }
+  },
+  "inboxDecline": "Decline",
+  "@inboxDecline": {
+    "description": "Button that dismisses a shared item"
+  },
+  "inboxAccept": "Accept",
+  "@inboxAccept": {
+    "description": "Button that copies a shared item into this workshop"
+  },
+  "inboxAddedFilament": "Filament added to your inventory.",
+  "@inboxAddedFilament": {
+    "description": "Snackbar after accepting a shared filament spool"
+  },
+  "inboxAddedCustomer": "Customer added.",
+  "@inboxAddedCustomer": {
+    "description": "Snackbar after accepting a shared customer"
+  },
+  "inboxAddedPrinter": "Printer added.",
+  "@inboxAddedPrinter": {
+    "description": "Snackbar after accepting a shared printer"
+  },
+  "inboxAddedQuote": "Quote added. Customer, printer, and spool links were cleared.",
+  "@inboxAddedQuote": {
+    "description": "Snackbar after accepting a shared order as a new quote"
+  },
+  "authSetupSubtitle": "Setup",
+  "@authSetupSubtitle": {
+    "description": "Subtitle on the Firebase setup gate"
+  },
+  "authSetupBody": "Firebase is not configured yet. Create a Firebase project, enable Google sign-in and Firestore, then run flutterfire configure. Add the debug SHA-1 for the Android app and deploy firestore.rules. The steps are in the README.",
+  "@authSetupBody": {
+    "description": "Explains how to configure Firebase before the app can sign in"
+  },
+  "authSignInSubtitle": "Price your 3D prints on your phone or on this computer.",
+  "@authSignInSubtitle": {
+    "description": "Subtitle on the sign-in screen"
+  },
+  "authFirebaseMissing": "Firebase is not configured. See the README.",
+  "@authFirebaseMissing": {
+    "description": "Short notice when Firebase is not configured"
+  },
+  "authSignInFailed": "Sign-in failed. Try again.",
+  "@authSignInFailed": {
+    "description": "Generic sign-in failure"
+  },
+  "authWebEmulator": "Google sign-in is not available in this browser. Use the test seller account.",
+  "@authWebEmulator": {
+    "description": "Web sign-in hint when the Auth emulator is on"
+  },
+  "authWebUseApp": "Google sign-in is not available in this browser. Use the Android or Windows app.",
+  "@authWebUseApp": {
+    "description": "Web sign-in hint to use the Android or Windows app"
+  },
+  "authSigningIn": "Signing in…",
+  "@authSigningIn": {
+    "description": "Sign-in button label while sign-in is in progress"
+  },
+  "authSignInGoogle": "Sign in with Google",
+  "@authSignInGoogle": {
+    "description": "Google sign-in button"
+  },
+  "authFinishInBrowser": "Finish sign-in in the browser, then return here.",
+  "@authFinishInBrowser": {
+    "description": "Hint shown on Windows while the browser sign-in is open"
+  },
+  "authSignInTestSeller": "Sign in as test seller",
+  "@authSignInTestSeller": {
+    "description": "Button that signs in with the local emulator test account"
+  },
+  "authEmulatorAccount": "Local Firebase emulators. This account is {email}.",
+  "@authEmulatorAccount": {
+    "description": "Explains the emulator test account",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authDesktopPageTitle": "Gramnota sign-in",
+  "@authDesktopPageTitle": {
+    "description": "Browser window title for Windows Google sign-in"
+  },
+  "authOpeningGoogle": "Opening Google…",
+  "@authOpeningGoogle": {
+    "description": "Browser status while Google sign-in is opening"
+  },
+  "authContinueGoogle": "Continue with Google",
+  "@authContinueGoogle": {
+    "description": "Browser button that continues Google sign-in"
+  },
+  "authNoToken": "Google did not return a sign-in token.",
+  "@authNoToken": {
+    "description": "Google returned no sign-in token"
+  },
+  "authSignedInClose": "Signed in. You can close this window and return to Gramnota.",
+  "@authSignedInClose": {
+    "description": "Browser status after Windows sign-in succeeds"
+  },
+  "authUnauthorizedDomain": "Google sign-in is not allowed from this page.",
+  "@authUnauthorizedDomain": {
+    "description": "Google rejected the localhost sign-in page"
+  },
+  "authCancelled": "Sign-in was cancelled.",
+  "@authCancelled": {
+    "description": "The user cancelled sign-in"
+  },
+  "authCancelledRetry": "Sign-in was cancelled. Try again.",
+  "@authCancelledRetry": {
+    "description": "The user cancelled sign-in and can try again"
+  },
+  "authContinueToFinish": "Continue with Google to finish sign-in.",
+  "@authContinueToFinish": {
+    "description": "Browser prompt to continue Google sign-in"
+  },
+  "authTimedOut": "Sign-in timed out. Finish it in the browser, or try again.",
+  "@authTimedOut": {
+    "description": "Windows sign-in waited too long for the browser"
+  },
+  "authBrowserFailed": "Could not open the browser. Try again.",
+  "@authBrowserFailed": {
+    "description": "The system browser could not be opened"
+  },
+  "authResponseInvalid": "Sign-in response was not valid.",
+  "@authResponseInvalid": {
+    "description": "The browser sent a sign-in response that could not be read"
+  },
+  "authGooglePlatforms": "Google sign-in is available in the Android and Windows apps.",
+  "@authGooglePlatforms": {
+    "description": "Google sign-in is only in the Android and Windows apps"
+  },
+  "updateAvailableTitle": "New version {version} is available",
+  "@updateAvailableTitle": {
+    "description": "Title when a newer build is available",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateSkipVersion": "Skip this version",
+  "@updateSkipVersion": {
+    "description": "Skips the offered app version"
+  },
+  "updateLater": "Later",
+  "@updateLater": {
+    "description": "Dismisses the update offer for now"
+  },
+  "updateNow": "Update",
+  "@updateNow": {
+    "description": "Starts the update"
+  },
+  "updateClose": "Close",
+  "@updateClose": {
+    "description": "Closes an update dialog"
+  },
+  "updateContinue": "Continue",
+  "@updateContinue": {
+    "description": "Continues after the Android install hint"
+  },
+  "updateAllowInstallTitle": "Allow installation",
+  "@updateAllowInstallTitle": {
+    "description": "Title when Android blocks installing the update"
+  },
+  "updateAllowInstallBody": "Allow installs from Gramnota. In Settings, choose Install unknown apps and turn Gramnota on. Then tap Update again.",
+  "@updateAllowInstallBody": {
+    "description": "How to allow installs from Gramnota"
+  },
+  "updateOpenSettings": "Open settings",
+  "@updateOpenSettings": {
+    "description": "Opens the Android setting for unknown-app installs"
+  },
+  "updateConfirmAndroidTitle": "Confirm in Android",
+  "@updateConfirmAndroidTitle": {
+    "description": "Title before the Android installer prompt"
+  },
+  "updateConfirmAndroidBody": "Android shows its own prompt. Tap Install there. That prompt cannot be skipped.",
+  "@updateConfirmAndroidBody": {
+    "description": "Explains the Android installer prompt"
+  },
+  "updateDownloading": "Downloading the update…",
+  "@updateDownloading": {
+    "description": "Progress title while the update downloads"
+  },
+  "updateChecksumFailed": "The file did not match (checksum). Nothing was installed.",
+  "@updateChecksumFailed": {
+    "description": "Downloaded file failed the checksum"
+  },
+  "updateDownloadFailed": "The download failed.",
+  "@updateDownloadFailed": {
+    "description": "The update download failed"
+  },
+  "updateManifestUnreadable": "Could not read the update information.",
+  "@updateManifestUnreadable": {
+    "description": "The update manifest could not be read"
+  },
+  "updateNoConnection": "No internet connection. Try again later.",
+  "@updateNoConnection": {
+    "description": "No network while checking or downloading an update"
+  },
+  "updateInstallFailed": "Could not start the installation.",
+  "@updateInstallFailed": {
+    "description": "The installer could not be started"
+  },
+  "updateSearchFailed": "Could not check for updates.",
+  "@updateSearchFailed": {
+    "description": "The update check failed"
+  },
+  "updatePlatformsOnly": "Updates are available for Android and Windows.",
+  "@updatePlatformsOnly": {
+    "description": "Updates exist only for Android and Windows"
+  },
+  "updateAlreadyLatest": "You already have the latest version.",
+  "@updateAlreadyLatest": {
+    "description": "This install is already the latest version"
+  },
+  "updateAlreadyLatestBuild": "You have the latest version (build {build})",
+  "@updateAlreadyLatestBuild": {
+    "description": "Manual check when this install is already current",
+    "placeholders": {
+      "build": {
+        "type": "int"
+      }
+    }
+  },
+  "updateFoundWhileClosed": "New version {version} (build {build}) is available.",
+  "@updateFoundWhileClosed": {
+    "description": "Update was found after the settings page closed",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "int"
+      }
+    }
+  },
+  "updateSearching": "Searching…",
+  "@updateSearching": {
+    "description": "Update button label while a check is running"
+  },
+  "updateSearch": "Check for updates",
+  "@updateSearch": {
+    "description": "Button that checks for updates"
+  },
+  "versionLabel": "Version",
+  "@versionLabel": {
+    "description": "Version label before the number is known"
+  },
+  "versionWithBuild": "Version {version} (build {build})",
+  "@versionWithBuild": {
+    "description": "Installed version and build number",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBuildOnly": "Build {build}.",
+  "@updateBuildOnly": {
+    "description": "Update offer body when the release has no notes",
+    "placeholders": {
+      "build": {
+        "type": "int"
+      }
+    }
+  },
+  "importPrintFile": "Print file",
+  "@importPrintFile": {
+    "description": "Fallback title when a Printables file has no name"
+  }
+}

@@ -1,3 +1,5 @@
+import 'package:gramnota/l10n/l10n.dart';
+
 const updateLogName = 'gramnota.updates';
 
 class UpdateNetworkException implements Exception {
@@ -62,16 +64,15 @@ String? updateFailureDetail(Object error) {
   };
 }
 
-String updateFailureMessage(Object error) {
+String updateFailureMessage(Object error, AppLocalizations l10n) {
   final summary = switch (error) {
-    UpdateChecksumException() =>
-      'Filen stämde inte (kontrollsumma). Inget installerades.',
-    UpdateDownloadException() => 'Nedladdningen misslyckades.',
-    UpdateManifestException() => 'Kunde inte läsa uppdateringsinformationen.',
-    UpdateNetworkException() => 'Ingen internetanslutning. Försök igen senare.',
-    UpdateInstallException() => 'Kunde inte starta installationen.',
-    FormatException() => 'Kunde inte läsa uppdateringsinformationen.',
-    _ => 'Kunde inte söka efter uppdateringar.',
+    UpdateChecksumException() => l10n.updateChecksumFailed,
+    UpdateDownloadException() => l10n.updateDownloadFailed,
+    UpdateManifestException() => l10n.updateManifestUnreadable,
+    UpdateNetworkException() => l10n.updateNoConnection,
+    UpdateInstallException() => l10n.updateInstallFailed,
+    FormatException() => l10n.updateManifestUnreadable,
+    _ => l10n.updateSearchFailed,
   };
   final detail = updateFailureDetail(error);
   if (detail == null || detail.isEmpty) {

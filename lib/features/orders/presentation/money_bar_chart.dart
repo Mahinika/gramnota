@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/format.dart';
+import '../../../l10n/l10n.dart';
 
 class MoneyBar {
   const MoneyBar({required this.label, required this.minor});
@@ -30,7 +30,7 @@ class MoneyBarChart extends StatelessWidget {
     });
     if (maxMinor == 0) {
       return Text(
-        'Nothing to chart this month.',
+        context.l10n.dashNothingToChart,
         style: theme.textTheme.bodyMedium?.copyWith(
           color: scheme.onSurfaceVariant,
         ),
@@ -89,7 +89,7 @@ class _BarColumn extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Text(
-          formatMoney(bar.minor, currencyCode),
+          context.money(bar.minor, currencyCode),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -109,6 +109,7 @@ class _BarColumn extends StatelessWidget {
           bar.label,
           textAlign: TextAlign.center,
           maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.labelSmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

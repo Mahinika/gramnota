@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../../../l10n/l10n.dart';
 import '../domain/gcode_metadata.dart';
 import '../domain/slice_file.dart';
 import 'byte_source.dart';
@@ -34,7 +35,7 @@ Future<GcodeImport> importSlice(
   return GcodeImport(
     title: sliceFileStem(displayName),
     plates: [plate],
-    note: gcodePlateNote(plate),
+    note: gcodePlateNote(plate, l10n: activeGramnotaL10n),
   );
 }
 
@@ -126,13 +127,17 @@ Future<GcodeImport> _importThreeMf(
     return GcodeImport(
       title: title,
       plates: [empty],
-      note: gcodePlateNote(empty),
+      note: gcodePlateNote(empty, l10n: activeGramnotaL10n),
     );
   }
   return GcodeImport(
     title: title,
     plates: built,
-    note: gcodePlateNote(built.first, plateCount: built.length),
+    note: gcodePlateNote(
+      built.first,
+      l10n: activeGramnotaL10n,
+      plateCount: built.length,
+    ),
   );
 }
 
@@ -263,9 +268,47 @@ String _plateName(String name) {
     caseSensitive: false,
   ).firstMatch(name);
   if (match != null) {
-    return 'Plate ${match.group(1)}';
+    return activeGramnotaL10n.gcodePlateName(int.parse(match.group(1)!));
   }
   return sliceFileStem(name);
+}
+
+/// User-facing text for a slice-file failure. Known archive errors are
+/// translated; anything else keeps the exception text.
+String describeGcodeError(Object error, AppLocalizations l10n) {
+  final raw = switch (error) {
+    FormatException(:final message) => message,
+    UnsupportedError(:final message) => message ?? '',
+    _ => '',
+  };
+  if (raw == 'Not a 3MF archive.') {
+    return l10n.gcodeNotArchive;
+  }
+  if (raw == 'This 3MF uses Zip64, which Gramnota cannot read.') {
+    return l10n.gcodeZip64;
+  }
+  if (raw == 'The 3MF archive is incomplete.') {
+    return l10n.gcodeArchiveIncomplete;
+  }
+  if (raw == 'The 3MF archive is missing a file header.') {
+    return l10n.gcodeMissingHeader;
+  }
+  if (raw == 'This browser build reads the file you pick, not a disk path.') {
+    return l10n.gcodeBrowserPath;
+  }
+  final compression = RegExp(
+    r'^Unsupported compression in (.+) \(method (\d+)\)\.$',
+  ).firstMatch(raw);
+  if (compression != null) {
+    return l10n.gcodeUnsupportedCompression(
+      compression.group(1)!,
+      compression.group(2)!,
+    );
+  }
+  if (raw.isNotEmpty) {
+    return raw;
+  }
+  return error.toString();
 }
 
 int _comparePlateKeys(String a, String b) {
