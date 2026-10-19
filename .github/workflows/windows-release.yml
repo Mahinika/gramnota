@@ -1,0 +1,186 @@
+# Builds the Windows desktop app and replaces the "windows" GitHub release.
+# Windows Firebase config is the committed lib/firebase_options.dart.
+# This job does not read repository secrets.
+name: Windows release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable symlink support for Flutter plugins
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Cache Pub packages
+        id: pub-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/AppData/Local/Pub/Cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Cache Windows native build
+        id: windows-build-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: build/windows
+          key: ${{ runner.os }}-flutter-3.44.8-windows-${{ hashFiles('pubspec.lock', 'windows/**/CMakeLists.txt', 'windows/runner/**') }}
+          restore-keys: |
+            ${{ runner.os }}-flutter-3.44.8-windows-
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.8
+          cache: true
+
+      - name: Flutter doctor
+        shell: pwsh
+        run: flutter doctor -v
+        continue-on-error: true
+
+      - name: Build Windows release
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          flutter config --enable-windows-desktop
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          flutter pub get
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          flutter build windows --release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Save Pub cache
+        if: steps.pub-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/AppData/Local/Pub/Cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+
+      - name: Save Windows native build
+        if: steps.windows-build-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build/windows
+          key: ${{ runner.os }}-flutter-3.44.8-windows-${{ hashFiles('pubspec.lock', 'windows/**/CMakeLists.txt', 'windows/runner/**') }}
+
+      - name: Locate Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            $PSNativeCommandUseErrorActionPreference = $false
+            $prefix = "C:\Tools\InnoSetup6"
+            $installer = Join-Path $env:RUNNER_TEMP "innosetup-6.7.3.exe"
+            curl.exe -fsSL -o $installer "https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & $installer /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- "/DIR=$prefix"
+            $iscc = Join-Path $prefix "ISCC.exe"
+          }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe was not found" }
+          Write-Host "Using $iscc"
+          Add-Content -Path $env:GITHUB_ENV -Value "INNO_ISCC=$iscc" -Encoding utf8NoBOM
+
+      - name: Package installer and portable zip
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy -Scope Process Bypass
+          & "$env:GITHUB_WORKSPACE\windows\installer\package.ps1"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gramnota-windows
+          path: |
+            build/windows/installer/Gramnota-Setup-*.exe
+            build/windows/installer/Gramnota-*-windows-x64.zip
+          if-no-files-found: error
+
+      - name: Install silently and check the layout
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $false
+          $setup = Get-ChildItem "build\windows\installer\Gramnota-Setup-*.exe" | Select-Object -First 1
+          $log = Join-Path $env:GITHUB_WORKSPACE "build\windows\installer\silent-install.log"
+          Write-Host "Running $($setup.FullName)"
+          # Setup is a GUI executable. Start-Process records its exit code; the
+          # call operator often leaves $LASTEXITCODE empty for GUI programs.
+          $proc = Start-Process -FilePath $setup.FullName -ArgumentList @(
+            "/VERYSILENT",
+            "/SUPPRESSMSGBOXES",
+            "/NORESTART",
+            "/LOG=$log"
+          ) -Wait -PassThru
+          Write-Host "Installer exit code: $($proc.ExitCode)"
+          if (Test-Path $log) { Get-Content $log -Tail 80 } else { Write-Host "No install log at $log" }
+          if ($proc.ExitCode -ne 0) {
+            throw "Silent install failed with exit code $($proc.ExitCode)"
+          }
+
+          $iss = Get-Content "windows\installer\gramnota.iss" -Raw
+          if ($iss -notmatch "AppId=\{\{([0-9A-F-]+)\}") {
+            throw "AppId missing from gramnota.iss"
+          }
+          $appId = $Matches[1]
+          $keyName = '{' + $appId + '}_is1'
+          $keys = @(
+            "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$keyName",
+            "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$keyName"
+          )
+          $installDir = $null
+          foreach ($key in $keys) {
+            if (Test-Path $key) {
+              $installDir = (Get-ItemProperty $key).InstallLocation
+              if ($installDir) { break }
+            }
+          }
+          if (-not $installDir) {
+            if (Test-Path $log) { Get-Content $log -Tail 80 }
+            throw "Installer did not register an uninstall entry"
+          }
+          Write-Host "Installed to $installDir"
+          foreach ($relative in @("gramnota.exe", "flutter_windows.dll", "msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll", "data\icudtl.dat")) {
+            $path = Join-Path $installDir $relative
+            if (-not (Test-Path $path)) { throw "Installed app is missing $relative" }
+          }
+          $start = Get-ChildItem -Path "$env:APPDATA\Microsoft\Windows\Start Menu","$env:ProgramData\Microsoft\Windows\Start Menu" -Recurse -Filter "Gramnota.lnk" -ErrorAction SilentlyContinue
+          if (-not $start) { throw "Start menu shortcut was not created" }
+          $desktopRoots = @("$env:USERPROFILE\Desktop", "$env:PUBLIC\Desktop")
+          $desktop = Get-ChildItem -Path $desktopRoots -Filter "Gramnota.lnk" -ErrorAction SilentlyContinue
+          if (-not $desktop) { throw "Desktop shortcut was not created" }
+          Write-Host "Shortcuts: $($start[0].FullName); $($desktop[0].FullName)"
+
+      - name: Publish on the windows release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$APP_VERSION" ]; then
+            echo "APP_VERSION was not set by package.ps1"
+            exit 1
+          fi
+          gh release delete windows --yes --cleanup-tag || true
+          gh release create windows \
+            "build/windows/installer/Gramnota-Setup-${APP_VERSION}.exe" \
+            "build/windows/installer/Gramnota-${APP_VERSION}-windows-x64.zip" \
+            --title "Gramnota for Windows" \
+            --notes "Windows ${APP_VERSION} built from ${GITHUB_SHA}. Gramnota-Setup-${APP_VERSION}.exe installs for the current user, adds Start menu and desktop shortcuts, and upgrades in place. Gramnota-${APP_VERSION}-windows-x64.zip is the portable build. Visual C++ runtime libraries are included." \
+            --target "$GITHUB_SHA"
