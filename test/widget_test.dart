@@ -36,4 +36,35 @@ void main() {
     expect(find.textContaining('per unit'), findsOneWidget);
     expect(formatMoney(61560, 'SEK'), contains('615'));
   });
+
+  testWidgets('hides the unit price on a combined quote', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: BreakdownCard(
+            currencyCode: 'SEK',
+            showPerUnit: false,
+            breakdown: PriceBreakdown(
+              materialMinor: 2000,
+              electricityMinor: 0,
+              machineMinor: 0,
+              failureMinor: 0,
+              laborMinor: 0,
+              extrasMinor: 0,
+              costMinor: 2000,
+              markupMinor: 0,
+              netMinor: 2000,
+              vatMinor: 0,
+              totalMinor: 2000,
+              perUnitMinor: 0,
+              quantity: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Total'), findsOneWidget);
+    expect(find.textContaining('per unit'), findsNothing);
+  });
 }

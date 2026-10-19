@@ -63,20 +63,22 @@ class CrealityCloudImporter {
       caseSensitive: false,
     ).firstMatch(html);
     if (og != null) {
-      return _decode(og.group(1)!);
+      return cleanModelTitle(_decode(og.group(1)!));
     }
     final swapped = RegExp(
       '''<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']''',
       caseSensitive: false,
     ).firstMatch(html);
     if (swapped != null) {
-      return _decode(swapped.group(1)!);
+      return cleanModelTitle(_decode(swapped.group(1)!));
     }
     final title = RegExp(
       '<title>([^<]+)</title>',
       caseSensitive: false,
     ).firstMatch(html);
-    return title == null ? null : _decode(title.group(1)!).split('|').first.trim();
+    return title == null
+        ? null
+        : cleanModelTitle(_decode(title.group(1)!));
   }
 
   String? _payload(String html) {

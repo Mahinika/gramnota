@@ -396,7 +396,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
     _spoolWeight.text = preset.spoolWeightGrams.round().toString();
     _remaining.text = preset.spoolWeightGrams.round().toString();
     if (preset.pricePerSpoolMinor > 0) {
-      _price.text = (preset.pricePerSpoolMinor / 100).toString();
+      _price.text = formatMinorAmount(preset.pricePerSpoolMinor);
     }
     _error = null;
   }
@@ -432,7 +432,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
     _diameter.text = _plainNumber(spool.diameterMm);
     _spoolWeight.text = _plainNumber(spool.spoolWeightGrams);
     _remaining.text = _plainNumber(spool.remainingGrams);
-    _price.text = _plainMoney(spool.pricePerSpoolMinor);
+    _price.text = formatMinorAmount(spool.pricePerSpoolMinor);
     _low.text = _plainNumber(spool.lowStockGrams);
     _notes.text = spool.notes;
     _loaded = true;
@@ -675,10 +675,6 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
   }
 }
 
-final filamentsProvider = StreamProvider.family<List<FilamentSpool>, UserStore>(
-  (ref, store) => store.watchFilaments(),
-);
-
 class _ColorSwatch extends StatelessWidget {
   const _ColorSwatch({required this.hex, this.size = 32});
 
@@ -704,14 +700,6 @@ String _plainNumber(double value) {
     return value.round().toString();
   }
   return value.toString();
-}
-
-String _plainMoney(int minor) {
-  final major = minor / 100;
-  if (major == major.roundToDouble()) {
-    return major.round().toString();
-  }
-  return major.toStringAsFixed(2);
 }
 
 Color _color(String hex) {

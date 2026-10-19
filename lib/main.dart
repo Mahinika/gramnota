@@ -8,14 +8,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'app.dart';
+import 'core/firebase_emulator.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (firebaseIsConfigured) {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    FirebaseFirestore.instance.settings = const Settings(
-      persistenceEnabled: true,
+    if (useFirebaseEmulator) {
+      await connectFirebaseEmulators();
+    }
+    FirebaseFirestore.instance.settings = Settings(
+      persistenceEnabled: !useFirebaseEmulator,
     );
     if (!kIsWeb && Platform.isAndroid) {
       await GoogleSignIn.instance.initialize();

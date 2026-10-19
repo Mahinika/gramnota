@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/menu_card.dart';
+import '../../../core/text_prompt.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
@@ -22,34 +23,17 @@ Future<void> sendItem({
   required SharedItemType type,
   required Map<String, dynamic> payload,
 }) async {
-  final email = TextEditingController();
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Send to user'),
-      content: TextField(
-        controller: email,
-        decoration: const InputDecoration(labelText: 'Their email'),
-        keyboardType: TextInputType.emailAddress,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Send'),
-        ),
-      ],
-    ),
+  final email = await promptForText(
+    context,
+    title: 'Send to user',
+    label: 'Their email',
+    confirmLabel: 'Send',
+    keyboardType: TextInputType.emailAddress,
   );
-  if (confirmed != true) {
-    email.dispose();
+  if (email == null || email.isEmpty) {
     return;
   }
-  final recipient = await store.findUserByEmail(email.text);
-  email.dispose();
+  final recipient = await store.findUserByEmail(email);
   if (!context.mounted) {
     return;
   }

@@ -11,8 +11,8 @@ const internalQuoteBreakdownFields = {
   'Net',
 };
 
-/// Customer PDF may show order-level VAT and total labels only.
-const customerQuoteBreakdownFields = {'VAT', 'Total'};
+/// Customer PDF summary. Line prices are before VAT, so these rows add up.
+const customerQuoteBreakdownFields = {'Price ex. VAT', 'VAT', 'Total'};
 
 bool isInternalQuoteBreakdownField(String label) =>
     internalQuoteBreakdownFields.contains(label);

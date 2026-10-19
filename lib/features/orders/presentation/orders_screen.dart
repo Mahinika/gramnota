@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/format.dart';
+import '../../../core/text_prompt.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/providers.dart';
@@ -11,9 +12,7 @@ import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../customers/domain/customer.dart';
 import '../../filaments/domain/filament_spool.dart';
-import '../../filaments/presentation/filaments_screen.dart';
 import '../../printers/domain/printer_profile.dart';
-import '../../printers/presentation/printers_screen.dart';
 import '../../settings/domain/workshop_settings.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
@@ -400,11 +399,24 @@ class OrderDetailScreen extends ConsumerWidget {
             actions: [
               IconButton(
                 tooltip: 'Share quote',
-                onPressed: () => shareQuotePdf(
-                  order: order,
-                  settings: settings.asData?.value ?? const WorkshopSettings(),
-                  customer: customer,
-                ),
+                onPressed: () async {
+                  try {
+                    await shareQuotePdf(
+                      order: order,
+                      settings:
+                          settings.asData?.value ?? const WorkshopSettings(),
+                      customer: customer,
+                    );
+                  } on Object catch (error) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Could not share the quote. $error'),
+                        ),
+                      );
+                    }
+                  }
+                },
                 icon: const Icon(Icons.ios_share),
               ),
               IconButton(
@@ -461,10 +473,10 @@ class OrderDetailScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    if (order.validUntil.length >= 10) ...[
+                    if (order.validUntil.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
-                        'Valid until ${order.validUntil.substring(0, 10)}',
+                        'Valid until ${formatIsoDate(order.validUntil)}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context)
                                   .colorScheme
@@ -584,7 +596,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4, bottom: 8),
                   child: Text(
-                    'Move the order back to Accepted before changing prints.',
+                    'Move the order back to Quote or Accepted before changing prints.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -604,6 +616,7 @@ class OrderDetailScreen extends ConsumerWidget {
               BreakdownCard(
                 breakdown: order.breakdown,
                 currencyCode: order.currencyCode,
+                showPerUnit: prints.length == 1,
               ),
             ],
           ),
@@ -680,10 +693,7 @@ class _OrderNoteFieldState extends State<_OrderNoteField> {
     }
     setState(() => _saving = true);
     try {
-      final now = DateTime.now().toUtc().toIso8601String();
-      await widget.store.saveOrder(
-        widget.order.copyWith(note: next, updatedAt: now),
-      );
+      await widget.store.saveOrderNote(orderId: widget.order.id, note: next);
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -785,7 +795,7 @@ class _PrintLineTile extends StatelessWidget {
                   ),
             ),
             Text(
-              formatMoney(line.breakdown.totalMinor, order.currencyCode),
+              '${formatMoney(line.breakdown.totalMinor, order.currencyCode)} incl. VAT',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     color: scheme.primary,
                   ),
@@ -842,39 +852,16 @@ Future<void> _renameQuote(
   UserStore store,
   PrintOrder order,
 ) async {
-  final title = TextEditingController(text: order.title);
-  final saved = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Quote title'),
-      content: TextField(
-        controller: title,
-        decoration: const InputDecoration(labelText: 'Title'),
-        autofocus: true,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Save'),
-        ),
-      ],
-    ),
+  final next = await promptForText(
+    context,
+    title: 'Quote title',
+    label: 'Title',
+    initialText: order.title,
   );
-  final next = title.text.trim();
-  title.dispose();
-  if (saved != true || next.isEmpty) {
+  if (next == null || next.isEmpty) {
     return;
   }
-  await store.saveOrder(
-    order.copyWith(
-      title: next,
-      updatedAt: DateTime.now().toUtc().toIso8601String(),
-    ),
-  );
+  await store.saveOrderTitle(orderId: order.id, title: next);
 }
 
 Future<void> _removePrint(

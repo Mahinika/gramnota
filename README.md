@@ -28,6 +28,22 @@ flutter run -d android
 flutter run -d windows
 ```
 
+## Local Firebase emulators
+
+The Auth and Firestore emulators let you walk the app without Google sign-in. Production builds do not use them. Install the [Firebase CLI](https://firebase.google.com/docs/cli), then from the repo root:
+
+```
+firebase emulators:start --only auth,firestore
+```
+
+In another terminal:
+
+```
+flutter run -d chrome --dart-define=USE_FIREBASE_EMULATOR=true
+```
+
+The same flag works with `-d windows` or a web server. The sign-in screen then offers **Sign in as test seller** (`seller@gramnota.test`). That account is created on the Auth emulator the first time you use it. A browser refresh signs you out (emulator persistence is off) but keeps talking to the emulators, including when the page is opened at `127.0.0.1`. Sign in as the test seller again. The emulator UI is at http://127.0.0.1:4000. Rules from [firestore.rules](firestore.rules) apply. In the browser build, Google sign-in is not available; use the test seller button.
+
 ## Android APK (GitHub)
 
 Every push to `master` builds a release APK in [GitHub Actions](.github/workflows/android-apk.yml) and publishes it on the **`android`** release:

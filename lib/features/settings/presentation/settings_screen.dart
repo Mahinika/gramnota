@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/money.dart';
@@ -139,8 +140,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
     _currency.text = settings.currencyCode;
-    _electricity.text = (settings.electricityMinorPerKwh / 100).toString();
-    _labor.text = (settings.laborMinorPerHour / 100).toString();
+    _electricity.text = formatMinorAmount(settings.electricityMinorPerKwh);
+    _labor.text = formatMinorAmount(settings.laborMinorPerHour);
     _markup.text = basisPointsLabel(settings.defaultMarkupBasisPoints);
     _vat.text = basisPointsLabel(settings.vatBasisPoints);
     _failure.text = basisPointsLabel(settings.defaultFailureBasisPoints);
@@ -180,6 +181,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             controller: _currency,
             decoration: const InputDecoration(labelText: 'Currency'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _electricity,
             decoration: const InputDecoration(
@@ -187,16 +189,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _labor,
             decoration: const InputDecoration(labelText: 'Labor per hour'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _markup,
             decoration: const InputDecoration(labelText: 'Default markup %'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _vat,
             decoration: const InputDecoration(
@@ -204,11 +209,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _failure,
             decoration: const InputDecoration(labelText: 'Default failure %'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _validity,
             decoration: const InputDecoration(labelText: 'Quote validity days'),
@@ -219,30 +226,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'Business profile',
             style: Theme.of(context).textTheme.titleMedium,
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _business,
             decoration: const InputDecoration(labelText: 'Name'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _street,
             decoration: const InputDecoration(labelText: 'Street'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _postal,
             decoration: const InputDecoration(labelText: 'Postal code'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _city,
             decoration: const InputDecoration(labelText: 'City'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _org,
             decoration: const InputDecoration(labelText: 'Org. number'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _phone,
             decoration: const InputDecoration(labelText: 'Phone'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _email,
             decoration: const InputDecoration(labelText: 'Email'),
@@ -254,20 +268,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               final markup = parseBasisPoints(_markup.text);
               final vat = parseBasisPoints(_vat.text);
               final failure = parseBasisPoints(_failure.text);
+              final electricity = parseMinor(_electricity.text);
+              final labor = parseMinor(_labor.text);
+              final validity = parsePositiveInt(_validity.text);
+              final currency = _currency.text.trim().toUpperCase();
+              if (electricity == null) {
+                setState(
+                  () => _message =
+                      'Enter the electricity price. Use 0 if you do not charge for power.',
+                );
+                return;
+              }
+              if (labor == null) {
+                setState(
+                  () => _message =
+                      'Enter the labor rate. Use 0 if you do not charge for labor.',
+                );
+                return;
+              }
               if (markup == null || vat == null || failure == null) {
                 setState(
                   () => _message = 'Markup, VAT, and failure must be numbers.',
                 );
                 return;
               }
+              if (!RegExp(r'^[A-Z]{3}$').hasMatch(currency)) {
+                setState(
+                  () => _message =
+                      'Enter a 3-letter currency code, such as SEK.',
+                );
+                return;
+              }
+              if (validity == null || validity < 1) {
+                setState(
+                  () => _message = 'Enter how many days a quote stays valid.',
+                );
+                return;
+              }
               await store.saveSettings(
                 WorkshopSettings(
                   setupCompleted: _setupCompleted,
-                  currencyCode: _currency.text.trim().isEmpty
-                      ? 'SEK'
-                      : _currency.text.trim().toUpperCase(),
-                  electricityMinorPerKwh: parseMinor(_electricity.text) ?? 0,
-                  laborMinorPerHour: parseMinor(_labor.text) ?? 0,
+                  currencyCode: currency,
+                  electricityMinorPerKwh: electricity,
+                  laborMinorPerHour: labor,
                   defaultMarkupBasisPoints: markup,
                   vatBasisPoints: vat,
                   defaultFailureBasisPoints: failure,
@@ -279,7 +322,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   phone: _phone.text.trim(),
                   email: _email.text.trim(),
                   nextQuoteNumber: _nextQuote,
-                  quoteValidityDays: parsePositiveInt(_validity.text) ?? 14,
+                  quoteValidityDays: validity,
                 ),
               );
               setState(() => _message = 'Settings saved.');

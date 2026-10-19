@@ -43,39 +43,87 @@ class PriceInput {
   final int quantity;
 }
 
+double _materialOne(MaterialUse material) {
+  if (material.grams <= 0 || material.pricePerKgMinor <= 0) {
+    return 0;
+  }
+  return material.grams / 1000 * material.pricePerKgMinor;
+}
+
+/// Rounds a money line. Values that overflow a double stay finite so a huge
+/// typed quantity cannot throw during a rebuild.
+int _roundMoney(num value) {
+  const limit = 9007199254740991;
+  if (value is double) {
+    if (value.isNaN) {
+      return 0;
+    }
+    if (value.isInfinite) {
+      return value.isNegative ? -limit : limit;
+    }
+  }
+  if (value.abs() > limit) {
+    return value.isNegative ? -limit : limit;
+  }
+  return value.round();
+}
+
 class PriceCalculator {
   const PriceCalculator();
 
   PriceBreakdown calculate(PriceInput input) {
     final quantity = input.quantity < 1 ? 1 : input.quantity;
-    final hours = input.printTimeSeconds / 3600;
+    final rawSeconds = input.printTimeSeconds < 0 ? 0 : input.printTimeSeconds;
+    final seconds = rawSeconds > 1000000000000 ? 1000000000000 : rawSeconds;
+    final watts = input.powerWatts < 0 ? 0 : input.powerWatts;
+    final hours = seconds / 3600;
+    final failureBasisPoints = input.failureBasisPoints < 0
+        ? 0
+        : input.failureBasisPoints;
+    final markupBasisPoints = input.markupBasisPoints < 0
+        ? 0
+        : input.markupBasisPoints;
+    final vatBasisPoints = input.vatBasisPoints < 0
+        ? 0
+        : input.vatBasisPoints;
+    final prepMinutes = input.prepMinutes < 0 ? 0 : input.prepMinutes;
+    final postMinutes = input.postMinutes < 0 ? 0 : input.postMinutes;
+    final laborMinorPerHour = input.laborMinorPerHour < 0
+        ? 0
+        : input.laborMinorPerHour;
+    final electricityMinorPerKwh = input.electricityMinorPerKwh < 0
+        ? 0
+        : input.electricityMinorPerKwh;
+    final purchasePriceMinor = input.purchasePriceMinor < 0
+        ? 0
+        : input.purchasePriceMinor;
 
     final materialOne = input.materials.fold<double>(
       0,
-      (sum, material) =>
-          sum + material.grams / 1000 * material.pricePerKgMinor,
+      (sum, material) => sum + _materialOne(material),
     );
-    final materialMinor = (materialOne * quantity).round();
+    final materialMinor = _roundMoney(materialOne * quantity);
 
-    final electricityOne =
-        input.powerWatts / 1000 * hours * input.electricityMinorPerKwh;
-    final electricityMinor = (electricityOne * quantity).round();
+    final electricityOne = watts / 1000 * hours * electricityMinorPerKwh;
+    final electricityMinor = _roundMoney(electricityOne * quantity);
 
-    final depreciationPerHour = input.lifetimeHours <= 0
+    final lifetime = input.lifetimeHours <= 0 ? 0.0 : input.lifetimeHours;
+    final depreciationPerHour = lifetime == 0
         ? 0.0
-        : input.purchasePriceMinor / input.lifetimeHours;
-    final machineOne =
-        hours * (depreciationPerHour + input.maintenanceMinorPerHour);
-    final machineMinor = (machineOne * quantity).round();
+        : purchasePriceMinor / lifetime;
+    final maintenance = input.maintenanceMinorPerHour < 0
+        ? 0
+        : input.maintenanceMinorPerHour;
+    final machineOne = hours * (depreciationPerHour + maintenance);
+    final machineMinor = _roundMoney(machineOne * quantity);
 
     final failureBase = materialMinor + electricityMinor + machineMinor;
-    final failureMinor = (failureBase * input.failureBasisPoints / 10000)
-        .round();
+    final failureMinor = _roundMoney(failureBase * failureBasisPoints / 10000);
 
-    final prepLaborMinor =
-        (input.prepMinutes / 60 * input.laborMinorPerHour).round();
-    final postLaborMinor =
-        (input.postMinutes / 60 * input.laborMinorPerHour * quantity).round();
+    final prepLaborMinor = _roundMoney(prepMinutes / 60 * laborMinorPerHour);
+    final postLaborMinor = _roundMoney(
+      postMinutes / 60 * laborMinorPerHour * quantity,
+    );
     final laborMinor = prepLaborMinor + postLaborMinor;
 
     final extrasMinor = input.extraMinors.fold<int>(0, (sum, cost) => sum + cost);
@@ -86,11 +134,11 @@ class PriceCalculator {
         failureMinor +
         laborMinor +
         extrasMinor;
-    final markupMinor = (costMinor * input.markupBasisPoints / 10000).round();
+    final markupMinor = _roundMoney(costMinor * markupBasisPoints / 10000);
     final netMinor = costMinor + markupMinor;
-    final vatMinor = (netMinor * input.vatBasisPoints / 10000).round();
+    final vatMinor = _roundMoney(netMinor * vatBasisPoints / 10000);
     final totalMinor = netMinor + vatMinor;
-    final perUnitMinor = (totalMinor / quantity).round();
+    final perUnitMinor = _roundMoney(totalMinor / quantity);
 
     return PriceBreakdown(
       materialMinor: materialMinor,

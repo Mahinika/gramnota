@@ -215,8 +215,8 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           return 'Enter the purchase price. Use 0 if you do not count machine wear.';
         }
         final life = parseNonNegativeDouble(_life.text);
-        if (life == null || life <= 0) {
-          return 'Enter the lifetime in hours.';
+        if (life == null) {
+          return 'Enter the lifetime in hours. Use 0 if you do not charge for machine wear.';
         }
         if (parseMinor(_maintenance.text) == null) {
           return 'Enter maintenance per hour. Use 0 if you have none.';
@@ -456,27 +456,33 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             decoration: const InputDecoration(labelText: 'Business name'),
             textCapitalization: TextCapitalization.words,
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _street,
             decoration: const InputDecoration(labelText: 'Street'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _postal,
             decoration: const InputDecoration(labelText: 'Postal code'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _city,
             decoration: const InputDecoration(labelText: 'City'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _org,
             decoration: const InputDecoration(labelText: 'Org. number'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _phone,
             decoration: const InputDecoration(labelText: 'Phone'),
             keyboardType: TextInputType.phone,
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _email,
             decoration: const InputDecoration(labelText: 'Email'),
@@ -520,11 +526,13 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             decoration: const InputDecoration(labelText: 'Default markup %'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _failure,
             decoration: const InputDecoration(labelText: 'Default failure %'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _vat,
             decoration: const InputDecoration(labelText: 'VAT %'),
@@ -542,6 +550,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             decoration: const InputDecoration(labelText: 'Currency'),
             textCapitalization: TextCapitalization.characters,
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _validity,
             decoration: const InputDecoration(labelText: 'Quote validity days'),
@@ -564,7 +573,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             decoration: const InputDecoration(labelText: 'Find a printer'),
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           if (matches.isEmpty)
             const Text('No printer with that name.')
           else
@@ -601,21 +610,28 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             controller: _printerName,
             decoration: const InputDecoration(labelText: 'Name'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _watts,
             decoration: const InputDecoration(labelText: 'Power W'),
             keyboardType: TextInputType.number,
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _price,
             decoration: const InputDecoration(labelText: 'Purchase price'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _life,
-            decoration: const InputDecoration(labelText: 'Lifetime hours'),
+            decoration: const InputDecoration(
+              labelText: 'Lifetime hours',
+              helperText: 'Use 0 if you do not charge for machine wear.',
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _maintenance,
             decoration: const InputDecoration(

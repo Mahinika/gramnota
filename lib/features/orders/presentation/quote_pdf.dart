@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
@@ -48,7 +45,7 @@ Future<void> shareQuotePdf({
         pw.Text('Quote ${order.quoteNumber}'),
         pw.Text(order.title),
         if (order.validUntil.isNotEmpty)
-          pw.Text('Valid until ${order.validUntil.substring(0, 10)}'),
+          pw.Text('Valid until ${formatIsoDate(order.validUntil)}'),
         if (customer != null) ...[
           pw.SizedBox(height: 8),
           pw.Text(customer.name),
@@ -56,6 +53,8 @@ Future<void> shareQuotePdf({
           if (customer.phone.isNotEmpty) pw.Text(customer.phone),
         ],
         pw.SizedBox(height: 16),
+        pw.Text('Prices exclude VAT.'),
+        pw.SizedBox(height: 8),
         for (final line in prints) ...[
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -75,7 +74,7 @@ Future<void> shareQuotePdf({
                   ],
                 ),
               ),
-              pw.Text(formatMoney(line.breakdown.totalMinor, currency)),
+              pw.Text(formatMoney(line.breakdown.netMinor, currency)),
             ],
           ),
           pw.SizedBox(height: 8),
@@ -84,10 +83,18 @@ Future<void> shareQuotePdf({
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
+            pw.Text('Price ex. VAT'),
+            pw.Text(formatMoney(order.breakdown.netMinor, currency)),
+          ],
+        ),
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
             pw.Text('VAT'),
             pw.Text(formatMoney(order.breakdown.vatMinor, currency)),
           ],
         ),
+        pw.Text('VAT is included in the total.'),
         pw.Divider(),
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -104,19 +111,23 @@ Future<void> shareQuotePdf({
         ),
         if (prints.length == 1)
           pw.Text(
-            '${formatMoney(prints.single.breakdown.perUnitMinor, currency)} per unit',
+            '${formatMoney(prints.single.breakdown.perUnitMinor, currency)} per unit, incl. VAT',
           ),
       ],
     ),
   );
   final bytes = await doc.save();
-  final dir = await getTemporaryDirectory();
-  final file = File('${dir.path}/quote-${order.quoteNumber}.pdf');
-  await file.writeAsBytes(bytes, flush: true);
   await SharePlus.instance.share(
     ShareParams(
-      files: [XFile(file.path)],
+      files: [
+        XFile.fromData(
+          bytes,
+          mimeType: 'application/pdf',
+          name: 'quote-${order.quoteNumber}.pdf',
+        ),
+      ],
       subject: 'Quote ${order.quoteNumber}',
     ),
   );
 }
+
