@@ -655,18 +655,15 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (!mounted) {
       return;
     }
-    final customerId = await _pickCustomerForQuote(customers);
-    if (customerId == null || !mounted) {
+    final resolvedCustomer = await pickCustomerId(
+      context,
+      store,
+      customers,
+      title: 'Save as quote',
+    );
+    if (resolvedCustomer == null || !mounted) {
       setState(() => _importNote = 'No plate was imported.');
       return;
-    }
-    var resolvedCustomer = customerId;
-    if (customerId == 'new') {
-      final created = await _createCustomer(store);
-      if (created == null || !mounted) {
-        return;
-      }
-      resolvedCustomer = created.id;
     }
     setState(() => _saving = true);
     try {
