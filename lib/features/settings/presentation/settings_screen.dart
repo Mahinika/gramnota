@@ -199,8 +199,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
     _currency.text = settings.currencyCode;
-    _electricity.text = formatMinorAmount(settings.electricityMinorPerKwh);
-    _labor.text = formatMinorAmount(settings.laborMinorPerHour);
+    _electricity.text = formatMinorField(settings.electricityMinorPerKwh);
+    _labor.text = formatMinorField(settings.laborMinorPerHour);
     _markup.text = basisPointsLabel(settings.defaultMarkupBasisPoints);
     _vat.text = basisPointsLabel(settings.vatBasisPoints);
     _failure.text = basisPointsLabel(settings.defaultFailureBasisPoints);

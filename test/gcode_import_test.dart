@@ -364,7 +364,7 @@ void main() {
     expect(_field(tester, 'Title'), 'Benchy');
     expect(_field(tester, 'Hours'), '1');
     expect(_field(tester, 'Minutes'), '5');
-    expect(_field(tester, 'Grams'), '12.5');
+    expect(_field(tester, 'Grams'), '12,5');
     expect(find.text('Import G-code'), findsOneWidget);
     expect(find.text('Save as product'), findsOneWidget);
   });

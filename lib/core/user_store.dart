@@ -111,12 +111,60 @@ class UserStore {
   }
 
   /// Records a deposit without rewriting status or stock fields.
+  ///
+  /// [depositAt] is the receipt date. An empty string clears it, which is
+  /// what a zero deposit does.
   Future<void> saveOrderDeposit({
     required String orderId,
     required int depositMinor,
+    required String depositAt,
   }) {
     final amount = depositMinor < 0 ? 0 : depositMinor;
-    return _updateOrderFields(orderId, {'depositMinor': amount});
+    return _updateOrderFields(orderId, {
+      'depositMinor': amount,
+      'depositAt': amount == 0 ? '' : depositAt,
+    });
+  }
+
+  /// Writes a catalog id onto one print without rewriting status or stock.
+  Future<void> stampLineProductId({
+    required String orderId,
+    required String lineId,
+    required String productId,
+  }) {
+    final ref = orders.doc(orderId);
+    return db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(ref);
+      if (!snapshot.exists) {
+        return;
+      }
+      final raw = snapshot.data();
+      if (raw == null) {
+        return;
+      }
+      final order = PrintOrder.fromJson({...raw, 'id': orderId});
+      final prints = orderPrints(order);
+      var found = false;
+      final next = <QuoteLine>[];
+      for (final line in prints) {
+        if (line.id == lineId) {
+          found = true;
+          next.add(line.copyWith(productId: productId));
+        } else {
+          next.add(line);
+        }
+      }
+      if (!found) {
+        return;
+      }
+      final updated = orderWithPrints(order, next);
+      transaction.update(ref, {
+        'lines': [
+          for (final line in updated.lines) line.toJson(),
+        ],
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      });
+    });
   }
 
   Future<void> _updateOrderFields(String orderId, Map<String, Object?> fields) {

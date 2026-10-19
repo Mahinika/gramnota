@@ -79,6 +79,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   final _rows = <_FilamentRow>[_FilamentRow()];
   final _extras = <_ExtraRow>[];
   String? _printerId;
+  String _productId = '';
   String _sourceUrl = '';
   String _profileTitle = '';
   String? _importNote;
@@ -357,14 +358,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _profileTitle = profile.title;
   }
 
-  String _gramsField(double grams) {
-    if (grams == grams.roundToDouble()) {
-      return grams.round().toString();
-    }
-    var text = grams.toStringAsFixed(3);
-    text = text.replaceFirst(RegExp(r'0+$'), '');
-    return text.replaceFirst(RegExp(r'\.$'), '');
-  }
+  String _gramsField(double grams) => formatDecimalField(grams, fractionDigits: 3);
 
   bool _namesMatch(String saved, String incoming) {
     final left = saved.trim().toLowerCase();
@@ -700,6 +694,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       if (mounted) {
         context.go('/orders/${order.id}');
       }
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _importNote =
+              'Could not save the quote. Check the connection and try again.',
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -761,17 +762,29 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       return;
     }
     final line = _captureLine('draft', input, breakdown, spools);
+    final existing = _productId.trim();
     final product = productFromLine(
       line,
-      id: const Uuid().v4(),
+      id: existing.isEmpty ? const Uuid().v4() : existing,
       now: DateTime.now().toUtc(),
     );
-    await store.saveProduct(product);
+    try {
+      await store.saveProduct(product);
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _importNote =
+              'Could not save the product. Check the connection and try again.',
+        );
+      }
+      return;
+    }
     if (mounted) {
-      setState(
-        () => _importNote =
-            'Saved “${product.name}” as a product. $productPriceExplanation',
-      );
+      setState(() {
+        _productId = product.id;
+        _importNote =
+            'Saved “${product.name}” as a product. $productPriceExplanation';
+      });
     }
   }
 
@@ -882,6 +895,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         : basisPointsLabel(settings.vatBasisPoints);
     _mute = false;
     _printerId = null;
+    _productId = '';
     _sourceUrl = '';
     _profileTitle = '';
     _importNote = null;
@@ -917,6 +931,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _vat.text = basisPointsLabel(line.vatBasisPoints);
     _mute = false;
     _printerId = line.printerId.isEmpty ? null : line.printerId;
+    _productId = line.productId;
     _sourceUrl = line.sourceUrl;
     _profileTitle = line.sourceProfileTitle;
     _importNote = null;
@@ -954,7 +969,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         line.extras.map((extra) {
           final row = _ExtraRow();
           row.name.text = extra.name;
-          row.cost.text = formatMinorAmount(extra.costMinor);
+          row.cost.text = formatMinorField(extra.costMinor);
           row.cost.addListener(_refresh);
           return row;
         }),
@@ -969,6 +984,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   ) {
     return QuoteLine(
       id: id,
+      productId: _productId,
       title: _title.text.trim(),
       quantity: input.quantity,
       printerId: _printerId ?? '',
@@ -1068,6 +1084,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       if (mounted) {
         context.go('/orders/${order.id}');
       }
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _importNote =
+              'Could not save the quote. Check the connection and try again.',
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -1127,6 +1150,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       await store.saveOrder(updated);
       if (mounted) {
         context.go('/orders/${updated.id}');
+      }
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _importNote =
+              'Could not save the print. Check the connection and try again.',
+        );
       }
     } finally {
       if (mounted) {

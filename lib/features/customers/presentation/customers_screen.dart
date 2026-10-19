@@ -164,6 +164,8 @@ class _CustomerListCard extends StatelessWidget {
               children: [
                 Text(
                   customer.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleMedium,
                 ),
                 if (subtitle.isNotEmpty) ...[
@@ -291,7 +293,17 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
       email: _email.text.trim(),
       notes: _notes.text.trim(),
     );
-    await store.saveCustomer(customer);
+    try {
+      await store.saveCustomer(customer);
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _error =
+              'Could not save the customer. Check the connection and try again.',
+        );
+      }
+      return;
+    }
     if (mounted) {
       context.go('/customers/${customer.id}');
     }

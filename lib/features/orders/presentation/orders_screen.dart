@@ -82,6 +82,7 @@ class OrdersScreen extends ConsumerStatefulWidget {
 class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   OrderStatus? _filter;
   var _inProgressOnly = false;
+  var _overdueOnly = false;
   final _search = TextEditingController();
 
   @override
@@ -125,6 +126,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           final query = _search.text.trim().toLowerCase();
           final visible = sorted.where((order) {
+            if (_overdueOnly && !quoteIsExpired(order, DateTime.now())) {
+              return false;
+            }
             if (_inProgressOnly && !statusIsInProgress(order.status)) {
               return false;
             }
@@ -161,7 +165,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 ),
               ),
               SizedBox(
-                height: 56,
+                height: 72,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -170,11 +174,14 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                       padding: const EdgeInsets.only(right: 8),
                       child: FilterChip(
                         label: const Text('All'),
-                        selected: _filter == null && !_inProgressOnly,
+                        selected:
+                            _filter == null && !_inProgressOnly && !_overdueOnly,
                         showCheckmark: false,
+                        materialTapTargetSize: MaterialTapTargetSize.padded,
                         onSelected: (_) => setState(() {
                           _filter = null;
                           _inProgressOnly = false;
+                          _overdueOnly = false;
                         }),
                       ),
                     ),
@@ -184,10 +191,28 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                         label: const Text('In progress'),
                         selected: _inProgressOnly,
                         showCheckmark: false,
+                        materialTapTargetSize: MaterialTapTargetSize.padded,
                         onSelected: (_) => setState(() {
                           _inProgressOnly = !_inProgressOnly;
                           if (_inProgressOnly) {
                             _filter = null;
+                            _overdueOnly = false;
+                          }
+                        }),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: const Text('Overdue'),
+                        selected: _overdueOnly,
+                        showCheckmark: false,
+                        materialTapTargetSize: MaterialTapTargetSize.padded,
+                        onSelected: (_) => setState(() {
+                          _overdueOnly = !_overdueOnly;
+                          if (_overdueOnly) {
+                            _filter = null;
+                            _inProgressOnly = false;
                           }
                         }),
                       ),
@@ -199,9 +224,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                           label: Text(orderStatusLabel(status)),
                           selected: _filter == status,
                           showCheckmark: false,
+                          materialTapTargetSize: MaterialTapTargetSize.padded,
                           onSelected: (_) => setState(() {
                             _filter = status;
                             _inProgressOnly = false;
+                            _overdueOnly = false;
                           }),
                         ),
                       ),
@@ -302,10 +329,20 @@ class _OrderListCard extends StatelessWidget {
               ),
               if (expired) ...[
                 const SizedBox(width: 6),
-                Text(
-                  'Expired',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: scheme.error,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.errorContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Overdue',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: scheme.onErrorContainer,
+                    ),
                   ),
                 ),
               ],
@@ -496,9 +533,13 @@ class OrderDetailScreen extends ConsumerWidget {
                     if (order.validUntil.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
-                        'Valid until ${formatIsoDate(order.validUntil)}',
+                        quoteIsExpired(order, DateTime.now())
+                            ? 'Overdue · valid until ${formatIsoDate(order.validUntil)}'
+                            : 'Valid until ${formatIsoDate(order.validUntil)}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: quoteIsExpired(order, DateTime.now())
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -746,14 +787,16 @@ class _DepositField extends StatefulWidget {
 
 class _DepositFieldState extends State<_DepositField> {
   late final TextEditingController _amount;
+  DateTime? _date;
   var _saving = false;
 
   @override
   void initState() {
     super.initState();
     _amount = TextEditingController(
-      text: formatMinorAmount(widget.order.depositMinor),
+      text: formatMinorField(widget.order.depositMinor),
     );
+    _date = calendarDayOf(widget.order.depositAt);
   }
 
   @override
@@ -761,7 +804,11 @@ class _DepositFieldState extends State<_DepositField> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.order.id != widget.order.id ||
         oldWidget.order.depositMinor != widget.order.depositMinor) {
-      _amount.text = formatMinorAmount(widget.order.depositMinor);
+      _amount.text = formatMinorField(widget.order.depositMinor);
+    }
+    if (oldWidget.order.id != widget.order.id ||
+        oldWidget.order.depositAt != widget.order.depositAt) {
+      _date = calendarDayOf(widget.order.depositAt);
     }
   }
 
@@ -769,6 +816,31 @@ class _DepositFieldState extends State<_DepositField> {
   void dispose() {
     _amount.dispose();
     super.dispose();
+  }
+
+  String _dateLabel() {
+    final date = _date;
+    if (date == null) {
+      return 'Deposit date';
+    }
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date ?? now,
+      firstDate: DateTime(now.year - 10),
+      lastDate: DateTime(now.year + 2),
+      helpText: 'Deposit received',
+    );
+    if (picked == null) {
+      return;
+    }
+    setState(() => _date = DateTime(picked.year, picked.month, picked.day));
   }
 
   Future<void> _save() async {
@@ -779,7 +851,15 @@ class _DepositFieldState extends State<_DepositField> {
       );
       return;
     }
-    if (parsed == widget.order.depositMinor || _saving) {
+    if (_saving) {
+      return;
+    }
+    final today = DateTime.now();
+    final day = parsed <= 0
+        ? null
+        : (_date ?? DateTime(today.year, today.month, today.day));
+    final stamp = day == null ? '' : calendarDayStamp(day);
+    if (parsed == widget.order.depositMinor && stamp == widget.order.depositAt) {
       return;
     }
     setState(() => _saving = true);
@@ -787,7 +867,21 @@ class _DepositFieldState extends State<_DepositField> {
       await widget.store.saveOrderDeposit(
         orderId: widget.order.id,
         depositMinor: parsed,
+        depositAt: stamp,
       );
+      if (mounted) {
+        setState(() => _date = day);
+      }
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not save the deposit. Check the connection and try again.',
+            ),
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -814,10 +908,19 @@ class _DepositFieldState extends State<_DepositField> {
             labelText: 'Deposit paid (${order.currencyCode})',
             helperText: settled
                 ? 'The order is marked Paid. The deposit is what was paid before that.'
-                : 'Optional. Still to pay is the quote total minus this deposit.',
+                : 'Optional. Home counts this amount in the deposit month, and the rest when the order is printed or paid.',
           ),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onSubmitted: (_) => _save(),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed: _pickDate,
+            icon: const Icon(Icons.event_outlined),
+            label: Text(_dateLabel()),
+          ),
         ),
         const SizedBox(height: 8),
         Row(
@@ -877,6 +980,16 @@ class _OrderNoteFieldState extends State<_OrderNoteField> {
     setState(() => _saving = true);
     try {
       await widget.store.saveOrderNote(orderId: widget.order.id, note: next);
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Could not save the note. Check the connection and try again.',
+            ),
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _saving = false);
@@ -960,6 +1073,7 @@ class _PrintLineTile extends StatelessWidget {
                   onPressed: () => saveLineAsProduct(
                     context: context,
                     store: store,
+                    order: order,
                     line: line,
                   ),
                   icon: const Icon(Icons.bookmark_add_outlined),
