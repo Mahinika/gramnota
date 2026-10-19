@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'emulator_session_stub.dart'
-    if (dart.library.html) 'emulator_session_web.dart';
+    if (dart.library.js_interop) 'emulator_session_web.dart';
 
 /// Compile-time flag. Pass `--dart-define=USE_FIREBASE_EMULATOR=true`.
 /// Production builds leave this false and never touch the emulators.
