@@ -87,7 +87,7 @@ Future<UpdatePromptResult> promptForUpdate(
       return UpdatePromptResult(message: manual ? message : null);
     }
     if (!context.mounted) {
-      return _offerUpdate(
+      return await _offerUpdate(
         host: _navigatorContext(navigator),
         navigator: navigator,
         artifact: artifact,
@@ -96,7 +96,7 @@ Future<UpdatePromptResult> promptForUpdate(
         l10n: l10n,
       );
     }
-    return _offerUpdate(
+    return await _offerUpdate(
       host: context,
       navigator: navigator,
       artifact: artifact,
