@@ -80,7 +80,7 @@ _PrintOrder _$PrintOrderFromJson(Map<String, dynamic> json) => _PrintOrder(
   quoteNumber: (json['quoteNumber'] as num).toInt(),
   customerId: json['customerId'] as String? ?? '',
   title: json['title'] as String,
-  status: $enumDecode(_$OrderStatusEnumMap, json['status']),
+  status: orderStatusFromJson(json['status']),
   validUntil: json['validUntil'] as String,
   quantity: (json['quantity'] as num).toInt(),
   printerId: json['printerId'] as String? ?? '',
@@ -107,6 +107,8 @@ _PrintOrder _$PrintOrderFromJson(Map<String, dynamic> json) => _PrintOrder(
       ) ??
       const <String, double>{},
   stockWarning: json['stockWarning'] as String? ?? '',
+  depositMinor: (json['depositMinor'] as num?)?.toInt() ?? 0,
+  revenueAt: json['revenueAt'] as String? ?? '',
   sourceUrl: json['sourceUrl'] as String? ?? '',
   sourceModelTitle: json['sourceModelTitle'] as String? ?? '',
   sourceProfileTitle: json['sourceProfileTitle'] as String? ?? '',
@@ -126,7 +128,7 @@ Map<String, dynamic> _$PrintOrderToJson(_PrintOrder instance) =>
       'quoteNumber': instance.quoteNumber,
       'customerId': instance.customerId,
       'title': instance.title,
-      'status': _$OrderStatusEnumMap[instance.status]!,
+      'status': orderStatusToJson(instance.status),
       'validUntil': instance.validUntil,
       'quantity': instance.quantity,
       'printerId': instance.printerId,
@@ -143,6 +145,8 @@ Map<String, dynamic> _$PrintOrderToJson(_PrintOrder instance) =>
       'stockDeducted': instance.stockDeducted,
       'deductedGrams': instance.deductedGrams,
       'stockWarning': instance.stockWarning,
+      'depositMinor': instance.depositMinor,
+      'revenueAt': instance.revenueAt,
       'sourceUrl': instance.sourceUrl,
       'sourceModelTitle': instance.sourceModelTitle,
       'sourceProfileTitle': instance.sourceProfileTitle,
@@ -151,11 +155,3 @@ Map<String, dynamic> _$PrintOrderToJson(_PrintOrder instance) =>
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,
     };
-
-const _$OrderStatusEnumMap = {
-  OrderStatus.quote: 'quote',
-  OrderStatus.accepted: 'accepted',
-  OrderStatus.printed: 'printed',
-  OrderStatus.delivered: 'delivered',
-  OrderStatus.cancelled: 'cancelled',
-};

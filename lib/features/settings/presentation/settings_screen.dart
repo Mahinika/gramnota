@@ -164,6 +164,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _phone = TextEditingController();
   final _email = TextEditingController();
   final _validity = TextEditingController(text: '14');
+  final _lowStock = TextEditingController(text: '100');
   var _loaded = false;
   var _setupCompleted = true;
   var _nextQuote = 1;
@@ -186,6 +187,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _phone,
       _email,
       _validity,
+      _lowStock,
     ]) {
       controller.dispose();
     }
@@ -210,6 +212,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _phone.text = settings.phone;
     _email.text = settings.email;
     _validity.text = settings.quoteValidityDays.toString();
+    final low = settings.defaultLowStockGrams;
+    _lowStock.text = low == low.roundToDouble()
+        ? low.round().toString()
+        : low.toString();
     _nextQuote = settings.nextQuoteNumber;
     _setupCompleted = settings.setupCompleted;
     _loaded = true;
@@ -278,6 +284,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             decoration: const InputDecoration(labelText: 'Quote validity days'),
             keyboardType: TextInputType.number,
           ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _lowStock,
+            decoration: const InputDecoration(
+              labelText: 'Low stock warning (g)',
+              helperText:
+                  'Spools can use this workshop default or their own threshold.',
+            ),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
           const SizedBox(height: 16),
           Text(
             'Business profile',
@@ -328,6 +344,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               final electricity = parseMinor(_electricity.text);
               final labor = parseMinor(_labor.text);
               final validity = parsePositiveInt(_validity.text);
+              final lowStock = parseNonNegativeDouble(_lowStock.text);
               final currency = _currency.text.trim().toUpperCase();
               if (electricity == null) {
                 setState(
@@ -362,6 +379,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 );
                 return;
               }
+              if (lowStock == null) {
+                setState(
+                  () => _message =
+                      'Enter the low-stock warning in grams. Use 0 to warn only when a spool is empty.',
+                );
+                return;
+              }
               await store.saveSettings(
                 WorkshopSettings(
                   setupCompleted: _setupCompleted,
@@ -380,6 +404,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   email: _email.text.trim(),
                   nextQuoteNumber: _nextQuote,
                   quoteValidityDays: validity,
+                  defaultLowStockGrams: lowStock,
                 ),
               );
               setState(() => _message = 'Settings saved.');

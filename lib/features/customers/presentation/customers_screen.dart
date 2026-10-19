@@ -12,6 +12,7 @@ import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../orders/data/orders_providers.dart';
 import '../../orders/domain/print_order.dart';
+import '../../orders/presentation/order_status_style.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
 import '../domain/customer.dart';
@@ -580,13 +581,7 @@ class _CustomerOrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final statusColor = switch (order.status) {
-      OrderStatus.quote => scheme.secondary,
-      OrderStatus.accepted => scheme.primary,
-      OrderStatus.printed => scheme.tertiary,
-      OrderStatus.delivered => scheme.primary,
-      OrderStatus.cancelled => scheme.error,
-    };
+    final statusColor = orderStatusColor(order.status, scheme);
     return TappableListCard(
       onTap: onTap,
       child: Column(

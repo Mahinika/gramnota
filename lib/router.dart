@@ -9,6 +9,7 @@ import 'features/auth/presentation/auth_screens.dart';
 import 'features/catalog/presentation/products_screen.dart';
 import 'features/customers/presentation/customers_screen.dart';
 import 'features/filaments/presentation/filaments_screen.dart';
+import 'features/orders/presentation/dashboard_screen.dart';
 import 'features/orders/presentation/orders_screen.dart';
 import 'features/pricing/presentation/calculator_screen.dart';
 import 'features/printers/presentation/printers_screen.dart';
@@ -51,6 +52,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           return AppShell(navigationShell: navigationShell);
         },
         branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (_, _) => const DashboardScreen(),
+              ),
+            ],
+          ),
           StatefulShellBranch(
             routes: [
               GoRoute(

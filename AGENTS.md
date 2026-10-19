@@ -21,7 +21,7 @@ lib/
 
 Features: `pricing`, `orders`, `customers`, `filaments`, `printers`, `settings`, `auth`, `import`, `sharing`, `catalog`.
 
-Navigation is a `StatefulShellRoute` in `router.dart`: Calculator, Orders, Customers, Filament, More (products, printers, settings, inbox). `AppShell` uses a navigation rail at width >= 840 and a bottom bar otherwise.
+Navigation is a `StatefulShellRoute` in `router.dart`: Home, Calculator, Orders, Customers, Filament, More (products, printers, settings, inbox). `AppShell` uses a navigation rail at width >= 840 and a bottom bar otherwise. Home is the month dashboard. After workshop setup the app still opens the calculator.
 
 Startup gates run before the shell: `initialLocation` `/starting`, then `resolveRedirect` and `workshopRedirect` in `lib/core/app_redirect.dart`. Unsigned users go to `/sign-in`; unconfigured Firebase to `/setup`; unknown or unfinished workshop setup to `/starting` or `/workshop-setup`. Pre-app screens use `GateScaffold`. `SetupFinished` bypasses setup only for the uid that just saved, via `setupBypassForUid`.
 
@@ -47,7 +47,7 @@ A quote stores each print as a `QuoteLine`. `PriceCalculator` prices one line. `
 
 Persisted models are Freezed + `json_serializable`, with `explicit_to_json` in `build.yaml`. Do not hand-edit `*.freezed.dart` or `*.g.dart`. Ids are client UUIDs, except inbox documents created by Firestore. Timestamps are UTC ISO-8601 strings. `UserStore._watch` injects the document id and skips a document that fails to decode.
 
-`OrderStock.allocateQuoteNumber` increments `nextQuoteNumber` in a transaction. Stock moves only when status enters or leaves `printed` / `delivered` (`statusHoldsStock`). A short spool still deducts what remains and stores `stockWarning` plus `deductedGrams` on the order.
+`OrderStock.allocateQuoteNumber` increments `nextQuoteNumber` in a transaction. Stock moves only when status enters or leaves `printed` / `paid` (`statusHoldsStock`). Printed and Paid both hold stock, so moving between them does not deduct again. Leaving them returns `deductedGrams`. A short spool still deducts what remains and stores `stockWarning` plus `deductedGrams` on the order. `revenueAt` is stamped the first time stock is taken and cleared when stock comes back. Older `delivered` documents decode as `paid`. `depositMinor` is an optional amount already paid.
 
 Inbox is the only cross-user write. The payload is a JSON string (`payloadJson`), not a nested map. Keep `firestore.rules` in step with any new field the create rule requires.
 
@@ -73,7 +73,7 @@ Screens are `ConsumerWidget` or `ConsumerStatefulWidget` and read `userStoreProv
 
 List rows use `TappableListCard` (`lib/core/menu_card.dart`). Section titles, label/value rows, and dividers use `SectionHeading`, `DetailRow`, and `SectionRule` in `lib/core/section_layout.dart`. Shared Firestore streams for orders, customers, and settings live in `lib/features/orders/data/orders_providers.dart`. Import that file. Do not import a screen only to reach a provider.
 
-Orders list: search, status chips, and an In progress filter. Filament list: search, a Low stock filter, and standard spools in a bottom sheet (`common_spools.dart`). Customers list shows `Customer.initials` and quote counts. Wide calculator layouts (width >= 840) put the price breakdown in a second column, with padding beside the divider. Recent quotes sit under the price, not inside the form.
+Orders list: search, status chips (Quote, Sent, Accepted, Printed, Paid, Declined, Cancelled), and an In progress filter. Filament list: search, a Low stock filter, and standard spools in a bottom sheet (`common_spools.dart`). A spool is low at its own threshold, or at `WorkshopSettings.defaultLowStockGrams` when `lowStockUsesDefault` is set. Customers list shows `Customer.initials` and quote counts. Wide calculator layouts (width >= 840) put the price breakdown in a second column, with padding beside the divider. Recent quotes sit under the price, not inside the form. Home aggregates printed and paid orders for the selected local month (`buildDashboard`).
 
 A new quote picks its customer on the calculator before save. The same sheet is `pickCustomerId` in `lib/features/customers/presentation/customer_quote_picker.dart` (search, no customer, new customer). Order detail uses it to link or change the customer. An empty printer or spool list on the calculator shows a setup card with a route to that screen.
 
@@ -87,6 +87,11 @@ The page is an invoice: workshop and bill-to side by side, quote number with iss
 
 - `test/price_calculator_test.dart` — pricing math
 - `test/order_stock_test.dart` — quote numbers and stock, via `fake_cloud_firestore`
+- `test/order_status_test.dart` — status migration and stock explanations
+- `test/dashboard_test.dart` — month totals, VAT, and low spools
+- `test/stock_warning_test.dart` — quote coverage against accepted orders
+- `test/dashboard_widget_test.dart` — dashboard and status chips
+- `test/plate_quote_test.dart` — multi-plate import
 - `test/link_import_test.dart` — importers with a fake fetcher
 - `test/widget_test.dart` — breakdown card
 - `test/workshop_setup_test.dart` — setup flag on old settings, `resolveRedirect`, and `setupBypassForUid`

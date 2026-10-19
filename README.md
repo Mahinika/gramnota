@@ -2,7 +2,7 @@
 
 Gramnota works out a sale price for a 3D print. It runs as an Android app and as a Windows desktop app from the same Flutter project.
 
-A quote can include filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT. One quote can hold several different prints, with one total and one stock deduction. Customers, filament spools, and printers stay with the signed-in user. Marking an order printed takes filament out of stock. A PDF quote can be shared from the order.
+A quote can include filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT. One quote can hold several different prints, with one total and one stock deduction. Customers, filament spools, and printers stay with the signed-in user. Marking an order Printed or Paid takes filament out of stock once. Cancelling or moving it back before Printed puts those grams back. A PDF quote can be shared from the order.
 
 ## Firebase
 
@@ -64,9 +64,9 @@ Paste a link, or on Android share it into the app.
 
 ## G-code and 3MF
 
-On the calculator, **Import G-code** reads a `.gcode` or `.3mf` file. Gramnota scans the start and end of the file for slicer comments, so a large toolpath is not loaded into memory. PrusaSlicer, OrcaSlicer, Bambu Studio, Cura, and Creality Print supply print time and filament grams, including one row per extruder when the file lists them. A `.3mf` is used when it contains sliced G-code or plate metadata (Bambu Studio and OrcaSlicer write those into the archive). The sale price still comes from your spools.
+On the calculator, **Import G-code** reads a `.gcode` or `.3mf` file. Gramnota scans the start and end of the file for slicer comments, so a large toolpath is not loaded into memory. PrusaSlicer, OrcaSlicer, Bambu Studio, Cura, and Creality Print supply print time and filament grams, including one row per extruder when the file lists them. A `.3mf` is used when it contains sliced G-code or plate metadata (Bambu Studio and OrcaSlicer write those into the archive). When that file has several plates, Gramnota asks whether to import all of them as separate prints on the quote, or to fill the form from one plate. The sale price still comes from your spools.
 
-On Android you can share a `.gcode` or `.3mf` file into Gramnota. It opens on the calculator.
+On Android you can share a link, or a file whose type is G-code or 3MF, into Gramnota. It opens on the calculator. Gramnota does not register for every `application/octet-stream` share. Android does not reliably filter those shares by file name (the path is an extra, not the intent data), so a broad binary type would offer Gramnota for unrelated files. File managers that only advertise `application/octet-stream` will not list Gramnota; share the file as G-code or 3MF, or import it from the calculator.
 
 ## Duplicate a quote
 
@@ -75,3 +75,23 @@ On a quote, **Duplicate as new quote** copies the prints, the customer, and the 
 ## Product catalog
 
 **More → Products** stores a print you quote again: time, filaments, printer, labor minutes, extras, and percents. Save one from the calculator (**Save as product**) or from a print on a quote. **Add from catalog** on the calculator, or **Add product** on a quote, inserts it and prices filament, electricity, and machine wear from the spools, printer, and workshop rates you have at that moment. Markup, failure, and VAT stay as saved on the product.
+
+## Quote status
+
+An order moves Quote → Sent → Accepted → Printed → Paid. Declined and Cancelled are the other exits. The order list has a chip for each status, plus All and In progress (everything that is not Paid, Declined, or Cancelled).
+
+Filament leaves the spool when the order first becomes Printed or Paid. Changing Printed to Paid does not take filament again. Cancelling, declining, or moving the order back before Printed returns the grams that were actually taken, including when the spool was short. Older orders stored as Delivered open as Paid, with their stock and totals unchanged.
+
+A deposit is optional. Until the order is Paid, the quote shows what is still to pay.
+
+A Quote or Sent order shows Expired the day after its valid-until date.
+
+## Home
+
+**Home** is the month view. Printed and Paid orders in that month count as revenue (incl. VAT and excl. VAT), cost, and profit. Profit is revenue excl. VAT minus cost. The month follows the device calendar, so an order just before local midnight stays in that month. Sent and Accepted quotes are an open pipeline and are not limited to the month. The page also lists filament grams by material, top customers, top products, and spools at or under their warning threshold.
+
+## Stock warnings
+
+Settings has a workshop low-stock warning, 100 g unless you change it. A spool can follow that default or keep its own threshold. The filament list and Home mark a spool that is at or under the threshold.
+
+On a quote, Gramnota warns when the chosen spools cannot cover grams times quantity, plus the same sum on other Accepted quotes that have not taken stock yet. The warning is shown before the order is marked Printed. You can still print it; a short spool only deducts what is left.

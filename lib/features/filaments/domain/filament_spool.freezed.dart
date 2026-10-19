@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FilamentSpool {
 
- String get id; String get brand; String get material; String get colorHex; double get diameterMm; double get spoolWeightGrams; double get remainingGrams; int get pricePerSpoolMinor; double get lowStockGrams; String get notes;
+ String get id; String get brand; String get material; String get colorHex; double get diameterMm; double get spoolWeightGrams; double get remainingGrams; int get pricePerSpoolMinor; double get lowStockGrams; bool get lowStockUsesDefault; String get notes;
 /// Create a copy of FilamentSpool
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $FilamentSpoolCopyWith<FilamentSpool> get copyWith => _$FilamentSpoolCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FilamentSpool&&(identical(other.id, id) || other.id == id)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.material, material) || other.material == material)&&(identical(other.colorHex, colorHex) || other.colorHex == colorHex)&&(identical(other.diameterMm, diameterMm) || other.diameterMm == diameterMm)&&(identical(other.spoolWeightGrams, spoolWeightGrams) || other.spoolWeightGrams == spoolWeightGrams)&&(identical(other.remainingGrams, remainingGrams) || other.remainingGrams == remainingGrams)&&(identical(other.pricePerSpoolMinor, pricePerSpoolMinor) || other.pricePerSpoolMinor == pricePerSpoolMinor)&&(identical(other.lowStockGrams, lowStockGrams) || other.lowStockGrams == lowStockGrams)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FilamentSpool&&(identical(other.id, id) || other.id == id)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.material, material) || other.material == material)&&(identical(other.colorHex, colorHex) || other.colorHex == colorHex)&&(identical(other.diameterMm, diameterMm) || other.diameterMm == diameterMm)&&(identical(other.spoolWeightGrams, spoolWeightGrams) || other.spoolWeightGrams == spoolWeightGrams)&&(identical(other.remainingGrams, remainingGrams) || other.remainingGrams == remainingGrams)&&(identical(other.pricePerSpoolMinor, pricePerSpoolMinor) || other.pricePerSpoolMinor == pricePerSpoolMinor)&&(identical(other.lowStockGrams, lowStockGrams) || other.lowStockGrams == lowStockGrams)&&(identical(other.lowStockUsesDefault, lowStockUsesDefault) || other.lowStockUsesDefault == lowStockUsesDefault)&&(identical(other.notes, notes) || other.notes == notes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,brand,material,colorHex,diameterMm,spoolWeightGrams,remainingGrams,pricePerSpoolMinor,lowStockGrams,notes);
+int get hashCode => Object.hash(runtimeType,id,brand,material,colorHex,diameterMm,spoolWeightGrams,remainingGrams,pricePerSpoolMinor,lowStockGrams,lowStockUsesDefault,notes);
 
 @override
 String toString() {
-  return 'FilamentSpool(id: $id, brand: $brand, material: $material, colorHex: $colorHex, diameterMm: $diameterMm, spoolWeightGrams: $spoolWeightGrams, remainingGrams: $remainingGrams, pricePerSpoolMinor: $pricePerSpoolMinor, lowStockGrams: $lowStockGrams, notes: $notes)';
+  return 'FilamentSpool(id: $id, brand: $brand, material: $material, colorHex: $colorHex, diameterMm: $diameterMm, spoolWeightGrams: $spoolWeightGrams, remainingGrams: $remainingGrams, pricePerSpoolMinor: $pricePerSpoolMinor, lowStockGrams: $lowStockGrams, lowStockUsesDefault: $lowStockUsesDefault, notes: $notes)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $FilamentSpoolCopyWith<$Res>  {
   factory $FilamentSpoolCopyWith(FilamentSpool value, $Res Function(FilamentSpool) _then) = _$FilamentSpoolCopyWithImpl;
 @useResult
 $Res call({
- String id, String brand, String material, String colorHex, double diameterMm, double spoolWeightGrams, double remainingGrams, int pricePerSpoolMinor, double lowStockGrams, String notes
+ String id, String brand, String material, String colorHex, double diameterMm, double spoolWeightGrams, double remainingGrams, int pricePerSpoolMinor, double lowStockGrams, bool lowStockUsesDefault, String notes
 });
 
 
@@ -65,7 +65,7 @@ class _$FilamentSpoolCopyWithImpl<$Res>
 
 /// Create a copy of FilamentSpool
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? brand = null,Object? material = null,Object? colorHex = null,Object? diameterMm = null,Object? spoolWeightGrams = null,Object? remainingGrams = null,Object? pricePerSpoolMinor = null,Object? lowStockGrams = null,Object? notes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? brand = null,Object? material = null,Object? colorHex = null,Object? diameterMm = null,Object? spoolWeightGrams = null,Object? remainingGrams = null,Object? pricePerSpoolMinor = null,Object? lowStockGrams = null,Object? lowStockUsesDefault = null,Object? notes = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,brand: null == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
@@ -76,7 +76,8 @@ as double,spoolWeightGrams: null == spoolWeightGrams ? _self.spoolWeightGrams : 
 as double,remainingGrams: null == remainingGrams ? _self.remainingGrams : remainingGrams // ignore: cast_nullable_to_non_nullable
 as double,pricePerSpoolMinor: null == pricePerSpoolMinor ? _self.pricePerSpoolMinor : pricePerSpoolMinor // ignore: cast_nullable_to_non_nullable
 as int,lowStockGrams: null == lowStockGrams ? _self.lowStockGrams : lowStockGrams // ignore: cast_nullable_to_non_nullable
-as double,notes: null == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as double,lowStockUsesDefault: null == lowStockUsesDefault ? _self.lowStockUsesDefault : lowStockUsesDefault // ignore: cast_nullable_to_non_nullable
+as bool,notes: null == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -162,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String brand,  String material,  String colorHex,  double diameterMm,  double spoolWeightGrams,  double remainingGrams,  int pricePerSpoolMinor,  double lowStockGrams,  String notes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String brand,  String material,  String colorHex,  double diameterMm,  double spoolWeightGrams,  double remainingGrams,  int pricePerSpoolMinor,  double lowStockGrams,  bool lowStockUsesDefault,  String notes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FilamentSpool() when $default != null:
-return $default(_that.id,_that.brand,_that.material,_that.colorHex,_that.diameterMm,_that.spoolWeightGrams,_that.remainingGrams,_that.pricePerSpoolMinor,_that.lowStockGrams,_that.notes);case _:
+return $default(_that.id,_that.brand,_that.material,_that.colorHex,_that.diameterMm,_that.spoolWeightGrams,_that.remainingGrams,_that.pricePerSpoolMinor,_that.lowStockGrams,_that.lowStockUsesDefault,_that.notes);case _:
   return orElse();
 
 }
@@ -183,10 +184,10 @@ return $default(_that.id,_that.brand,_that.material,_that.colorHex,_that.diamete
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String brand,  String material,  String colorHex,  double diameterMm,  double spoolWeightGrams,  double remainingGrams,  int pricePerSpoolMinor,  double lowStockGrams,  String notes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String brand,  String material,  String colorHex,  double diameterMm,  double spoolWeightGrams,  double remainingGrams,  int pricePerSpoolMinor,  double lowStockGrams,  bool lowStockUsesDefault,  String notes)  $default,) {final _that = this;
 switch (_that) {
 case _FilamentSpool():
-return $default(_that.id,_that.brand,_that.material,_that.colorHex,_that.diameterMm,_that.spoolWeightGrams,_that.remainingGrams,_that.pricePerSpoolMinor,_that.lowStockGrams,_that.notes);case _:
+return $default(_that.id,_that.brand,_that.material,_that.colorHex,_that.diameterMm,_that.spoolWeightGrams,_that.remainingGrams,_that.pricePerSpoolMinor,_that.lowStockGrams,_that.lowStockUsesDefault,_that.notes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +204,10 @@ return $default(_that.id,_that.brand,_that.material,_that.colorHex,_that.diamete
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String brand,  String material,  String colorHex,  double diameterMm,  double spoolWeightGrams,  double remainingGrams,  int pricePerSpoolMinor,  double lowStockGrams,  String notes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String brand,  String material,  String colorHex,  double diameterMm,  double spoolWeightGrams,  double remainingGrams,  int pricePerSpoolMinor,  double lowStockGrams,  bool lowStockUsesDefault,  String notes)?  $default,) {final _that = this;
 switch (_that) {
 case _FilamentSpool() when $default != null:
-return $default(_that.id,_that.brand,_that.material,_that.colorHex,_that.diameterMm,_that.spoolWeightGrams,_that.remainingGrams,_that.pricePerSpoolMinor,_that.lowStockGrams,_that.notes);case _:
+return $default(_that.id,_that.brand,_that.material,_that.colorHex,_that.diameterMm,_that.spoolWeightGrams,_that.remainingGrams,_that.pricePerSpoolMinor,_that.lowStockGrams,_that.lowStockUsesDefault,_that.notes);case _:
   return null;
 
 }
@@ -218,7 +219,7 @@ return $default(_that.id,_that.brand,_that.material,_that.colorHex,_that.diamete
 @JsonSerializable()
 
 class _FilamentSpool extends FilamentSpool {
-  const _FilamentSpool({required this.id, required this.brand, required this.material, this.colorHex = '#808080', this.diameterMm = 1.75, this.spoolWeightGrams = 1000, this.remainingGrams = 1000, this.pricePerSpoolMinor = 0, this.lowStockGrams = 100, this.notes = ''}): super._();
+  const _FilamentSpool({required this.id, required this.brand, required this.material, this.colorHex = '#808080', this.diameterMm = 1.75, this.spoolWeightGrams = 1000, this.remainingGrams = 1000, this.pricePerSpoolMinor = 0, this.lowStockGrams = 100, this.lowStockUsesDefault = false, this.notes = ''}): super._();
   factory _FilamentSpool.fromJson(Map<String, dynamic> json) => _$FilamentSpoolFromJson(json);
 
 @override final  String id;
@@ -230,6 +231,7 @@ class _FilamentSpool extends FilamentSpool {
 @override@JsonKey() final  double remainingGrams;
 @override@JsonKey() final  int pricePerSpoolMinor;
 @override@JsonKey() final  double lowStockGrams;
+@override@JsonKey() final  bool lowStockUsesDefault;
 @override@JsonKey() final  String notes;
 
 /// Create a copy of FilamentSpool
@@ -245,16 +247,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FilamentSpool&&(identical(other.id, id) || other.id == id)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.material, material) || other.material == material)&&(identical(other.colorHex, colorHex) || other.colorHex == colorHex)&&(identical(other.diameterMm, diameterMm) || other.diameterMm == diameterMm)&&(identical(other.spoolWeightGrams, spoolWeightGrams) || other.spoolWeightGrams == spoolWeightGrams)&&(identical(other.remainingGrams, remainingGrams) || other.remainingGrams == remainingGrams)&&(identical(other.pricePerSpoolMinor, pricePerSpoolMinor) || other.pricePerSpoolMinor == pricePerSpoolMinor)&&(identical(other.lowStockGrams, lowStockGrams) || other.lowStockGrams == lowStockGrams)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FilamentSpool&&(identical(other.id, id) || other.id == id)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.material, material) || other.material == material)&&(identical(other.colorHex, colorHex) || other.colorHex == colorHex)&&(identical(other.diameterMm, diameterMm) || other.diameterMm == diameterMm)&&(identical(other.spoolWeightGrams, spoolWeightGrams) || other.spoolWeightGrams == spoolWeightGrams)&&(identical(other.remainingGrams, remainingGrams) || other.remainingGrams == remainingGrams)&&(identical(other.pricePerSpoolMinor, pricePerSpoolMinor) || other.pricePerSpoolMinor == pricePerSpoolMinor)&&(identical(other.lowStockGrams, lowStockGrams) || other.lowStockGrams == lowStockGrams)&&(identical(other.lowStockUsesDefault, lowStockUsesDefault) || other.lowStockUsesDefault == lowStockUsesDefault)&&(identical(other.notes, notes) || other.notes == notes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,brand,material,colorHex,diameterMm,spoolWeightGrams,remainingGrams,pricePerSpoolMinor,lowStockGrams,notes);
+int get hashCode => Object.hash(runtimeType,id,brand,material,colorHex,diameterMm,spoolWeightGrams,remainingGrams,pricePerSpoolMinor,lowStockGrams,lowStockUsesDefault,notes);
 
 @override
 String toString() {
-  return 'FilamentSpool(id: $id, brand: $brand, material: $material, colorHex: $colorHex, diameterMm: $diameterMm, spoolWeightGrams: $spoolWeightGrams, remainingGrams: $remainingGrams, pricePerSpoolMinor: $pricePerSpoolMinor, lowStockGrams: $lowStockGrams, notes: $notes)';
+  return 'FilamentSpool(id: $id, brand: $brand, material: $material, colorHex: $colorHex, diameterMm: $diameterMm, spoolWeightGrams: $spoolWeightGrams, remainingGrams: $remainingGrams, pricePerSpoolMinor: $pricePerSpoolMinor, lowStockGrams: $lowStockGrams, lowStockUsesDefault: $lowStockUsesDefault, notes: $notes)';
 }
 
 
@@ -265,7 +267,7 @@ abstract mixin class _$FilamentSpoolCopyWith<$Res> implements $FilamentSpoolCopy
   factory _$FilamentSpoolCopyWith(_FilamentSpool value, $Res Function(_FilamentSpool) _then) = __$FilamentSpoolCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String brand, String material, String colorHex, double diameterMm, double spoolWeightGrams, double remainingGrams, int pricePerSpoolMinor, double lowStockGrams, String notes
+ String id, String brand, String material, String colorHex, double diameterMm, double spoolWeightGrams, double remainingGrams, int pricePerSpoolMinor, double lowStockGrams, bool lowStockUsesDefault, String notes
 });
 
 
@@ -282,7 +284,7 @@ class __$FilamentSpoolCopyWithImpl<$Res>
 
 /// Create a copy of FilamentSpool
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? brand = null,Object? material = null,Object? colorHex = null,Object? diameterMm = null,Object? spoolWeightGrams = null,Object? remainingGrams = null,Object? pricePerSpoolMinor = null,Object? lowStockGrams = null,Object? notes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? brand = null,Object? material = null,Object? colorHex = null,Object? diameterMm = null,Object? spoolWeightGrams = null,Object? remainingGrams = null,Object? pricePerSpoolMinor = null,Object? lowStockGrams = null,Object? lowStockUsesDefault = null,Object? notes = null,}) {
   return _then(_FilamentSpool(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,brand: null == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
@@ -293,7 +295,8 @@ as double,spoolWeightGrams: null == spoolWeightGrams ? _self.spoolWeightGrams : 
 as double,remainingGrams: null == remainingGrams ? _self.remainingGrams : remainingGrams // ignore: cast_nullable_to_non_nullable
 as double,pricePerSpoolMinor: null == pricePerSpoolMinor ? _self.pricePerSpoolMinor : pricePerSpoolMinor // ignore: cast_nullable_to_non_nullable
 as int,lowStockGrams: null == lowStockGrams ? _self.lowStockGrams : lowStockGrams // ignore: cast_nullable_to_non_nullable
-as double,notes: null == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as double,lowStockUsesDefault: null == lowStockUsesDefault ? _self.lowStockUsesDefault : lowStockUsesDefault // ignore: cast_nullable_to_non_nullable
+as bool,notes: null == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

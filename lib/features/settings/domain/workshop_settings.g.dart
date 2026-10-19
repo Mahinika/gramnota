@@ -28,6 +28,8 @@ _WorkshopSettings _$WorkshopSettingsFromJson(Map<String, dynamic> json) =>
       email: json['email'] as String? ?? '',
       nextQuoteNumber: (json['nextQuoteNumber'] as num?)?.toInt() ?? 1,
       quoteValidityDays: (json['quoteValidityDays'] as num?)?.toInt() ?? 14,
+      defaultLowStockGrams:
+          (json['defaultLowStockGrams'] as num?)?.toDouble() ?? 100,
     );
 
 Map<String, dynamic> _$WorkshopSettingsToJson(_WorkshopSettings instance) =>
@@ -48,4 +50,5 @@ Map<String, dynamic> _$WorkshopSettingsToJson(_WorkshopSettings instance) =>
       'email': instance.email,
       'nextQuoteNumber': instance.nextQuoteNumber,
       'quoteValidityDays': instance.quoteValidityDays,
+      'defaultLowStockGrams': instance.defaultLowStockGrams,
     };

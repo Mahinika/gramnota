@@ -17,6 +17,7 @@ _FilamentSpool _$FilamentSpoolFromJson(Map<String, dynamic> json) =>
       remainingGrams: (json['remainingGrams'] as num?)?.toDouble() ?? 1000,
       pricePerSpoolMinor: (json['pricePerSpoolMinor'] as num?)?.toInt() ?? 0,
       lowStockGrams: (json['lowStockGrams'] as num?)?.toDouble() ?? 100,
+      lowStockUsesDefault: json['lowStockUsesDefault'] as bool? ?? false,
       notes: json['notes'] as String? ?? '',
     );
 
@@ -31,5 +32,6 @@ Map<String, dynamic> _$FilamentSpoolToJson(_FilamentSpool instance) =>
       'remainingGrams': instance.remainingGrams,
       'pricePerSpoolMinor': instance.pricePerSpoolMinor,
       'lowStockGrams': instance.lowStockGrams,
+      'lowStockUsesDefault': instance.lowStockUsesDefault,
       'notes': instance.notes,
     };

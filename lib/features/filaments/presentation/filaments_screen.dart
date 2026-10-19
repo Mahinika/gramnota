@@ -40,8 +40,9 @@ class _FilamentsScreenState extends ConsumerState<FilamentsScreen> {
       return const Scaffold(body: EmptyView(message: 'Sign in to see filament.'));
     }
     final spools = ref.watch(filamentsProvider(store));
-    final currency =
-        ref.watch(settingsProvider(store)).asData?.value.currencyCode ?? 'SEK';
+    final settings = ref.watch(settingsProvider(store)).asData?.value;
+    final currency = settings?.currencyCode ?? 'SEK';
+    final lowStockGrams = settings?.defaultLowStockGrams ?? 100;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Filament'),
@@ -82,7 +83,7 @@ class _FilamentsScreenState extends ConsumerState<FilamentsScreen> {
           final query = _search.text.trim().toLowerCase();
           final visible = [
             for (final spool in list)
-              if ((!_lowStockOnly || spool.isLowStock) &&
+              if ((!_lowStockOnly || spool.isLowAt(lowStockGrams)) &&
                   (query.isEmpty ||
                       '${spool.brand} ${spool.material} ${spool.notes}'
                           .toLowerCase()
@@ -158,6 +159,7 @@ class _FilamentsScreenState extends ConsumerState<FilamentsScreen> {
                           return _SpoolListCard(
                             spool: spool,
                             currencyCode: currency,
+                            low: spool.isLowAt(lowStockGrams),
                             onTap: () => context.go('/filaments/${spool.id}'),
                           );
                         },
@@ -177,11 +179,13 @@ class _SpoolListCard extends StatelessWidget {
   const _SpoolListCard({
     required this.spool,
     required this.currencyCode,
+    required this.low,
     required this.onTap,
   });
 
   final FilamentSpool spool;
   final String currencyCode;
+  final bool low;
   final VoidCallback onTap;
 
   @override
@@ -191,7 +195,7 @@ class _SpoolListCard extends StatelessWidget {
     final progress = spool.spoolWeightGrams <= 0
         ? 0.0
         : (spool.remainingGrams / spool.spoolWeightGrams).clamp(0.0, 1.0);
-    final barColor = spool.isLowStock ? scheme.error : scheme.primary;
+    final barColor = low ? scheme.error : scheme.primary;
     return TappableListCard(
       onTap: onTap,
       child: Column(
@@ -218,7 +222,7 @@ class _SpoolListCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (spool.isLowStock)
+              if (low)
                 Text(
                   'Low',
                   style: theme.textTheme.labelMedium?.copyWith(
@@ -350,6 +354,7 @@ Future<void> _addStandardSpool(
     spoolWeightGrams: preset.spoolWeightGrams,
     remainingGrams: preset.spoolWeightGrams,
     pricePerSpoolMinor: preset.pricePerSpoolMinor,
+    lowStockUsesDefault: true,
   );
   await store.saveFilament(spool);
   if (!context.mounted) {
@@ -387,6 +392,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
   final _low = TextEditingController(text: '100');
   final _notes = TextEditingController();
   var _loaded = false;
+  var _usesWorkshopDefault = true;
   String? _error;
 
   void _applyPreset(CommonSpool preset) {
@@ -434,6 +440,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
     _remaining.text = _plainNumber(spool.remainingGrams);
     _price.text = formatMinorAmount(spool.pricePerSpoolMinor);
     _low.text = _plainNumber(spool.lowStockGrams);
+    _usesWorkshopDefault = spool.lowStockUsesDefault;
     _notes.text = spool.notes;
     _loaded = true;
   }
@@ -459,6 +466,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
       remainingGrams: remaining,
       pricePerSpoolMinor: price,
       lowStockGrams: parseNonNegativeDouble(_low.text) ?? 100,
+      lowStockUsesDefault: _usesWorkshopDefault,
       notes: _notes.text.trim(),
     );
   }
@@ -591,11 +599,27 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: _low,
-            decoration: const InputDecoration(labelText: 'Low stock threshold g'),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Use workshop low-stock default'),
+            subtitle: Text(
+              _usesWorkshopDefault
+                  ? 'Warns at ${formatGrams(ref.watch(settingsProvider(store)).asData?.value.defaultLowStockGrams ?? 100)}.'
+                  : 'This spool keeps its own threshold.',
+            ),
+            value: _usesWorkshopDefault,
+            onChanged: (value) => setState(() => _usesWorkshopDefault = value),
           ),
+          if (!_usesWorkshopDefault) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: _low,
+              decoration: const InputDecoration(
+                labelText: 'Low stock threshold g',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            ),
+          ],
           if (widget.id != 'new')
             Align(
               alignment: Alignment.centerLeft,

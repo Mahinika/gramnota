@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$WorkshopSettings {
 
-@JsonKey(readValue: readSetupCompleted) bool get setupCompleted; String get currencyCode; int get electricityMinorPerKwh; int get laborMinorPerHour; int get defaultMarkupBasisPoints; int get vatBasisPoints; int get defaultFailureBasisPoints; String get businessName; String get street; String get postalCode; String get city; String get orgNumber; String get phone; String get email; int get nextQuoteNumber; int get quoteValidityDays;
+@JsonKey(readValue: readSetupCompleted) bool get setupCompleted; String get currencyCode; int get electricityMinorPerKwh; int get laborMinorPerHour; int get defaultMarkupBasisPoints; int get vatBasisPoints; int get defaultFailureBasisPoints; String get businessName; String get street; String get postalCode; String get city; String get orgNumber; String get phone; String get email; int get nextQuoteNumber; int get quoteValidityDays; double get defaultLowStockGrams;
 /// Create a copy of WorkshopSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $WorkshopSettingsCopyWith<WorkshopSettings> get copyWith => _$WorkshopSettingsCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkshopSettings&&(identical(other.setupCompleted, setupCompleted) || other.setupCompleted == setupCompleted)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.electricityMinorPerKwh, electricityMinorPerKwh) || other.electricityMinorPerKwh == electricityMinorPerKwh)&&(identical(other.laborMinorPerHour, laborMinorPerHour) || other.laborMinorPerHour == laborMinorPerHour)&&(identical(other.defaultMarkupBasisPoints, defaultMarkupBasisPoints) || other.defaultMarkupBasisPoints == defaultMarkupBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.defaultFailureBasisPoints, defaultFailureBasisPoints) || other.defaultFailureBasisPoints == defaultFailureBasisPoints)&&(identical(other.businessName, businessName) || other.businessName == businessName)&&(identical(other.street, street) || other.street == street)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.city, city) || other.city == city)&&(identical(other.orgNumber, orgNumber) || other.orgNumber == orgNumber)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.nextQuoteNumber, nextQuoteNumber) || other.nextQuoteNumber == nextQuoteNumber)&&(identical(other.quoteValidityDays, quoteValidityDays) || other.quoteValidityDays == quoteValidityDays));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkshopSettings&&(identical(other.setupCompleted, setupCompleted) || other.setupCompleted == setupCompleted)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.electricityMinorPerKwh, electricityMinorPerKwh) || other.electricityMinorPerKwh == electricityMinorPerKwh)&&(identical(other.laborMinorPerHour, laborMinorPerHour) || other.laborMinorPerHour == laborMinorPerHour)&&(identical(other.defaultMarkupBasisPoints, defaultMarkupBasisPoints) || other.defaultMarkupBasisPoints == defaultMarkupBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.defaultFailureBasisPoints, defaultFailureBasisPoints) || other.defaultFailureBasisPoints == defaultFailureBasisPoints)&&(identical(other.businessName, businessName) || other.businessName == businessName)&&(identical(other.street, street) || other.street == street)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.city, city) || other.city == city)&&(identical(other.orgNumber, orgNumber) || other.orgNumber == orgNumber)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.nextQuoteNumber, nextQuoteNumber) || other.nextQuoteNumber == nextQuoteNumber)&&(identical(other.quoteValidityDays, quoteValidityDays) || other.quoteValidityDays == quoteValidityDays)&&(identical(other.defaultLowStockGrams, defaultLowStockGrams) || other.defaultLowStockGrams == defaultLowStockGrams));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,setupCompleted,currencyCode,electricityMinorPerKwh,laborMinorPerHour,defaultMarkupBasisPoints,vatBasisPoints,defaultFailureBasisPoints,businessName,street,postalCode,city,orgNumber,phone,email,nextQuoteNumber,quoteValidityDays);
+int get hashCode => Object.hash(runtimeType,setupCompleted,currencyCode,electricityMinorPerKwh,laborMinorPerHour,defaultMarkupBasisPoints,vatBasisPoints,defaultFailureBasisPoints,businessName,street,postalCode,city,orgNumber,phone,email,nextQuoteNumber,quoteValidityDays,defaultLowStockGrams);
 
 @override
 String toString() {
-  return 'WorkshopSettings(setupCompleted: $setupCompleted, currencyCode: $currencyCode, electricityMinorPerKwh: $electricityMinorPerKwh, laborMinorPerHour: $laborMinorPerHour, defaultMarkupBasisPoints: $defaultMarkupBasisPoints, vatBasisPoints: $vatBasisPoints, defaultFailureBasisPoints: $defaultFailureBasisPoints, businessName: $businessName, street: $street, postalCode: $postalCode, city: $city, orgNumber: $orgNumber, phone: $phone, email: $email, nextQuoteNumber: $nextQuoteNumber, quoteValidityDays: $quoteValidityDays)';
+  return 'WorkshopSettings(setupCompleted: $setupCompleted, currencyCode: $currencyCode, electricityMinorPerKwh: $electricityMinorPerKwh, laborMinorPerHour: $laborMinorPerHour, defaultMarkupBasisPoints: $defaultMarkupBasisPoints, vatBasisPoints: $vatBasisPoints, defaultFailureBasisPoints: $defaultFailureBasisPoints, businessName: $businessName, street: $street, postalCode: $postalCode, city: $city, orgNumber: $orgNumber, phone: $phone, email: $email, nextQuoteNumber: $nextQuoteNumber, quoteValidityDays: $quoteValidityDays, defaultLowStockGrams: $defaultLowStockGrams)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $WorkshopSettingsCopyWith<$Res>  {
   factory $WorkshopSettingsCopyWith(WorkshopSettings value, $Res Function(WorkshopSettings) _then) = _$WorkshopSettingsCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(readValue: readSetupCompleted) bool setupCompleted, String currencyCode, int electricityMinorPerKwh, int laborMinorPerHour, int defaultMarkupBasisPoints, int vatBasisPoints, int defaultFailureBasisPoints, String businessName, String street, String postalCode, String city, String orgNumber, String phone, String email, int nextQuoteNumber, int quoteValidityDays
+@JsonKey(readValue: readSetupCompleted) bool setupCompleted, String currencyCode, int electricityMinorPerKwh, int laborMinorPerHour, int defaultMarkupBasisPoints, int vatBasisPoints, int defaultFailureBasisPoints, String businessName, String street, String postalCode, String city, String orgNumber, String phone, String email, int nextQuoteNumber, int quoteValidityDays, double defaultLowStockGrams
 });
 
 
@@ -65,7 +65,7 @@ class _$WorkshopSettingsCopyWithImpl<$Res>
 
 /// Create a copy of WorkshopSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? setupCompleted = null,Object? currencyCode = null,Object? electricityMinorPerKwh = null,Object? laborMinorPerHour = null,Object? defaultMarkupBasisPoints = null,Object? vatBasisPoints = null,Object? defaultFailureBasisPoints = null,Object? businessName = null,Object? street = null,Object? postalCode = null,Object? city = null,Object? orgNumber = null,Object? phone = null,Object? email = null,Object? nextQuoteNumber = null,Object? quoteValidityDays = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? setupCompleted = null,Object? currencyCode = null,Object? electricityMinorPerKwh = null,Object? laborMinorPerHour = null,Object? defaultMarkupBasisPoints = null,Object? vatBasisPoints = null,Object? defaultFailureBasisPoints = null,Object? businessName = null,Object? street = null,Object? postalCode = null,Object? city = null,Object? orgNumber = null,Object? phone = null,Object? email = null,Object? nextQuoteNumber = null,Object? quoteValidityDays = null,Object? defaultLowStockGrams = null,}) {
   return _then(_self.copyWith(
 setupCompleted: null == setupCompleted ? _self.setupCompleted : setupCompleted // ignore: cast_nullable_to_non_nullable
 as bool,currencyCode: null == currencyCode ? _self.currencyCode : currencyCode // ignore: cast_nullable_to_non_nullable
@@ -83,7 +83,8 @@ as String,phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,nextQuoteNumber: null == nextQuoteNumber ? _self.nextQuoteNumber : nextQuoteNumber // ignore: cast_nullable_to_non_nullable
 as int,quoteValidityDays: null == quoteValidityDays ? _self.quoteValidityDays : quoteValidityDays // ignore: cast_nullable_to_non_nullable
-as int,
+as int,defaultLowStockGrams: null == defaultLowStockGrams ? _self.defaultLowStockGrams : defaultLowStockGrams // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 
@@ -168,10 +169,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted,  String currencyCode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted,  String currencyCode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays,  double defaultLowStockGrams)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WorkshopSettings() when $default != null:
-return $default(_that.setupCompleted,_that.currencyCode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays);case _:
+return $default(_that.setupCompleted,_that.currencyCode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays,_that.defaultLowStockGrams);case _:
   return orElse();
 
 }
@@ -189,10 +190,10 @@ return $default(_that.setupCompleted,_that.currencyCode,_that.electricityMinorPe
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted,  String currencyCode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted,  String currencyCode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays,  double defaultLowStockGrams)  $default,) {final _that = this;
 switch (_that) {
 case _WorkshopSettings():
-return $default(_that.setupCompleted,_that.currencyCode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays);case _:
+return $default(_that.setupCompleted,_that.currencyCode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays,_that.defaultLowStockGrams);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +210,10 @@ return $default(_that.setupCompleted,_that.currencyCode,_that.electricityMinorPe
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted,  String currencyCode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted,  String currencyCode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays,  double defaultLowStockGrams)?  $default,) {final _that = this;
 switch (_that) {
 case _WorkshopSettings() when $default != null:
-return $default(_that.setupCompleted,_that.currencyCode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays);case _:
+return $default(_that.setupCompleted,_that.currencyCode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays,_that.defaultLowStockGrams);case _:
   return null;
 
 }
@@ -224,7 +225,7 @@ return $default(_that.setupCompleted,_that.currencyCode,_that.electricityMinorPe
 @JsonSerializable()
 
 class _WorkshopSettings implements WorkshopSettings {
-  const _WorkshopSettings({@JsonKey(readValue: readSetupCompleted) this.setupCompleted = false, this.currencyCode = 'SEK', this.electricityMinorPerKwh = 0, this.laborMinorPerHour = 0, this.defaultMarkupBasisPoints = 3000, this.vatBasisPoints = 2500, this.defaultFailureBasisPoints = 0, this.businessName = '', this.street = '', this.postalCode = '', this.city = '', this.orgNumber = '', this.phone = '', this.email = '', this.nextQuoteNumber = 1, this.quoteValidityDays = 14});
+  const _WorkshopSettings({@JsonKey(readValue: readSetupCompleted) this.setupCompleted = false, this.currencyCode = 'SEK', this.electricityMinorPerKwh = 0, this.laborMinorPerHour = 0, this.defaultMarkupBasisPoints = 3000, this.vatBasisPoints = 2500, this.defaultFailureBasisPoints = 0, this.businessName = '', this.street = '', this.postalCode = '', this.city = '', this.orgNumber = '', this.phone = '', this.email = '', this.nextQuoteNumber = 1, this.quoteValidityDays = 14, this.defaultLowStockGrams = 100});
   factory _WorkshopSettings.fromJson(Map<String, dynamic> json) => _$WorkshopSettingsFromJson(json);
 
 @override@JsonKey(readValue: readSetupCompleted) final  bool setupCompleted;
@@ -243,6 +244,7 @@ class _WorkshopSettings implements WorkshopSettings {
 @override@JsonKey() final  String email;
 @override@JsonKey() final  int nextQuoteNumber;
 @override@JsonKey() final  int quoteValidityDays;
+@override@JsonKey() final  double defaultLowStockGrams;
 
 /// Create a copy of WorkshopSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -257,16 +259,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkshopSettings&&(identical(other.setupCompleted, setupCompleted) || other.setupCompleted == setupCompleted)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.electricityMinorPerKwh, electricityMinorPerKwh) || other.electricityMinorPerKwh == electricityMinorPerKwh)&&(identical(other.laborMinorPerHour, laborMinorPerHour) || other.laborMinorPerHour == laborMinorPerHour)&&(identical(other.defaultMarkupBasisPoints, defaultMarkupBasisPoints) || other.defaultMarkupBasisPoints == defaultMarkupBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.defaultFailureBasisPoints, defaultFailureBasisPoints) || other.defaultFailureBasisPoints == defaultFailureBasisPoints)&&(identical(other.businessName, businessName) || other.businessName == businessName)&&(identical(other.street, street) || other.street == street)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.city, city) || other.city == city)&&(identical(other.orgNumber, orgNumber) || other.orgNumber == orgNumber)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.nextQuoteNumber, nextQuoteNumber) || other.nextQuoteNumber == nextQuoteNumber)&&(identical(other.quoteValidityDays, quoteValidityDays) || other.quoteValidityDays == quoteValidityDays));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkshopSettings&&(identical(other.setupCompleted, setupCompleted) || other.setupCompleted == setupCompleted)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.electricityMinorPerKwh, electricityMinorPerKwh) || other.electricityMinorPerKwh == electricityMinorPerKwh)&&(identical(other.laborMinorPerHour, laborMinorPerHour) || other.laborMinorPerHour == laborMinorPerHour)&&(identical(other.defaultMarkupBasisPoints, defaultMarkupBasisPoints) || other.defaultMarkupBasisPoints == defaultMarkupBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.defaultFailureBasisPoints, defaultFailureBasisPoints) || other.defaultFailureBasisPoints == defaultFailureBasisPoints)&&(identical(other.businessName, businessName) || other.businessName == businessName)&&(identical(other.street, street) || other.street == street)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.city, city) || other.city == city)&&(identical(other.orgNumber, orgNumber) || other.orgNumber == orgNumber)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.nextQuoteNumber, nextQuoteNumber) || other.nextQuoteNumber == nextQuoteNumber)&&(identical(other.quoteValidityDays, quoteValidityDays) || other.quoteValidityDays == quoteValidityDays)&&(identical(other.defaultLowStockGrams, defaultLowStockGrams) || other.defaultLowStockGrams == defaultLowStockGrams));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,setupCompleted,currencyCode,electricityMinorPerKwh,laborMinorPerHour,defaultMarkupBasisPoints,vatBasisPoints,defaultFailureBasisPoints,businessName,street,postalCode,city,orgNumber,phone,email,nextQuoteNumber,quoteValidityDays);
+int get hashCode => Object.hash(runtimeType,setupCompleted,currencyCode,electricityMinorPerKwh,laborMinorPerHour,defaultMarkupBasisPoints,vatBasisPoints,defaultFailureBasisPoints,businessName,street,postalCode,city,orgNumber,phone,email,nextQuoteNumber,quoteValidityDays,defaultLowStockGrams);
 
 @override
 String toString() {
-  return 'WorkshopSettings(setupCompleted: $setupCompleted, currencyCode: $currencyCode, electricityMinorPerKwh: $electricityMinorPerKwh, laborMinorPerHour: $laborMinorPerHour, defaultMarkupBasisPoints: $defaultMarkupBasisPoints, vatBasisPoints: $vatBasisPoints, defaultFailureBasisPoints: $defaultFailureBasisPoints, businessName: $businessName, street: $street, postalCode: $postalCode, city: $city, orgNumber: $orgNumber, phone: $phone, email: $email, nextQuoteNumber: $nextQuoteNumber, quoteValidityDays: $quoteValidityDays)';
+  return 'WorkshopSettings(setupCompleted: $setupCompleted, currencyCode: $currencyCode, electricityMinorPerKwh: $electricityMinorPerKwh, laborMinorPerHour: $laborMinorPerHour, defaultMarkupBasisPoints: $defaultMarkupBasisPoints, vatBasisPoints: $vatBasisPoints, defaultFailureBasisPoints: $defaultFailureBasisPoints, businessName: $businessName, street: $street, postalCode: $postalCode, city: $city, orgNumber: $orgNumber, phone: $phone, email: $email, nextQuoteNumber: $nextQuoteNumber, quoteValidityDays: $quoteValidityDays, defaultLowStockGrams: $defaultLowStockGrams)';
 }
 
 
@@ -277,7 +279,7 @@ abstract mixin class _$WorkshopSettingsCopyWith<$Res> implements $WorkshopSettin
   factory _$WorkshopSettingsCopyWith(_WorkshopSettings value, $Res Function(_WorkshopSettings) _then) = __$WorkshopSettingsCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(readValue: readSetupCompleted) bool setupCompleted, String currencyCode, int electricityMinorPerKwh, int laborMinorPerHour, int defaultMarkupBasisPoints, int vatBasisPoints, int defaultFailureBasisPoints, String businessName, String street, String postalCode, String city, String orgNumber, String phone, String email, int nextQuoteNumber, int quoteValidityDays
+@JsonKey(readValue: readSetupCompleted) bool setupCompleted, String currencyCode, int electricityMinorPerKwh, int laborMinorPerHour, int defaultMarkupBasisPoints, int vatBasisPoints, int defaultFailureBasisPoints, String businessName, String street, String postalCode, String city, String orgNumber, String phone, String email, int nextQuoteNumber, int quoteValidityDays, double defaultLowStockGrams
 });
 
 
@@ -294,7 +296,7 @@ class __$WorkshopSettingsCopyWithImpl<$Res>
 
 /// Create a copy of WorkshopSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? setupCompleted = null,Object? currencyCode = null,Object? electricityMinorPerKwh = null,Object? laborMinorPerHour = null,Object? defaultMarkupBasisPoints = null,Object? vatBasisPoints = null,Object? defaultFailureBasisPoints = null,Object? businessName = null,Object? street = null,Object? postalCode = null,Object? city = null,Object? orgNumber = null,Object? phone = null,Object? email = null,Object? nextQuoteNumber = null,Object? quoteValidityDays = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? setupCompleted = null,Object? currencyCode = null,Object? electricityMinorPerKwh = null,Object? laborMinorPerHour = null,Object? defaultMarkupBasisPoints = null,Object? vatBasisPoints = null,Object? defaultFailureBasisPoints = null,Object? businessName = null,Object? street = null,Object? postalCode = null,Object? city = null,Object? orgNumber = null,Object? phone = null,Object? email = null,Object? nextQuoteNumber = null,Object? quoteValidityDays = null,Object? defaultLowStockGrams = null,}) {
   return _then(_WorkshopSettings(
 setupCompleted: null == setupCompleted ? _self.setupCompleted : setupCompleted // ignore: cast_nullable_to_non_nullable
 as bool,currencyCode: null == currencyCode ? _self.currencyCode : currencyCode // ignore: cast_nullable_to_non_nullable
@@ -312,7 +314,8 @@ as String,phone: null == phone ? _self.phone : phone // ignore: cast_nullable_to
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,nextQuoteNumber: null == nextQuoteNumber ? _self.nextQuoteNumber : nextQuoteNumber // ignore: cast_nullable_to_non_nullable
 as int,quoteValidityDays: null == quoteValidityDays ? _self.quoteValidityDays : quoteValidityDays // ignore: cast_nullable_to_non_nullable
-as int,
+as int,defaultLowStockGrams: null == defaultLowStockGrams ? _self.defaultLowStockGrams : defaultLowStockGrams // ignore: cast_nullable_to_non_nullable
+as double,
   ));
 }
 
