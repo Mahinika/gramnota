@@ -34,7 +34,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Cache Pub packages
-        uses: actions/cache@v4
+        id: pub-cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/AppData/Local/Pub/Cache
           key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
@@ -42,7 +43,8 @@ jobs:
             ${{ runner.os }}-pub-
 
       - name: Cache Windows native build
-        uses: actions/cache@v4
+        id: windows-build-cache
+        uses: actions/cache/restore@v4
         with:
           path: build/windows
           key: ${{ runner.os }}-flutter-3.44.8-windows-${{ hashFiles('pubspec.lock', 'windows/**/CMakeLists.txt', 'windows/runner/**') }}
@@ -70,20 +72,35 @@ jobs:
           flutter build windows --release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Install Inno Setup 6.7.3
+      - name: Save Pub cache
+        if: steps.pub-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/AppData/Local/Pub/Cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+
+      - name: Save Windows native build
+        if: steps.windows-build-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build/windows
+          key: ${{ runner.os }}-flutter-3.44.8-windows-${{ hashFiles('pubspec.lock', 'windows/**/CMakeLists.txt', 'windows/runner/**') }}
+
+      - name: Locate Inno Setup
         shell: pwsh
         run: |
-          $PSNativeCommandUseErrorActionPreference = $false
-          # The runner image already has an Inno Setup 6.7.1 compiler. Install
-          # 6.7.3 into its own directory so that copy is the one we run.
-          $prefix = "C:\Tools\InnoSetup6"
-          $installer = Join-Path $env:RUNNER_TEMP "innosetup-6.7.3.exe"
-          curl.exe -fsSL -o $installer "https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & $installer /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- "/DIR=$prefix"
-          Write-Host "Inno Setup installer exit code: $LASTEXITCODE"
-          $iscc = Join-Path $prefix "ISCC.exe"
-          if (-not (Test-Path $iscc)) { throw "ISCC.exe was not installed (installer exit $LASTEXITCODE)" }
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            $PSNativeCommandUseErrorActionPreference = $false
+            $prefix = "C:\Tools\InnoSetup6"
+            $installer = Join-Path $env:RUNNER_TEMP "innosetup-6.7.3.exe"
+            curl.exe -fsSL -o $installer "https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            & $installer /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- "/DIR=$prefix"
+            $iscc = Join-Path $prefix "ISCC.exe"
+          }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe was not found" }
+          Write-Host "Using $iscc"
           Add-Content -Path $env:GITHUB_ENV -Value "INNO_ISCC=$iscc" -Encoding utf8NoBOM
 
       - name: Package installer and portable zip

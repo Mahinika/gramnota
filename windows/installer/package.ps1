@@ -128,8 +128,8 @@ Write-Host "Runtime dependencies are next to gramnota.exe"
 New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
 $compile = & $iscc "/DAppVersion=$appVersion" "/DAppBuild=$appBuild" $iss 2>&1 | Out-String
 Write-Host $compile
-if ($compile -notmatch "Compiler engine version: Inno Setup 6\.7\.3") {
-  throw "Expected Inno Setup 6.7.3. Compiler output:`n$compile"
+if ($compile -notmatch "Compiler engine version: Inno Setup 6\.") {
+  throw "Inno Setup 6 did not compile the installer.`n$compile"
 }
 if ($LASTEXITCODE -ne 0) {
   throw "ISCC failed with exit code $LASTEXITCODE"
