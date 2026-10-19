@@ -42,7 +42,7 @@ In another terminal:
 flutter run -d chrome --dart-define=USE_FIREBASE_EMULATOR=true
 ```
 
-The same flag works with `-d windows` or a web server. The sign-in screen then offers **Sign in as test seller** (`seller@gramnota.test`). That account is created on the Auth emulator the first time you use it. The emulator UI is at http://127.0.0.1:4000. Rules from [firestore.rules](firestore.rules) apply.
+The same flag works with `-d windows` or a web server. The sign-in screen then offers **Sign in as test seller** (`seller@gramnota.test`). That account is created on the Auth emulator the first time you use it. A browser refresh signs you out (emulator persistence is off) but keeps talking to the emulators, including when the page is opened at `127.0.0.1`. Sign in as the test seller again. The emulator UI is at http://127.0.0.1:4000. Rules from [firestore.rules](firestore.rules) apply. In the browser build, Google sign-in is not available; use the test seller button.
 
 ## Android APK (GitHub)
 

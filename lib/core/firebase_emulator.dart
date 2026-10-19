@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'emulator_session_stub.dart'
+    if (dart.library.html) 'emulator_session_web.dart';
+
 /// Compile-time flag. Pass `--dart-define=USE_FIREBASE_EMULATOR=true`.
 /// Production builds leave this false and never touch the emulators.
 const useFirebaseEmulator = bool.fromEnvironment('USE_FIREBASE_EMULATOR');
@@ -19,12 +22,19 @@ const emulatorTesterPassword = 'gramnota-test';
 const emulatorTesterName = 'Test seller';
 
 Future<void> connectFirebaseEmulators() async {
+  clearAuthEmulatorSession();
   await FirebaseAuth.instance.useAuthEmulator(
     firebaseEmulatorHost,
     firebaseAuthEmulatorPort,
   );
-  FirebaseFirestore.instance.useFirestoreEmulator(
-    firebaseEmulatorHost,
-    firebaseFirestoreEmulatorPort,
-  );
+  try {
+    FirebaseFirestore.instance.useFirestoreEmulator(
+      firebaseEmulatorHost,
+      firebaseFirestoreEmulatorPort,
+    );
+  } on Object catch (error) {
+    if (!error.toString().contains('already')) {
+      rethrow;
+    }
+  }
 }

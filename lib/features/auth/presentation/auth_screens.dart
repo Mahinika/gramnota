@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,8 +45,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     });
     try {
       await action();
-    } on Object catch (error) {
-      setState(() => _error = '$error');
+    } on FirebaseAuthException catch (error) {
+      setState(() {
+        _error = error.message ?? 'Sign-in failed. Try again.';
+      });
+    } on Object {
+      setState(() => _error = 'Sign-in failed. Try again.');
     } finally {
       if (mounted) {
         setState(() => _busy = false);
@@ -66,20 +72,36 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             Text(_error!, textAlign: TextAlign.center),
             const SizedBox(height: 12),
           ],
-          FilledButton(
-            onPressed: _busy || !firebaseIsConfigured
-                ? null
-                : () => _run(signInWithGoogle),
-            child: Text(_busy ? 'Signing in…' : 'Sign in with Google'),
-          ),
-          if (useFirebaseEmulator) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
+          if (kIsWeb)
+            Text(
+              useFirebaseEmulator
+                  ? 'Google sign-in is not available in this browser. Use the test seller account.'
+                  : 'Google sign-in is not available in this browser. Use the Android or Windows app.',
+              textAlign: TextAlign.center,
+            )
+          else
+            FilledButton(
               onPressed: _busy || !firebaseIsConfigured
                   ? null
-                  : () => _run(signInWithEmulatorTester),
-              child: const Text('Sign in as test seller'),
+                  : () => _run(signInWithGoogle),
+              child: Text(_busy ? 'Signing in…' : 'Sign in with Google'),
             ),
+          if (useFirebaseEmulator) ...[
+            const SizedBox(height: 12),
+            if (kIsWeb)
+              FilledButton(
+                onPressed: _busy || !firebaseIsConfigured
+                    ? null
+                    : () => _run(signInWithEmulatorTester),
+                child: const Text('Sign in as test seller'),
+              )
+            else
+              OutlinedButton(
+                onPressed: _busy || !firebaseIsConfigured
+                    ? null
+                    : () => _run(signInWithEmulatorTester),
+                child: const Text('Sign in as test seller'),
+              ),
             const SizedBox(height: 8),
             Text(
               'Local Firebase emulators. This account is $emulatorTesterEmail.',
