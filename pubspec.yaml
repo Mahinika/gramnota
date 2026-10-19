@@ -72,10 +72,15 @@ flutter_launcher_icons:
   ios: false
   image_path: assets/brand/gramnota_icon.png
   adaptive_icon_background: "#0F6E56"
-  adaptive_icon_foreground: assets/brand/gramnota_mark.png
+  adaptive_icon_foreground: assets/brand/gramnota_foreground.png
+  # Padding lives in the foreground bitmap (66dp keyline). The generator's
+  # default 16% inset would shrink that artwork a second time.
+  adaptive_icon_foreground_inset: 0
+  adaptive_icon_monochrome: assets/brand/gramnota_monochrome.png
   windows:
     generate: true
     image_path: assets/brand/gramnota_icon.png
+    icon_size: 256
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
