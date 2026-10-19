@@ -22,7 +22,7 @@ description: >-
 `OrderStock` owns both, inside `runTransaction`.
 
 - `allocateQuoteNumber` reads `settings/main`, uses `nextQuoteNumber` (minimum 1), and writes the next value.
-- Stock moves only when status crosses `statusHoldsStock` (`printed` and `delivered`). Deduct the sum of `grams * quantity` per spool, clamp at zero, and store the amount actually taken in `deductedGrams`.
+- Stock moves only when status crosses `statusHoldsStock` (`printed` and `paid`). Deduct the sum of `grams * quantity` per spool, clamp at zero, and store the amount actually taken in `deductedGrams`. Moving between Printed and Paid does not deduct again. `delivered` in old JSON decodes as `paid`.
 - Leaving those statuses adds `deductedGrams` back and clears `stockDeducted` and `stockWarning`.
 - Do not update `remainingGrams` from a screen.
 

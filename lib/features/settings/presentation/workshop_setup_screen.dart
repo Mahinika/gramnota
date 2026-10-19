@@ -302,6 +302,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
               spoolWeightGrams: preset.spoolWeightGrams,
               remainingGrams: preset.spoolWeightGrams,
               pricePerSpoolMinor: preset.pricePerSpoolMinor,
+              lowStockUsesDefault: true,
             ),
           );
         }

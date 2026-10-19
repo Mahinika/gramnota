@@ -21,7 +21,9 @@ import '../../import/data/gcode_importer.dart';
 import '../../import/data/link_import_service.dart';
 import '../../import/domain/gcode_metadata.dart';
 import '../../import/domain/import_models.dart';
+import '../../import/domain/plate_quote.dart';
 import '../../import/domain/slice_file.dart';
+import '../../import/presentation/plate_import_dialog.dart';
 import '../../orders/data/order_stock.dart';
 import '../../orders/data/orders_providers.dart';
 import '../../orders/domain/print_order.dart';
@@ -544,26 +546,19 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     }
     var plate = usable.first;
     if (usable.length > 1) {
-      final picked = await showDialog<GcodePlate>(
-        context: context,
-        builder: (context) => SimpleDialog(
-          title: const Text('Choose a plate'),
-          children: [
-            for (final candidate in usable)
-              SimpleDialogOption(
-                onPressed: () => Navigator.pop(context, candidate),
-                child: Text(candidate.name),
-              ),
-          ],
-        ),
-      );
-      if (picked == null) {
-        if (mounted) {
-          setState(() => _importNote = 'No plate was imported.');
-        }
+      final choice = await showPlateImportDialog(context, usable);
+      if (!mounted) {
         return;
       }
-      plate = picked;
+      if (choice == null) {
+        setState(() => _importNote = 'No plate was imported.');
+        return;
+      }
+      if (choice.importAll) {
+        await _importAllPlates(store, result, usable);
+        return;
+      }
+      plate = choice.plate ?? usable.first;
     }
     if (!mounted) {
       return;
@@ -592,6 +587,127 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       );
       _importNote = gcodePlateNote(plate, plateCount: result.plates.length);
     });
+  }
+
+  Future<void> _importAllPlates(
+    UserStore store,
+    GcodeImport result,
+    List<GcodePlate> plates,
+  ) async {
+    final settings =
+        ref.read(settingsProvider(store)).asData?.value ??
+        const WorkshopSettings();
+    final printers = await store.watchPrinters().first;
+    final spools = await store.watchFilaments().first;
+    if (!mounted) {
+      return;
+    }
+    final lines = quoteLinesFromPlates(
+      plates: plates,
+      newId: () => const Uuid().v4(),
+      settings: settings,
+      spools: spools,
+      printers: printers,
+      printerId: _printerId ?? '',
+      prepMinutes: _minuteCount(_prep),
+      postMinutes: _minuteCount(_post),
+      markupBasisPoints:
+          parseBasisPoints(_markup.text) ?? settings.defaultMarkupBasisPoints,
+      failureBasisPoints:
+          parseBasisPoints(_failure.text) ?? settings.defaultFailureBasisPoints,
+      vatBasisPoints: parseBasisPoints(_vat.text) ?? settings.vatBasisPoints,
+    );
+    if (lines.isEmpty) {
+      setState(() => _importNote = 'No plate had print time or filament weight.');
+      return;
+    }
+    if (widget.orderId != null) {
+      final orders = await store.watchOrders().first;
+      PrintOrder? target;
+      for (final order in orders) {
+        if (order.id == widget.orderId) {
+          target = order;
+        }
+      }
+      if (!mounted) {
+        return;
+      }
+      if (target == null) {
+        setState(() => _importNote = 'Quote not found.');
+        return;
+      }
+      if (target.stockDeducted) {
+        setState(() => _importNote = printsLockedMessage);
+        return;
+      }
+      final next = [...orderPrints(target), ...lines];
+      final updated = orderWithPrints(target, next).copyWith(
+        title: quoteTitleFor(target, next),
+        updatedAt: DateTime.now().toUtc().toIso8601String(),
+      );
+      await store.saveOrder(updated);
+      if (mounted) {
+        context.go('/orders/${updated.id}');
+      }
+      return;
+    }
+    final customers = await store.watchCustomers().first;
+    if (!mounted) {
+      return;
+    }
+    final customerId = await _pickCustomerForQuote(customers);
+    if (customerId == null || !mounted) {
+      setState(() => _importNote = 'No plate was imported.');
+      return;
+    }
+    var resolvedCustomer = customerId;
+    if (customerId == 'new') {
+      final created = await _createCustomer(store);
+      if (created == null || !mounted) {
+        return;
+      }
+      resolvedCustomer = created.id;
+    }
+    setState(() => _saving = true);
+    try {
+      final number = await OrderStock(store).allocateQuoteNumber();
+      final now = DateTime.now().toUtc();
+      final typed = _title.text.trim();
+      final title = typed.isNotEmpty
+          ? typed
+          : (result.title.trim().isNotEmpty
+                ? result.title.trim()
+                : lines.map((line) => line.title).join(' + '));
+      final draft = PrintOrder(
+        id: const Uuid().v4(),
+        quoteNumber: number,
+        customerId: resolvedCustomer,
+        title: title,
+        status: OrderStatus.quote,
+        validUntil: now
+            .add(Duration(days: settings.quoteValidityDays))
+            .toIso8601String(),
+        quantity: 1,
+        printTimeSeconds: 0,
+        filaments: const [],
+        markupBasisPoints: lines.first.markupBasisPoints,
+        failureBasisPoints: lines.first.failureBasisPoints,
+        vatBasisPoints: lines.first.vatBasisPoints,
+        currencyCode: settings.currencyCode,
+        breakdown: lines.first.breakdown,
+        createdAt: now.toIso8601String(),
+        updatedAt: now.toIso8601String(),
+      );
+      final order = orderWithPrints(draft, lines).copyWith(title: title);
+      await store.saveOrder(order);
+      if (mounted) {
+        context.go('/orders/${order.id}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
   }
 
   Future<void> _addFromCatalog(
@@ -975,7 +1091,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (target.stockDeducted) {
       setState(
         () => _importNote =
-            'Move the order back to Quote or Accepted before changing prints.',
+            printsLockedMessage,
       );
       return;
     }
@@ -1262,7 +1378,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ],
             if (locked)
               const Text(
-                'Move the order back to Quote or Accepted before changing prints.',
+                printsLockedMessage,
               ),
             TextField(
               controller: _link,

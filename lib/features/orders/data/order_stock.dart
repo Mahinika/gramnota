@@ -46,10 +46,8 @@ class OrderStock {
       }
       final holdsNow = statusHoldsStock(current.status) && current.stockDeducted;
       final holdsNext = statusHoldsStock(next);
-      var updated = current.copyWith(
-        status: next,
-        updatedAt: DateTime.now().toUtc().toIso8601String(),
-      );
+      final now = DateTime.now().toUtc().toIso8601String();
+      var updated = current.copyWith(status: next, updatedAt: now);
       var warning = '';
 
       if (!holdsNow && holdsNext) {
@@ -98,6 +96,7 @@ class OrderStock {
           stockDeducted: true,
           deductedGrams: deducted,
           stockWarning: warning,
+          revenueAt: now,
         );
       } else if (holdsNow && !holdsNext) {
         for (final entry in current.deductedGrams.entries) {
@@ -118,7 +117,13 @@ class OrderStock {
           stockDeducted: false,
           deductedGrams: const {},
           stockWarning: '',
+          revenueAt: '',
         );
+      } else if (holdsNow && holdsNext && current.revenueAt.isEmpty) {
+        final prior = current.updatedAt.isNotEmpty
+            ? current.updatedAt
+            : current.createdAt;
+        updated = updated.copyWith(revenueAt: prior);
       }
 
       transaction.set(orderRef, updated.toJson());

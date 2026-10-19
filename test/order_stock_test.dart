@@ -526,4 +526,306 @@ void main() {
     expect(saved.note, 'Call the customer');
     expect(spool.remainingGrams, 90);
   });
+
+  test('moving from printed to paid does not deduct again', () async {
+    final firestore = FakeFirebaseFirestore();
+    final store = UserStore(firestore, 'user');
+    await store.saveFilament(
+      const FilamentSpool(
+        id: 'spool',
+        brand: 'Prusa',
+        material: 'PLA',
+        remainingGrams: 100,
+      ),
+    );
+    const order = PrintOrder(
+      id: 'order',
+      quoteNumber: 9,
+      title: 'Clip',
+      status: OrderStatus.accepted,
+      validUntil: '2026-10-20T00:00:00.000Z',
+      quantity: 1,
+      printTimeSeconds: 600,
+      filaments: [FilamentUsage(filamentId: 'spool', grams: 10)],
+      markupBasisPoints: 0,
+      failureBasisPoints: 0,
+      vatBasisPoints: 0,
+      currencyCode: 'SEK',
+      breakdown: PriceBreakdown(
+        materialMinor: 0,
+        electricityMinor: 0,
+        machineMinor: 0,
+        failureMinor: 0,
+        laborMinor: 0,
+        extrasMinor: 0,
+        costMinor: 0,
+        markupMinor: 0,
+        netMinor: 0,
+        vatMinor: 0,
+        totalMinor: 0,
+        perUnitMinor: 0,
+        quantity: 1,
+      ),
+      createdAt: '2026-03-01T00:00:00.000Z',
+      updatedAt: '2026-03-01T00:00:00.000Z',
+    );
+    await store.saveOrder(order);
+    final stock = OrderStock(store);
+    final printed = await stock.setStatus(order: order, next: OrderStatus.printed);
+    final paid = await stock.setStatus(order: printed.order, next: OrderStatus.paid);
+
+    final spool = FilamentSpool.fromJson({
+      ...(await store.filaments.doc('spool').get()).data()!,
+      'id': 'spool',
+    });
+    expect(spool.remainingGrams, 90);
+    expect(paid.order.status, OrderStatus.paid);
+    expect(paid.order.stockDeducted, isTrue);
+    expect(paid.order.deductedGrams['spool'], 10);
+    expect(paid.order.revenueAt, printed.order.revenueAt);
+    expect(paid.order.revenueAt, isNotEmpty);
+  });
+
+  test('cancelling a paid order returns the deducted grams', () async {
+    final firestore = FakeFirebaseFirestore();
+    final store = UserStore(firestore, 'user');
+    await store.saveFilament(
+      const FilamentSpool(
+        id: 'spool',
+        brand: 'Prusa',
+        material: 'PLA',
+        remainingGrams: 40,
+      ),
+    );
+    const paid = PrintOrder(
+      id: 'order',
+      quoteNumber: 10,
+      title: 'Clip',
+      status: OrderStatus.paid,
+      validUntil: '2026-10-20T00:00:00.000Z',
+      quantity: 1,
+      printTimeSeconds: 600,
+      filaments: [FilamentUsage(filamentId: 'spool', grams: 10)],
+      markupBasisPoints: 0,
+      failureBasisPoints: 0,
+      vatBasisPoints: 0,
+      currencyCode: 'SEK',
+      breakdown: PriceBreakdown(
+        materialMinor: 0,
+        electricityMinor: 0,
+        machineMinor: 0,
+        failureMinor: 0,
+        laborMinor: 0,
+        extrasMinor: 0,
+        costMinor: 0,
+        markupMinor: 0,
+        netMinor: 0,
+        vatMinor: 0,
+        totalMinor: 0,
+        perUnitMinor: 0,
+        quantity: 1,
+      ),
+      stockDeducted: true,
+      deductedGrams: {'spool': 10},
+      revenueAt: '2026-03-02T00:00:00.000Z',
+      createdAt: '2026-03-01T00:00:00.000Z',
+      updatedAt: '2026-03-02T00:00:00.000Z',
+    );
+    await store.saveOrder(paid);
+
+    final change = await OrderStock(store).setStatus(
+      order: paid,
+      next: OrderStatus.cancelled,
+    );
+
+    final spool = FilamentSpool.fromJson({
+      ...(await store.filaments.doc('spool').get()).data()!,
+      'id': 'spool',
+    });
+    expect(spool.remainingGrams, 50);
+    expect(change.order.stockDeducted, isFalse);
+    expect(change.order.deductedGrams, isEmpty);
+    expect(change.order.revenueAt, isEmpty);
+    expect(change.order.status, OrderStatus.cancelled);
+  });
+
+  test('reverting a printed order to accepted returns stock', () async {
+    final firestore = FakeFirebaseFirestore();
+    final store = UserStore(firestore, 'user');
+    await store.saveFilament(
+      const FilamentSpool(
+        id: 'spool',
+        brand: 'Prusa',
+        material: 'PLA',
+        remainingGrams: 70,
+      ),
+    );
+    const printed = PrintOrder(
+      id: 'order',
+      quoteNumber: 11,
+      title: 'Clip',
+      status: OrderStatus.printed,
+      validUntil: '2026-10-20T00:00:00.000Z',
+      quantity: 1,
+      printTimeSeconds: 600,
+      filaments: [FilamentUsage(filamentId: 'spool', grams: 25)],
+      markupBasisPoints: 0,
+      failureBasisPoints: 0,
+      vatBasisPoints: 0,
+      currencyCode: 'SEK',
+      breakdown: PriceBreakdown(
+        materialMinor: 0,
+        electricityMinor: 0,
+        machineMinor: 0,
+        failureMinor: 0,
+        laborMinor: 0,
+        extrasMinor: 0,
+        costMinor: 0,
+        markupMinor: 0,
+        netMinor: 0,
+        vatMinor: 0,
+        totalMinor: 0,
+        perUnitMinor: 0,
+        quantity: 1,
+      ),
+      stockDeducted: true,
+      deductedGrams: {'spool': 25},
+      revenueAt: '2026-03-04T00:00:00.000Z',
+      createdAt: '2026-03-01T00:00:00.000Z',
+      updatedAt: '2026-03-04T00:00:00.000Z',
+    );
+    await store.saveOrder(printed);
+
+    await OrderStock(store).setStatus(
+      order: printed,
+      next: OrderStatus.accepted,
+    );
+
+    final spool = FilamentSpool.fromJson({
+      ...(await store.filaments.doc('spool').get()).data()!,
+      'id': 'spool',
+    });
+    expect(spool.remainingGrams, 95);
+  });
+
+  test('sent does not take filament', () async {
+    final firestore = FakeFirebaseFirestore();
+    final store = UserStore(firestore, 'user');
+    await store.saveFilament(
+      const FilamentSpool(
+        id: 'spool',
+        brand: 'Prusa',
+        material: 'PLA',
+        remainingGrams: 100,
+      ),
+    );
+    const order = PrintOrder(
+      id: 'order',
+      quoteNumber: 12,
+      title: 'Clip',
+      status: OrderStatus.quote,
+      validUntil: '2026-10-20T00:00:00.000Z',
+      quantity: 1,
+      printTimeSeconds: 600,
+      filaments: [FilamentUsage(filamentId: 'spool', grams: 10)],
+      markupBasisPoints: 0,
+      failureBasisPoints: 0,
+      vatBasisPoints: 0,
+      currencyCode: 'SEK',
+      breakdown: PriceBreakdown(
+        materialMinor: 0,
+        electricityMinor: 0,
+        machineMinor: 0,
+        failureMinor: 0,
+        laborMinor: 0,
+        extrasMinor: 0,
+        costMinor: 0,
+        markupMinor: 0,
+        netMinor: 0,
+        vatMinor: 0,
+        totalMinor: 0,
+        perUnitMinor: 0,
+        quantity: 1,
+      ),
+      createdAt: '2026-03-01T00:00:00.000Z',
+      updatedAt: '2026-03-01T00:00:00.000Z',
+    );
+    await store.saveOrder(order);
+
+    final change = await OrderStock(store).setStatus(
+      order: order,
+      next: OrderStatus.sent,
+    );
+
+    final spool = FilamentSpool.fromJson({
+      ...(await store.filaments.doc('spool').get()).data()!,
+      'id': 'spool',
+    });
+    expect(change.order.status, OrderStatus.sent);
+    expect(change.order.stockDeducted, isFalse);
+    expect(spool.remainingGrams, 100);
+  });
+
+  test('an old delivered order stays paid and can return stock', () async {
+    final firestore = FakeFirebaseFirestore();
+    final store = UserStore(firestore, 'user');
+    await store.saveFilament(
+      const FilamentSpool(
+        id: 'spool',
+        brand: 'Prusa',
+        material: 'PLA',
+        remainingGrams: 20,
+      ),
+    );
+    await store.orders.doc('legacy').set({
+      'id': 'legacy',
+      'quoteNumber': 3,
+      'title': 'Old',
+      'status': 'delivered',
+      'validUntil': '2026-01-01T00:00:00.000Z',
+      'quantity': 1,
+      'printTimeSeconds': 60,
+      'filaments': [
+        {'filamentId': 'spool', 'grams': 12.5, 'material': 'PLA', 'colorHex': ''},
+      ],
+      'markupBasisPoints': 0,
+      'failureBasisPoints': 0,
+      'vatBasisPoints': 0,
+      'currencyCode': 'SEK',
+      'breakdown': const PriceBreakdown(
+        materialMinor: 100,
+        electricityMinor: 0,
+        machineMinor: 0,
+        failureMinor: 0,
+        laborMinor: 0,
+        extrasMinor: 0,
+        costMinor: 100,
+        markupMinor: 0,
+        netMinor: 100,
+        vatMinor: 0,
+        totalMinor: 100,
+        perUnitMinor: 100,
+        quantity: 1,
+      ).toJson(),
+      'stockDeducted': true,
+      'deductedGrams': {'spool': 12.5},
+      'createdAt': '2026-01-01T00:00:00.000Z',
+      'updatedAt': '2026-01-02T00:00:00.000Z',
+    });
+    final stored = PrintOrder.fromJson({
+      ...(await store.orders.doc('legacy').get()).data()!,
+      'id': 'legacy',
+    });
+    expect(stored.status, OrderStatus.paid);
+    expect(stored.deductedGrams['spool'], 12.5);
+    expect(stored.depositMinor, 0);
+
+    await OrderStock(store).setStatus(order: stored, next: OrderStatus.cancelled);
+
+    final spool = FilamentSpool.fromJson({
+      ...(await store.filaments.doc('spool').get()).data()!,
+      'id': 'spool',
+    });
+    expect(spool.remainingGrams, 32.5);
+  });
 }

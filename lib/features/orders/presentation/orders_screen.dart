@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/format.dart';
+import '../../../core/money.dart';
 import '../../../core/text_prompt.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
@@ -23,18 +24,10 @@ import '../data/order_stock.dart';
 import '../data/orders_providers.dart';
 import '../domain/duplicate_quote.dart';
 import '../domain/print_order.dart';
+import '../domain/stock_coverage.dart';
+import 'order_status_style.dart';
 import 'quote_actions.dart';
 import 'quote_pdf.dart';
-
-Color _orderStatusColor(OrderStatus status, ColorScheme scheme) {
-  return switch (status) {
-    OrderStatus.quote => scheme.secondary,
-    OrderStatus.accepted => scheme.primary,
-    OrderStatus.printed => scheme.tertiary,
-    OrderStatus.delivered => scheme.primary,
-    OrderStatus.cancelled => scheme.error,
-  };
-}
 
 Future<void> _assignOrderCustomer(
   BuildContext context,
@@ -132,10 +125,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
           final query = _search.text.trim().toLowerCase();
           final visible = sorted.where((order) {
-            if (_inProgressOnly &&
-                order.status != OrderStatus.quote &&
-                order.status != OrderStatus.accepted &&
-                order.status != OrderStatus.printed) {
+            if (_inProgressOnly && !statusIsInProgress(order.status)) {
               return false;
             }
             if (_filter != null && order.status != _filter) {
@@ -278,7 +268,8 @@ class _OrderListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final statusColor = _orderStatusColor(order.status, scheme);
+    final statusColor = orderStatusColor(order.status, scheme);
+    final expired = quoteIsExpired(order, DateTime.now());
     final note = order.note.trim();
     final prints = orderPrints(order);
     final updated = _formatOrderUpdated(order.updatedAt);
@@ -309,6 +300,15 @@ class _OrderListCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (expired) ...[
+                const SizedBox(width: 6),
+                Text(
+                  'Expired',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.error,
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 6),
@@ -422,6 +422,11 @@ class OrderDetailScreen extends ConsumerWidget {
         final workshop = settings.asData?.value ?? const WorkshopSettings();
         final prints = orderPrints(order);
         final locked = order.stockDeducted;
+        final coverage = quoteSpoolCoverage(
+          order: order,
+          orders: list,
+          spools: spools,
+        );
         return Scaffold(
           appBar: AppBar(
             title: Text('Quote ${order.quoteNumber}'),
@@ -474,10 +479,7 @@ class OrderDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        _StatusChip(
-                          status: order.status,
-                          scheme: Theme.of(context).colorScheme,
-                        ),
+                        OrderStatusChip(status: order.status),
                         const Spacer(),
                         Text(
                           formatMoney(
@@ -514,13 +516,12 @@ class OrderDetailScreen extends ConsumerWidget {
               ),
               if (order.stockWarning.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                MaterialBanner(
-                  content: Text(order.stockWarning),
-                  leading: const Icon(Icons.warning_amber_outlined),
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.errorContainer.withValues(alpha: 0.5),
-                  actions: const [SizedBox.shrink()],
+                StockWarningBanner(messages: [order.stockWarning]),
+              ],
+              if (coverage.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                StockWarningBanner(
+                  messages: [for (final item in coverage) item.message],
                 ),
               ],
               const SizedBox(height: 12),
@@ -589,28 +590,18 @@ class OrderDetailScreen extends ConsumerWidget {
               _OrderNoteField(order: order, store: store),
               const SectionRule(),
               const SectionHeading('Status'),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final status in OrderStatus.values)
-                    FilterChip(
-                      label: Text(orderStatusLabel(status)),
-                      selected: order.status == status,
-                      showCheckmark: false,
-                      onSelected: (_) async {
-                        final change = await OrderStock(
-                          store,
-                        ).setStatus(order: order, next: status);
-                        if (change.warning.isNotEmpty && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(change.warning)),
-                          );
-                        }
-                      },
-                    ),
-                ],
+              OrderStatusSection(
+                selected: order.status,
+                onSelected: (status) => _changeOrderStatus(
+                  context: context,
+                  store: store,
+                  order: order,
+                  next: status,
+                  coverage: coverage,
+                ),
               ),
+              const SizedBox(height: 12),
+              _DepositField(order: order, store: store),
               const SectionRule(),
               const SectionHeading('New quote'),
               const Text(duplicateQuoteSummary),
@@ -665,7 +656,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4, bottom: 8),
                   child: Text(
-                    'Move the order back to Quote or Accepted before changing prints.',
+                    printsLockedMessage,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -698,25 +689,148 @@ class OrderDetailScreen extends ConsumerWidget {
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status, required this.scheme});
+Future<void> _changeOrderStatus({
+  required BuildContext context,
+  required UserStore store,
+  required PrintOrder order,
+  required OrderStatus next,
+  required List<SpoolCoverage> coverage,
+}) async {
+  if (order.status == next) {
+    return;
+  }
+  final explanation = stockChangeExplanation(order.status, next);
+  final short = statusHoldsStock(next) && !statusHoldsStock(order.status)
+      ? [for (final item in coverage) item.message]
+      : const <String>[];
+  final blocks = [?explanation, ...short];
+  if (blocks.isNotEmpty) {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Mark as ${orderStatusLabel(next)}?'),
+        content: Text(blocks.join('\n\n')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Back'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Update status'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+  }
+  final change = await OrderStock(store).setStatus(order: order, next: next);
+  if (change.warning.isNotEmpty && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(change.warning)),
+    );
+  }
+}
 
-  final OrderStatus status;
-  final ColorScheme scheme;
+class _DepositField extends StatefulWidget {
+  const _DepositField({required this.order, required this.store});
+
+  final PrintOrder order;
+  final UserStore store;
+
+  @override
+  State<_DepositField> createState() => _DepositFieldState();
+}
+
+class _DepositFieldState extends State<_DepositField> {
+  late final TextEditingController _amount;
+  var _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _amount = TextEditingController(
+      text: formatMinorAmount(widget.order.depositMinor),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _DepositField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.order.id != widget.order.id ||
+        oldWidget.order.depositMinor != widget.order.depositMinor) {
+      _amount.text = formatMinorAmount(widget.order.depositMinor);
+    }
+  }
+
+  @override
+  void dispose() {
+    _amount.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final parsed = parseMinor(_amount.text.trim().isEmpty ? '0' : _amount.text);
+    if (parsed == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter the deposit with a comma or a dot.')),
+      );
+      return;
+    }
+    if (parsed == widget.order.depositMinor || _saving) {
+      return;
+    }
+    setState(() => _saving = true);
+    try {
+      await widget.store.saveOrderDeposit(
+        orderId: widget.order.id,
+        depositMinor: parsed,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final color = _orderStatusColor(status, scheme);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        orderStatusLabel(status),
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: color),
-      ),
+    final order = widget.order;
+    final balance = order.breakdown.totalMinor - order.depositMinor;
+    final settled = order.status == OrderStatus.paid;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _amount,
+          decoration: InputDecoration(
+            labelText: 'Deposit paid (${order.currencyCode})',
+            helperText: settled
+                ? 'The order is marked Paid. The deposit is what was paid before that.'
+                : 'Optional. Still to pay is the quote total minus this deposit.',
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          onSubmitted: (_) => _save(),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                settled
+                    ? 'Marked paid'
+                    : 'Still to pay ${formatMoney(balance < 0 ? 0 : balance, order.currencyCode)}',
+              ),
+            ),
+            TextButton(
+              onPressed: _saving ? null : _save,
+              child: Text(_saving ? 'Saving' : 'Save deposit'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

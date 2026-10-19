@@ -110,6 +110,15 @@ class UserStore {
     return _updateOrderFields(orderId, {'title': title});
   }
 
+  /// Records a deposit without rewriting status or stock fields.
+  Future<void> saveOrderDeposit({
+    required String orderId,
+    required int depositMinor,
+  }) {
+    final amount = depositMinor < 0 ? 0 : depositMinor;
+    return _updateOrderFields(orderId, {'depositMinor': amount});
+  }
+
   Future<void> _updateOrderFields(String orderId, Map<String, Object?> fields) {
     final ref = orders.doc(orderId);
     return db.runTransaction((transaction) async {

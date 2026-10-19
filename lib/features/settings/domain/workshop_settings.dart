@@ -31,6 +31,7 @@ abstract class WorkshopSettings with _$WorkshopSettings {
     @Default('') String email,
     @Default(1) int nextQuoteNumber,
     @Default(14) int quoteValidityDays,
+    @Default(100) double defaultLowStockGrams,
   }) = _WorkshopSettings;
 
   factory WorkshopSettings.fromJson(Map<String, dynamic> json) =>

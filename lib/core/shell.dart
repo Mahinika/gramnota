@@ -10,6 +10,7 @@ class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   static const destinations = [
+    (label: 'Home', icon: 'home'),
     (label: 'Calculator', icon: 'calculator'),
     (label: 'Orders', icon: 'orders'),
     (label: 'Customers', icon: 'customers'),
