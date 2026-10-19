@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -26,47 +27,223 @@ UpdatePlatform currentUpdatePlatform() {
   return UpdatePlatform.other;
 }
 
-Future<void> promptForUpdate(
+Future<UpdatePromptResult> promptForUpdate(
   BuildContext context, {
   required bool manual,
   UpdateCoordinator? coordinator,
   UpdateClient? client,
+  void Function()? onReady,
 }) async {
-  final info = await PackageInfo.fromPlatform();
-  final installed = parseInstalledBuild(info.buildNumber);
-  final downloader = client ?? UpdateClient(manifestUrl: updateManifestUrl);
-  final active =
-      coordinator ??
-      UpdateCoordinator(
-        client: downloader,
-        preferences: await SharedUpdatePreferences.load(),
-        platform: currentUpdatePlatform(),
-        installedBuild: installed,
-      );
-  final outcome = await active.check(manual: manual);
-  if (!context.mounted) {
-    return;
+  final navigator = Navigator.maybeOf(context, rootNavigator: true);
+  DialogRoute<void>? spinner;
+  if (manual && navigator != null && context.mounted) {
+    spinner = DialogRoute<void>(
+      context: navigator.context,
+      barrierDismissible: false,
+      builder: (context) =>
+          const PopScope(canPop: false, child: UpdateCheckDialog()),
+    );
+    unawaited(navigator.push(spinner));
   }
-  final artifact = outcome.artifact;
-  if (artifact == null) {
-    final message = outcome.message;
-    if (manual && message != null) {
-      await showUpdateMessage(context, message);
+
+  Future<void> closeSpinner() async {
+    final route = spinner;
+    if (route == null) {
+      return;
     }
-    return;
+    spinner = null;
+    if (navigator != null && route.isActive) {
+      navigator.removeRoute(route);
+    }
+  }
+
+  try {
+    final downloader = client ?? UpdateClient(manifestUrl: updateManifestUrl);
+    final active =
+        coordinator ??
+        UpdateCoordinator(
+          client: downloader,
+          preferences: await _loadPreferences(),
+          platform: currentUpdatePlatform(),
+          installedBuild: await _readInstalledBuild(),
+        );
+    final outcome = await active.check(manual: manual);
+    onReady?.call();
+    await closeSpinner();
+    final artifact = outcome.artifact;
+    if (artifact == null) {
+      final message = outcome.message;
+      if (manual && message != null) {
+        if (context.mounted) {
+          await _present(context, navigator, message);
+        } else if (navigator != null && navigator.mounted) {
+          await _present(navigator.context, navigator, message);
+        } else {
+          log('Update result was not shown: $message', name: updateLogName);
+        }
+      }
+      return UpdatePromptResult(message: manual ? message : null);
+    }
+    if (!context.mounted) {
+      return _offerUpdate(
+        host: _navigatorContext(navigator),
+        navigator: navigator,
+        artifact: artifact,
+        preferences: active.preferences,
+        downloader: downloader,
+      );
+    }
+    return _offerUpdate(
+      host: context,
+      navigator: navigator,
+      artifact: artifact,
+      preferences: active.preferences,
+      downloader: downloader,
+    );
+  } on Object catch (error, stackTrace) {
+    onReady?.call();
+    await closeSpinner();
+    log(
+      'Update prompt failed',
+      name: updateLogName,
+      error: error,
+      stackTrace: stackTrace,
+    );
+    final message = updateFailureMessage(error);
+    if (manual) {
+      if (context.mounted) {
+        await _present(context, navigator, message);
+      } else if (navigator != null && navigator.mounted) {
+        await _present(navigator.context, navigator, message);
+      } else {
+        log('Update result was not shown: $message', name: updateLogName);
+      }
+    }
+    return UpdatePromptResult(message: manual ? message : null);
+  }
+}
+
+Future<UpdatePromptResult> _offerUpdate({
+  required BuildContext? host,
+  required NavigatorState? navigator,
+  required UpdateArtifact artifact,
+  required UpdatePreferences preferences,
+  required UpdateClient downloader,
+}) async {
+  if (host == null || !host.mounted) {
+    log(
+      'Update ${artifact.build} was found after the page closed',
+      name: updateLogName,
+    );
+    return UpdatePromptResult(
+      message:
+          'Ny version ${artifact.version} (build ${artifact.build}) finns.',
+    );
   }
   final choice = await showDialog<UpdateChoice>(
-    context: context,
+    context: host,
+    useRootNavigator: true,
     builder: (context) => UpdateOfferDialog(artifact: artifact),
   );
   if (choice == UpdateChoice.skip) {
-    await active.preferences.setSkippedBuild(artifact.build);
+    await preferences.setSkippedBuild(artifact.build);
+    return const UpdatePromptResult();
+  }
+  if (choice != UpdateChoice.update) {
+    return const UpdatePromptResult();
+  }
+  final installHost = host.mounted ? host : _navigatorContext(navigator);
+  if (installHost == null || !installHost.mounted) {
+    return const UpdatePromptResult(
+      message: 'Kunde inte starta installationen.',
+    );
+  }
+  await _downloadAndInstall(installHost, artifact, downloader);
+  return const UpdatePromptResult();
+}
+
+Future<int> _readInstalledBuild() async {
+  Object? failure;
+  StackTrace? failureStack;
+  if (Platform.isAndroid) {
+    try {
+      final raw = await updateMethodChannel.invokeMethod<Object>(
+        'installedBuild',
+      );
+      if (raw is int) {
+        return raw;
+      }
+      if (raw is num) {
+        return raw.toInt();
+      }
+    } on Object catch (error, stackTrace) {
+      failure = error;
+      failureStack = stackTrace;
+      log(
+        'Could not read the Android version code',
+        name: updateLogName,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+  try {
+    final info = await PackageInfo.fromPlatform();
+    return parseInstalledBuild(info.buildNumber);
+  } on Object catch (error, stackTrace) {
+    log(
+      'Could not read the package build number',
+      name: updateLogName,
+      error: error,
+      stackTrace: stackTrace,
+    );
+    failure = error;
+    failureStack = stackTrace;
+  }
+  Error.throwWithStackTrace(failure, failureStack);
+}
+
+Future<UpdatePreferences> _loadPreferences() async {
+  try {
+    return await SharedUpdatePreferences.load();
+  } on Object catch (error, stackTrace) {
+    log(
+      'Update preferences are unavailable',
+      name: updateLogName,
+      error: error,
+      stackTrace: stackTrace,
+    );
+    return MemoryUpdatePreferences();
+  }
+}
+
+BuildContext? _navigatorContext(NavigatorState? navigator) {
+  if (navigator != null && navigator.mounted) {
+    return navigator.context;
+  }
+  return null;
+}
+
+Future<void> _present(
+  BuildContext context,
+  NavigatorState? navigator,
+  String message,
+) async {
+  final host = context.mounted ? context : _navigatorContext(navigator);
+  if (host == null || !host.mounted) {
+    log('Update result was not shown: $message', name: updateLogName);
     return;
   }
-  if (choice != UpdateChoice.update || !context.mounted) {
-    return;
+  try {
+    await showUpdateMessage(host, message);
+  } on Object catch (error, stackTrace) {
+    log(
+      'Could not show the update message',
+      name: updateLogName,
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
-  await _downloadAndInstall(context, artifact, downloader);
 }
 
 Future<void> _downloadAndInstall(

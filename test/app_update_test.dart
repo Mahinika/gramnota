@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -10,6 +11,7 @@ import 'package:gramnota/features/updates/domain/update_check.dart';
 import 'package:gramnota/features/updates/domain/update_failures.dart';
 import 'package:gramnota/features/updates/domain/update_models.dart';
 import 'package:gramnota/features/updates/presentation/update_dialogs.dart';
+import 'package:gramnota/features/updates/presentation/update_launcher.dart';
 import 'package:gramnota/features/updates/presentation/update_section.dart';
 import 'package:gramnota/features/updates/update_config.dart';
 import 'package:http/http.dart' as http;
@@ -129,11 +131,21 @@ void main() {
     );
     expect(
       updateFailureMessage(const FormatException('bad')),
-      'Kunde inte läsa uppdateringsinformationen.',
+      'Kunde inte läsa uppdateringsinformationen. (bad)',
     );
     expect(
       updateFailureMessage(StateError('x')),
-      'Kunde inte söka efter uppdateringar.',
+      'Kunde inte söka efter uppdateringar. (Bad state: x)',
+    );
+    expect(
+      updateFailureMessage(
+        const UpdateNetworkException('SocketException: reset'),
+      ),
+      'Ingen internetanslutning. Försök igen senare. (SocketException: reset)',
+    );
+    expect(
+      updateFailureMessage(const UpdateManifestException('HTTP 302')),
+      'Kunde inte läsa uppdateringsinformationen. (HTTP 302)',
     );
   });
 
@@ -200,7 +212,7 @@ void main() {
       now: () => DateTime.utc(2026, 10, 19),
     ).check(manual: true);
     expect(current.upToDate, isTrue);
-    expect(current.message, 'Du har redan den senaste versionen.');
+    expect(current.message, 'You have the latest version (build 1)');
   });
 
   test(
@@ -268,6 +280,181 @@ void main() {
     );
     expect(find.text('Version 1.0.0 (build 1)'), findsOneWidget);
     expect(find.text('Sök efter uppdateringar'), findsOneWidget);
+  });
+
+  test(
+    'a redirecting octet-stream manifest offers the newer android build',
+    () async {
+      const notes = 'Ny version å';
+      final payload = utf8.encode(
+        jsonEncode({
+          'version': '1.0.0',
+          'android': {
+            'build': 17,
+            'commit': 'abc',
+            'date': '2026-10-19',
+            'notes': notes,
+            'url': 'https://example.test/Gramnota.apk',
+            'sha256': 'ab' * 32,
+          },
+        }),
+      );
+      final redirecting = _RedirectingClient(payload);
+      final client = UpdateClient(
+        client: redirecting,
+        manifestUrl: 'https://example.test/latest.json',
+      );
+      final newer = await UpdateCoordinator(
+        client: client,
+        preferences: MemoryUpdatePreferences(),
+        platform: UpdatePlatform.android,
+        installedBuild: 16,
+        now: () => DateTime.utc(2026, 10, 19),
+      ).check(manual: true);
+      expect(redirecting.redirects, 1);
+      expect(newer.artifact?.build, 17);
+      expect(newer.artifact?.notes, notes);
+
+      final current = await UpdateCoordinator(
+        client: client,
+        preferences: MemoryUpdatePreferences(),
+        platform: UpdatePlatform.android,
+        installedBuild: 17,
+        now: () => DateTime.utc(2026, 10, 19),
+      ).check(manual: true);
+      expect(current.upToDate, isTrue);
+      expect(current.message, 'You have the latest version (build 17)');
+
+      final missing = UpdateClient(
+        client: _StatusClient(500),
+        manifestUrl: 'https://example.test/latest.json',
+      );
+      await expectLater(
+        missing.fetchManifest(),
+        throwsA(
+          isA<UpdateManifestException>().having(
+            (error) => error.detail,
+            'detail',
+            'HTTP 500',
+          ),
+        ),
+      );
+    },
+  );
+
+  test('a redirected download keeps the file bytes', () async {
+    final bytes = utf8.encode('gramnota-apk');
+    final digest = sha256.convert(bytes).toString();
+    final client = UpdateClient(
+      client: _RedirectingClient(bytes, path: '/Gramnota.apk'),
+      manifestUrl: 'https://example.test/latest.json',
+    );
+    final file = File(
+      '${Directory.systemTemp.path}/gramnota-update-redirect/Gramnota.apk',
+    );
+    final saved = await client.download(
+      url: 'https://example.test/Gramnota.apk',
+      sha256: digest,
+      destination: file,
+    );
+    expect(await saved.readAsBytes(), bytes);
+    if (file.existsSync()) {
+      await file.delete();
+    }
+  });
+
+  testWidgets('checking shows a spinner and then the latest-version message', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: UpdateSection(
+            versionLabel: 'Version 1.0.0 (build 16)',
+            prompt: (context) async {
+              await gate.future;
+              return const UpdatePromptResult(
+                message: 'You have the latest version (build 16)',
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Sök efter uppdateringar'));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Söker…'), findsOneWidget);
+    gate.complete();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('You have the latest version (build 16)'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('a failed search stays on screen with the reason', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: UpdateSection(
+            versionLabel: 'Version 1.0.0 (build 16)',
+            prompt: (context) async {
+              throw StateError('plugin missing');
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Sök efter uppdateringar'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.textContaining('plugin missing'), findsOneWidget);
+    expect(
+      find.textContaining('Kunde inte söka efter uppdateringar'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('an android build 16 check offers build 17 from the manifest', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    final coordinator = UpdateCoordinator(
+      client: _DelayedSource(_manifest(build: 17), gate),
+      preferences: MemoryUpdatePreferences(),
+      platform: UpdatePlatform.android,
+      installedBuild: 16,
+      now: () => DateTime.utc(2026, 10, 19),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: UpdateSection(
+            versionLabel: 'Version 1.0.0 (build 16)',
+            prompt: (context) => promptForUpdate(
+              context,
+              manual: true,
+              coordinator: coordinator,
+              onReady: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Sök efter uppdateringar'));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsWidgets);
+    gate.complete();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Ny version 1.0.0 finns'), findsOneWidget);
+    await tester.tap(find.text('Senare'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Ny version 1.0.0 finns'), findsNothing);
   });
 }
 
@@ -401,5 +588,62 @@ class _FakeSource implements ManifestSource {
       throw failure;
     }
     return manifest;
+  }
+}
+
+class _DelayedSource implements ManifestSource {
+  _DelayedSource(this.manifest, this.gate);
+
+  final UpdateManifest manifest;
+  final Completer<void> gate;
+
+  @override
+  Future<UpdateManifest> fetchManifest() async {
+    await gate.future;
+    return manifest;
+  }
+}
+
+/// Returns 302 for the first hop and an octet-stream body for the next.
+class _RedirectingClient extends http.BaseClient {
+  _RedirectingClient(this.payload, {this.path = '/latest.json'});
+
+  final List<int> payload;
+  final String path;
+  var redirects = 0;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    if (request.url.path == path) {
+      redirects += 1;
+      return http.StreamedResponse(
+        http.ByteStream.fromBytes(const <int>[]),
+        302,
+        headers: {
+          'location': request.url.replace(path: '/payload').toString(),
+          'content-type': 'text/html; charset=utf-8',
+        },
+      );
+    }
+    return http.StreamedResponse(
+      http.ByteStream.fromBytes(payload),
+      200,
+      headers: {'content-type': 'application/octet-stream'},
+      contentLength: payload.length,
+    );
+  }
+}
+
+class _StatusClient extends http.BaseClient {
+  _StatusClient(this.statusCode);
+
+  final int statusCode;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    return http.StreamedResponse(
+      http.ByteStream.fromBytes(const <int>[]),
+      statusCode,
+    );
   }
 }

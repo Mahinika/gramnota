@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import '../data/update_preferences.dart';
 import 'update_failures.dart';
 import 'update_models.dart';
@@ -6,6 +8,13 @@ import 'update_models.dart';
 /// do not import `dart:io`.
 abstract class ManifestSource {
   Future<UpdateManifest> fetchManifest();
+}
+
+/// What a manual check should tell the user, besides an update dialog.
+class UpdatePromptResult {
+  const UpdatePromptResult({this.message});
+
+  final String? message;
 }
 
 class UpdateCheckOutcome {
@@ -55,13 +64,28 @@ class UpdateCoordinator {
     final UpdateManifest manifest;
     try {
       manifest = await client.fetchManifest();
-    } on Object catch (error) {
+    } on Object catch (error, stackTrace) {
+      log(
+        'Update check failed',
+        name: updateLogName,
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!manual) {
         return const UpdateCheckOutcome();
       }
       return UpdateCheckOutcome(message: updateFailureMessage(error));
     }
-    await preferences.setLastCheck(_now());
+    try {
+      await preferences.setLastCheck(_now());
+    } on Object catch (error, stackTrace) {
+      log(
+        'Could not store the update check time',
+        name: updateLogName,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
     final artifact = manifest.forPlatform(platform);
     if (artifact == null) {
       if (!manual) {
@@ -71,7 +95,17 @@ class UpdateCoordinator {
         message: 'Kunde inte läsa uppdateringsinformationen.',
       );
     }
-    final skipped = await preferences.skippedBuild();
+    int? skipped;
+    try {
+      skipped = await preferences.skippedBuild();
+    } on Object catch (error, stackTrace) {
+      log(
+        'Could not read the skipped update',
+        name: updateLogName,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
     if (!shouldOfferUpdate(
       installedBuild: installedBuild,
       availableBuild: artifact.build,
@@ -81,9 +115,9 @@ class UpdateCoordinator {
       if (!manual) {
         return const UpdateCheckOutcome();
       }
-      return const UpdateCheckOutcome(
+      return UpdateCheckOutcome(
         upToDate: true,
-        message: 'Du har redan den senaste versionen.',
+        message: 'You have the latest version (build $installedBuild)',
       );
     }
     return UpdateCheckOutcome(artifact: artifact);

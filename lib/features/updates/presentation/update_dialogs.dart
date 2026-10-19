@@ -91,6 +91,27 @@ Future<void> showAndroidConfirmHint(BuildContext context) {
   );
 }
 
+class UpdateCheckDialog extends StatelessWidget {
+  const UpdateCheckDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const AlertDialog(
+      content: Row(
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 16),
+          Expanded(child: Text('Söker…')),
+        ],
+      ),
+    );
+  }
+}
+
 class UpdateProgressDialog extends StatelessWidget {
   const UpdateProgressDialog({required this.progress, super.key});
 
