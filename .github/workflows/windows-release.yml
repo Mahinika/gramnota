@@ -1,4 +1,4 @@
-# Builds the Windows desktop app and replaces the "windows" GitHub release.
+# Builds the Windows desktop app and publishes it on the shared "latest" release.
 # Windows Firebase config is the committed lib/firebase_options.dart.
 # This job does not read repository secrets.
 name: Windows release
@@ -168,7 +168,7 @@ jobs:
           if (-not $desktop) { throw "Desktop shortcut was not created" }
           Write-Host "Shortcuts: $($start[0].FullName); $($desktop[0].FullName)"
 
-      - name: Publish on the windows release
+      - name: Publish on the latest release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -177,10 +177,9 @@ jobs:
             echo "APP_VERSION was not set by package.ps1"
             exit 1
           fi
-          gh release delete windows --yes --cleanup-tag || true
-          gh release create windows \
-            "build/windows/installer/Gramnota-Setup-${APP_VERSION}.exe" \
-            "build/windows/installer/Gramnota-${APP_VERSION}-windows-x64.zip" \
-            --title "Gramnota for Windows" \
-            --notes "Windows ${APP_VERSION} built from ${GITHUB_SHA}. Gramnota-Setup-${APP_VERSION}.exe installs for the current user, adds Start menu and desktop shortcuts, and upgrades in place. Gramnota-${APP_VERSION}-windows-x64.zip is the portable build. Visual C++ runtime libraries are included." \
-            --target "$GITHUB_SHA"
+          mkdir -p "$RUNNER_TEMP/gramnota-publish"
+          cp "build/windows/installer/Gramnota-Setup-${APP_VERSION}.exe" "$RUNNER_TEMP/gramnota-publish/Gramnota-Setup.exe"
+          cp "build/windows/installer/Gramnota-${APP_VERSION}-windows-x64.zip" "$RUNNER_TEMP/gramnota-publish/Gramnota-windows.zip"
+          bash .github/scripts/publish_release.sh windows \
+            "$RUNNER_TEMP/gramnota-publish/Gramnota-Setup.exe" \
+            "$RUNNER_TEMP/gramnota-publish/Gramnota-windows.zip"
