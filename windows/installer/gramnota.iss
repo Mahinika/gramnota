@@ -40,9 +40,10 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-; lowest: double-click installs for the current user and does not show UAC.
-; {autopf} is then %LOCALAPPDATA%\Programs.
-PrivilegesRequired=lowest
+; Admin install to Program Files. An already-elevated CI runner cannot
+; complete a per-user (PrivilegesRequired=lowest) install, because Inno
+; re-launches unelevated and that re-launch fails there.
+PrivilegesRequired=admin
 MinVersion=10.0
 CloseApplications=yes
 RestartApplications=no

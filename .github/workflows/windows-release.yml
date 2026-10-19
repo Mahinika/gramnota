@@ -74,14 +74,17 @@ jobs:
         shell: pwsh
         run: |
           $PSNativeCommandUseErrorActionPreference = $false
+          # The runner image already has an Inno Setup 6.7.1 compiler. Install
+          # 6.7.3 into its own directory so that copy is the one we run.
+          $prefix = "C:\Tools\InnoSetup6"
           $installer = Join-Path $env:RUNNER_TEMP "innosetup-6.7.3.exe"
           curl.exe -fsSL -o $installer "https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & $installer /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
+          & $installer /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- "/DIR=$prefix"
           Write-Host "Inno Setup installer exit code: $LASTEXITCODE"
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          $iscc = Join-Path $prefix "ISCC.exe"
           if (-not (Test-Path $iscc)) { throw "ISCC.exe was not installed (installer exit $LASTEXITCODE)" }
-          Write-Host "ISCC file version: $((Get-Item $iscc).VersionInfo.FileVersion)"
+          Add-Content -Path $env:GITHUB_ENV -Value "INNO_ISCC=$iscc" -Encoding utf8NoBOM
 
       - name: Package installer and portable zip
         shell: pwsh
@@ -105,9 +108,11 @@ jobs:
           $setup = Get-ChildItem "build\windows\installer\Gramnota-Setup-*.exe" | Select-Object -First 1
           $log = Join-Path $env:GITHUB_WORKSPACE "build\windows\installer\silent-install.log"
           & $setup.FullName /VERYSILENT /SUPPRESSMSGBOXES /NORESTART "/LOG=$log"
-          if ($LASTEXITCODE -ne 0) {
-            if (Test-Path $log) { Get-Content $log -Tail 80 }
-            throw "Silent install failed with exit code $LASTEXITCODE"
+          $installCode = $LASTEXITCODE
+          Write-Host "Installer exit code: $installCode"
+          if ($installCode -ne 0) {
+            if (Test-Path $log) { Get-Content $log -Tail 120 } else { Write-Host "No install log at $log" }
+            throw "Silent install failed with exit code $installCode"
           }
 
           $iss = Get-Content "windows\installer\gramnota.iss" -Raw

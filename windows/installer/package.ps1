@@ -9,7 +9,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $release = Join-Path $repoRoot "build\windows\x64\runner\Release"
 $installerDir = Join-Path $repoRoot "build\windows\installer"
 $iss = Join-Path $PSScriptRoot "gramnota.iss"
-$iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+$iscc = if ($env:INNO_ISCC) { $env:INNO_ISCC } else { "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
 
 if (-not (Test-Path (Join-Path $release "gramnota.exe"))) {
   throw "Missing $release\gramnota.exe. Run flutter build windows --release first."
@@ -126,7 +126,11 @@ if ($missing.Count -gt 0) {
 Write-Host "Runtime dependencies are next to gramnota.exe"
 
 New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
-& $iscc "/DAppVersion=$appVersion" "/DAppBuild=$appBuild" $iss
+$compile = & $iscc "/DAppVersion=$appVersion" "/DAppBuild=$appBuild" $iss 2>&1 | Out-String
+Write-Host $compile
+if ($compile -notmatch "Compiler engine version: Inno Setup 6\.7\.3") {
+  throw "Expected Inno Setup 6.7.3. Compiler output:`n$compile"
+}
 if ($LASTEXITCODE -ne 0) {
   throw "ISCC failed with exit code $LASTEXITCODE"
 }

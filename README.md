@@ -62,7 +62,7 @@ https://github.com/Mahinika/gramnota/releases/tag/windows
 
 Download while signed in to GitHub (the repo is private). You can also start a build from the Actions tab (**Windows release** → **Run workflow**). The workflow does not need repository secrets: Windows Firebase settings are already in `lib/firebase_options.dart`.
 
-- `Gramnota-Setup-<version>.exe` — installer for your Windows account. It does not ask for administrator rights. It adds a Start menu shortcut and, unless you clear the checkbox, a desktop shortcut. Run a newer installer to upgrade in place. Uninstall later from Windows Settings, under Apps. The app is installed in `%LOCALAPPDATA%\Programs\Gramnota`.
+- `Gramnota-Setup-<version>.exe` — installer. Windows asks for administrator permission. It adds a Start menu shortcut and, unless you clear the checkbox, a desktop shortcut. Run a newer installer to upgrade in place. Uninstall later from Windows Settings, under Apps. The app is installed in `C:\Program Files\Gramnota`.
 - `Gramnota-<version>-windows-x64.zip` — the same build as a folder. Unzip it and run `gramnota.exe`.
 
 Both include the Visual C++ runtime libraries next to `gramnota.exe` (`msvcp140.dll`, `vcruntime140.dll`, `vcruntime140_1.dll`, and the other runtime DLLs from the build), so a clean Windows 10 or 11 PC does not need a separate Visual C++ download.
