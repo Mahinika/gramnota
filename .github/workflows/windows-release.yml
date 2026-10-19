@@ -43,13 +43,13 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: build/windows
-          key: ${{ runner.os }}-flutter-3.44.8-windows-${{ hashFiles('pubspec.lock', 'windows/**/CMakeLists.txt', 'windows/runner/**') }}
+          key: ${{ runner.os }}-flutter-3.47.7-windows-${{ hashFiles('pubspec.lock', 'windows/**/CMakeLists.txt', 'windows/runner/**') }}
           restore-keys: |
-            ${{ runner.os }}-flutter-3.44.8-windows-
+            ${{ runner.os }}-flutter-3.47.7-windows-
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.44.8
+          flutter-version: 3.47.7
           cache: true
 
       - name: Flutter doctor
@@ -83,7 +83,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: build/windows
-          key: ${{ runner.os }}-flutter-3.44.8-windows-${{ hashFiles('pubspec.lock', 'windows/**/CMakeLists.txt', 'windows/runner/**') }}
+          key: ${{ runner.os }}-flutter-3.47.7-windows-${{ hashFiles('pubspec.lock', 'windows/**/CMakeLists.txt', 'windows/runner/**') }}
 
       - name: Locate Inno Setup
         shell: pwsh
