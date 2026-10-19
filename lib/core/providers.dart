@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
+import '../features/import/domain/slice_file.dart';
 import '../firebase_options.dart';
 import 'firebase_emulator.dart';
 import 'user_store.dart';
@@ -40,6 +41,17 @@ final pendingLinkProvider = NotifierProvider<PendingLink, String?>(
   PendingLink.new,
 );
 
+class PendingSlice extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void setPath(String? value) => state = value;
+}
+
+final pendingSliceProvider = NotifierProvider<PendingSlice, String?>(
+  PendingSlice.new,
+);
+
 bool get _isAndroid => !kIsWeb && Platform.isAndroid;
 
 final sharedLinkBootstrapProvider = Provider<void>((ref) {
@@ -49,20 +61,35 @@ final sharedLinkBootstrapProvider = Provider<void>((ref) {
   final subscription = ReceiveSharingIntent.instance.getMediaStream().listen((
     files,
   ) {
-    final link = sharedText(files);
-    if (link != null) {
-      ref.read(pendingLinkProvider.notifier).setLink(link);
-    }
+    _captureShare(ref, files);
   });
   ref.onDispose(subscription.cancel);
   ReceiveSharingIntent.instance.getInitialMedia().then((files) async {
-    final link = sharedText(files);
-    if (link != null) {
-      ref.read(pendingLinkProvider.notifier).setLink(link);
-    }
+    _captureShare(ref, files);
     await ReceiveSharingIntent.instance.reset();
   });
 });
+
+void _captureShare(Ref ref, List<SharedMediaFile> files) {
+  final slice = sharedSlicePath(files);
+  if (slice != null) {
+    ref.read(pendingSliceProvider.notifier).setPath(slice);
+    return;
+  }
+  final link = sharedText(files);
+  if (link != null) {
+    ref.read(pendingLinkProvider.notifier).setLink(link);
+  }
+}
+
+String? sharedSlicePath(List<SharedMediaFile> files) {
+  for (final file in files) {
+    if (isSliceFileName(file.path)) {
+      return file.path;
+    }
+  }
+  return null;
+}
 
 String? sharedText(List<SharedMediaFile> files) {
   for (final file in files) {
@@ -133,10 +160,10 @@ Future<void> _rememberSignedInUser(User? user) async {
   if (user == null || email == null) {
     return;
   }
-  await UserStore(FirebaseFirestore.instance, user.uid).ensureDirectory(
-    email: email,
-    displayName: user.displayName ?? email,
-  );
+  await UserStore(
+    FirebaseFirestore.instance,
+    user.uid,
+  ).ensureDirectory(email: email, displayName: user.displayName ?? email);
 }
 
 Future<void> signOut() async {

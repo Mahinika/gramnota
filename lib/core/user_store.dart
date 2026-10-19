@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../features/catalog/domain/catalog_product.dart';
 import '../features/customers/domain/customer.dart';
 import '../features/filaments/domain/filament_spool.dart';
 import '../features/orders/domain/print_order.dart';
@@ -29,6 +30,9 @@ class UserStore {
 
   CollectionReference<Map<String, dynamic>> get orders =>
       db.collection('users').doc(uid).collection('orders');
+
+  CollectionReference<Map<String, dynamic>> get products =>
+      db.collection('users').doc(uid).collection('products');
 
   CollectionReference<Map<String, dynamic>> get inbox =>
       db.collection('users').doc(uid).collection('inbox');
@@ -79,16 +83,22 @@ class UserStore {
 
   Stream<List<PrintOrder>> watchOrders() => _watch(orders, PrintOrder.fromJson);
 
+  Stream<List<CatalogProduct>> watchProducts() =>
+      _watch(products, CatalogProduct.fromJson);
+
+  Future<void> saveProduct(CatalogProduct product) {
+    return products.doc(product.id).set(product.toJson());
+  }
+
+  Future<void> deleteProduct(String id) => products.doc(id).delete();
+
   Future<void> saveOrder(PrintOrder order) {
     return orders.doc(order.id).set(order.toJson());
   }
 
   /// Updates the note only. A full [saveOrder] of a screen snapshot can
   /// overwrite a status change that already moved filament stock.
-  Future<void> saveOrderNote({
-    required String orderId,
-    required String note,
-  }) {
+  Future<void> saveOrderNote({required String orderId, required String note}) {
     return _updateOrderFields(orderId, {'note': note});
   }
 
@@ -100,10 +110,7 @@ class UserStore {
     return _updateOrderFields(orderId, {'title': title});
   }
 
-  Future<void> _updateOrderFields(
-    String orderId,
-    Map<String, Object?> fields,
-  ) {
+  Future<void> _updateOrderFields(String orderId, Map<String, Object?> fields) {
     final ref = orders.doc(orderId);
     return db.runTransaction((transaction) async {
       final snapshot = await transaction.get(ref);
@@ -122,7 +129,14 @@ class UserStore {
   Future<void> deleteInboxItem(String id) => inbox.doc(id).delete();
 
   Future<void> deleteOwnedData({required String? email}) async {
-    for (final collection in [printers, filaments, customers, orders, inbox]) {
+    for (final collection in [
+      printers,
+      filaments,
+      customers,
+      orders,
+      products,
+      inbox,
+    ]) {
       await _deleteCollection(collection);
     }
     await settingsDoc.delete();

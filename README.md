@@ -62,6 +62,16 @@ Paste a link, or on Android share it into the app.
 - Thingiverse, Thangs, Cults3D, MyMiniFactory, Makeronline, Nexprint, and GrabCAD fill the title when the page publishes one, and say that time and weight were not published. If that page links to MakerWorld, Printables, or Creality Cloud, Gramnota follows that link once.
 - The price still comes from your own spools.
 
-## Later
+## G-code and 3MF
 
-G-code import, duplicating an order as a new quote, and a saved product catalog are not in this version.
+On the calculator, **Import G-code** reads a `.gcode` or `.3mf` file. Gramnota scans the start and end of the file for slicer comments, so a large toolpath is not loaded into memory. PrusaSlicer, OrcaSlicer, Bambu Studio, Cura, and Creality Print supply print time and filament grams, including one row per extruder when the file lists them. A `.3mf` is used when it contains sliced G-code or plate metadata (Bambu Studio and OrcaSlicer write those into the archive). The sale price still comes from your spools.
+
+On Android you can share a `.gcode` or `.3mf` file into Gramnota. It opens on the calculator.
+
+## Duplicate a quote
+
+On a quote, **Duplicate as new quote** copies the prints, the customer, and the print settings. The copy is a Quote with a new number and new dates. Filament already taken out of stock stays on the original order. Prices are calculated again from the current spool prices, printer costs, electricity price, and labor rate. Markup, failure, and VAT stay as they are on each print.
+
+## Product catalog
+
+**More → Products** stores a print you quote again: time, filaments, printer, labor minutes, extras, and percents. Save one from the calculator (**Save as product**) or from a print on a quote. **Add from catalog** on the calculator, or **Add product** on a quote, inserts it and prices filament, electricity, and machine wear from the spools, printer, and workshop rates you have at that moment. Markup, failure, and VAT stay as saved on the product.

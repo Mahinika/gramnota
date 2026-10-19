@@ -13,7 +13,13 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
 
+    // Owned workshop data: settings, printers, filaments, customers, orders,
+    // products (saved print catalog), and inbox. Another user cannot read it.
     match /users/{uid}/{document=**} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /users/{uid}/products/{productId} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 

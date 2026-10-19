@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/user_store.dart';
+import '../../catalog/domain/catalog_product.dart';
 import '../../customers/domain/customer.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../printers/domain/printer_profile.dart';
@@ -25,4 +26,8 @@ final printersProvider = StreamProvider.family<List<PrinterProfile>, UserStore>(
 
 final filamentsProvider = StreamProvider.family<List<FilamentSpool>, UserStore>(
   (ref, store) => store.watchFilaments(),
+);
+
+final productsProvider = StreamProvider.family<List<CatalogProduct>, UserStore>(
+  (ref, store) => store.watchProducts(),
 );
