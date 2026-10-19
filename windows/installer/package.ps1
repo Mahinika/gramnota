@@ -53,6 +53,7 @@ if (-not (Test-Path $crtDir)) {
 }
 Write-Host "Copying VC++ runtime from $crtDir"
 Copy-Item (Join-Path $crtDir "*.dll") -Destination $release -Force
+Get-ChildItem (Join-Path $crtDir "*.dll") | ForEach-Object { Write-Host "  $($_.Name)" }
 
 Get-ChildItem -Path $release -Recurse -File |
   Where-Object { $_.Extension -in '.pdb', '.ilk', '.exp', '.lib' } |
@@ -98,15 +99,23 @@ function Get-DependentDlls([string]$binary) {
   return $dlls
 }
 
-$shipped = @(Get-ChildItem $release -Filter "*.dll" -File | ForEach-Object { $_.FullName })
-$shipped += Join-Path $release "gramnota.exe"
+# Check binaries that load at startup. Skip the CRT DLLs themselves: they
+# import api-ms-win-* API sets, which Windows 10+ resolves and which are not
+# files in System32. Skip dartjni.dll too; nothing in Gramnota loads it, and
+# it imports jvm.dll.
+$targets = @(
+  (Join-Path $release "gramnota.exe"),
+  (Join-Path $release "flutter_windows.dll")
+)
+$targets += @(Get-ChildItem $release -Filter "*_plugin.dll" -File | ForEach-Object { $_.FullName })
 $missing = @()
-foreach ($binary in $shipped) {
+foreach ($binary in $targets) {
   foreach ($dll in (Get-DependentDlls $binary)) {
+    if ($dll -match "^(?i)(api-ms-win-|ext-ms-)") { continue }
     $local = Join-Path $release $dll
-    $system = Join-Path $env:SystemRoot "System32\$dll"
-    $mustShip = $dll -match "^(?i)(msvcp|vcruntime|concrt|vccorlib)"
     if (Test-Path $local) { continue }
+    $mustShip = $dll -match "^(?i)(msvcp|vcruntime|concrt|vccorlib)"
+    $system = Join-Path $env:SystemRoot "System32\$dll"
     if (-not $mustShip -and (Test-Path $system)) { continue }
     $missing += "$(Split-Path $binary -Leaf) -> $dll"
   }
