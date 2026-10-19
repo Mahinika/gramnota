@@ -132,6 +132,30 @@ abstract class AppLocalizations {
   /// **'System default'**
   String get languageSystem;
 
+  /// Settings field for light, dark, or system appearance
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get themeLabel;
+
+  /// Appearance option that follows the device theme
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// Light appearance
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// Dark appearance
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
   /// Settings field for the workshop currency
   ///
   /// In en, this message translates to:

@@ -18,6 +18,18 @@ class AppLocalizationsPl extends AppLocalizations {
   String get languageSystem => 'Domyślny systemowy';
 
   @override
+  String get themeLabel => 'Wygląd';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Jasny';
+
+  @override
+  String get themeDark => 'Ciemny';
+
+  @override
   String get currencyLabel => 'Waluta';
 
   @override

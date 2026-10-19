@@ -6,6 +6,8 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/app_language_controller.dart';
 import '../../../core/app_languages.dart';
+import '../../../core/app_theme_controller.dart';
+import '../../../core/theme_mode.dart';
 import '../../../core/currencies.dart';
 import '../../../core/locale_pickers.dart';
 import '../../../core/money.dart';
@@ -116,6 +118,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
   CommonSpool? _selectedSpool;
   var _currencyCode = defaultCurrencyCode;
   var _languageCode = defaultLanguageCode;
+  var _themeMode = defaultThemeCode;
   var _step = 0;
   var _saving = false;
   String? _error;
@@ -260,6 +263,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
               setupCompleted: true,
               languageCode: _languageCode,
               currencyCode: _currencyCode,
+              themeMode: normalizeThemeMode(_themeMode),
               nextQuoteNumber: nextQuote,
               email: _email.text.trim(),
             )
@@ -267,6 +271,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
               setupCompleted: true,
               languageCode: _languageCode,
               currencyCode: normalizeCurrencyCode(_currencyCode),
+              themeMode: normalizeThemeMode(_themeMode),
               electricityMinorPerKwh: parseMinor(_electricity.text) ?? 0,
               laborMinorPerHour: parseMinor(_labor.text) ?? 0,
               defaultMarkupBasisPoints: parseBasisPoints(_markup.text) ?? 3000,
@@ -284,6 +289,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             );
       await store.saveSettings(settings);
       await ref.read(appLanguageProvider.notifier).setLanguage(_languageCode);
+      await ref.read(appThemeProvider.notifier).setTheme(_themeMode);
       if (!skipped) {
         await store.savePrinter(
           PrinterProfile(
@@ -539,6 +545,11 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           LanguageMenu(
             languageCode: _languageCode,
             onChanged: (code) => setState(() => _languageCode = code),
+          ),
+          const SizedBox(height: 12),
+          ThemeMenu(
+            themeMode: _themeMode,
+            onChanged: (code) => setState(() => _themeMode = code),
           ),
           const SizedBox(height: 12),
           CurrencyField(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme.dart';
 import '../../../l10n/l10n.dart';
 
 class MoneyBar {
@@ -37,10 +38,12 @@ class MoneyBarChart extends StatelessWidget {
       );
     }
     final colors = [
-      scheme.primary,
+      scheme.brightness == Brightness.dark ? gramnotaGreenBright : scheme.primary,
       scheme.tertiary,
       scheme.secondary,
-      scheme.primaryContainer,
+      scheme.brightness == Brightness.dark
+          ? scheme.onPrimaryContainer
+          : scheme.primaryContainer,
     ];
     return SizedBox(
       height: 168,

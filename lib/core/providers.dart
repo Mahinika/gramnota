@@ -108,7 +108,7 @@ String? sharedText(List<SharedMediaFile> files) {
   return null;
 }
 
-Future<void> signInWithGoogle() async {
+Future<void> signInWithGoogle({bool darkPage = false}) async {
   final UserCredential credential;
   if (_isAndroid) {
     final account = await GoogleSignIn.instance.authenticate();
@@ -125,6 +125,7 @@ Future<void> signInWithGoogle() async {
       projectId: options.projectId,
       appId: options.appId,
       storageBucket: options.storageBucket,
+      dark: darkPage,
     );
     credential = await FirebaseAuth.instance.signInWithCredential(
       GoogleAuthProvider.credential(

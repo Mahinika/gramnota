@@ -18,6 +18,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get languageSystem => 'Valeur par défaut du système';
 
   @override
+  String get themeLabel => 'Apparence';
+
+  @override
+  String get themeSystem => 'Système';
+
+  @override
+  String get themeLight => 'Clair';
+
+  @override
+  String get themeDark => 'Sombre';
+
+  @override
   String get currencyLabel => 'Devise';
 
   @override

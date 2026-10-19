@@ -28,6 +28,7 @@ Future<DesktopGoogleCredential> requestDesktopGoogleCredential({
   Future<bool> Function(Uri url)? openBrowser,
   Duration timeout = const Duration(minutes: 5),
   AppLocalizations? l10n,
+  bool dark = false,
 }) async {
   final strings = l10n ?? activeGramnotaL10n;
   final nonce = newSignInNonce();
@@ -39,6 +40,7 @@ Future<DesktopGoogleCredential> requestDesktopGoogleCredential({
     storageBucket: storageBucket,
     nonce: nonce,
     l10n: strings,
+    dark: dark,
   );
   final v4 = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   final servers = <HttpServer>[v4];
@@ -108,6 +110,7 @@ String desktopGoogleSignInPage({
   required String nonce,
   String? storageBucket,
   AppLocalizations? l10n,
+  bool dark = false,
 }) {
   final strings = l10n ?? activeGramnotaL10n;
   final config = jsonEncode({
@@ -136,7 +139,7 @@ String desktopGoogleSignInPage({
 <title>${_html(strings.authDesktopPageTitle)}</title>
 <style>
   body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: #F6F3EC; color: #1A1F1C; font-family: "Segoe UI", sans-serif; }
+    background: ${dark ? '#141A17' : '#F6F3EC'}; color: ${dark ? '#F4F7F5' : '#1A1F1C'}; font-family: "Segoe UI", sans-serif; }
   main { max-width: 360px; padding: 32px 24px; text-align: center; }
   h1 { font-size: 28px; font-weight: 600; margin: 0 0 12px; }
   p { margin: 0 0 20px; line-height: 1.4; }
