@@ -60,6 +60,12 @@ The zip is the same program without an install. Unpack it and run `gramnota.exe`
   <img src="docs/screenshots/filament.webp" alt="Filament spools and stock" width="220">
 </p>
 
+## Community
+
+[![Join the Gramnota Discord](https://img.shields.io/badge/Discord-Join%20the%20community-0F6E56?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/32c8gzgWcS)
+
+Join the Gramnota Discord for help, bug reports and feature ideas.
+
 All rights reserved.
 
 ---
