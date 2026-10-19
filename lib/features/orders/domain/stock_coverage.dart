@@ -50,6 +50,9 @@ List<SpoolCoverage> quoteSpoolCoverage({
   required List<PrintOrder> orders,
   required List<FilamentSpool> spools,
 }) {
+  if (order.stockDeducted) {
+    return const [];
+  }
   final needed = _gramsBySpool(order);
   if (needed.isEmpty) {
     return const [];

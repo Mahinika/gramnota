@@ -123,6 +123,31 @@ void main() {
     expect(warnings.single.message, contains('short by 10 g'));
   });
 
+  test('a printed order does not warn again for grams already taken', () {
+    final printed = order(
+      id: 'current',
+      status: OrderStatus.printed,
+      stockDeducted: true,
+      lines: [
+        line(
+          id: 'a',
+          quantity: 2,
+          filaments: const [
+            FilamentUsage(filamentId: 'pla', grams: 50, material: 'PLA'),
+          ],
+        ),
+      ],
+    );
+
+    final warnings = quoteSpoolCoverage(
+      order: printed,
+      orders: [printed],
+      spools: const [spool],
+    );
+
+    expect(warnings, isEmpty);
+  });
+
   test('exact coverage is not a warning', () {
     final current = order(
       id: 'current',

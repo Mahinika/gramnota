@@ -800,6 +800,11 @@ class _DepositFieldState extends State<_DepositField> {
     final order = widget.order;
     final balance = order.breakdown.totalMinor - order.depositMinor;
     final settled = order.status == OrderStatus.paid;
+    final balanceLabel = settled
+        ? 'Marked paid'
+        : balance <= 0
+        ? 'Deposit covers this quote'
+        : 'Still to pay ${formatMoney(balance, order.currencyCode)}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -817,13 +822,7 @@ class _DepositFieldState extends State<_DepositField> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(
-              child: Text(
-                settled
-                    ? 'Marked paid'
-                    : 'Still to pay ${formatMoney(balance < 0 ? 0 : balance, order.currencyCode)}',
-              ),
-            ),
+            Expanded(child: Text(balanceLabel)),
             TextButton(
               onPressed: _saving ? null : _save,
               child: Text(_saving ? 'Saving' : 'Save deposit'),
