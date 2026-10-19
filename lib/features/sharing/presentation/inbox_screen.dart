@@ -50,13 +50,22 @@ Future<void> sendItem({
     return;
   }
   final user = FirebaseAuth.instance.currentUser;
-  await store.sendToUser(
-    recipientUid: recipient.uid,
-    type: type,
-    payload: payload,
-    senderName: user?.displayName ?? user?.email ?? 'Gramnota user',
-    senderEmail: user?.email ?? '',
-  );
+  try {
+    await store.sendToUser(
+      recipientUid: recipient.uid,
+      type: type,
+      payload: payload,
+      senderName: user?.displayName ?? user?.email ?? 'Gramnota user',
+      senderEmail: user?.email ?? '',
+    );
+  } on InboxPayloadTooLarge {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('That item is too large to send.')),
+      );
+    }
+    return;
+  }
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Sent to ${recipient.displayName}.')),

@@ -30,8 +30,12 @@ A stock change needs a `fake_cloud_firestore` test in `test/order_stock_test.dar
 
 ## Rules
 
-`users/{uid}/**` is read-write for that uid. The inbox create rule is the only cross-user write: the sender is signed in, `senderUid` is `request.auth.uid`, and `keys().hasAll` lists every field `InboxItem.toJson()` writes. `payloadJson` is a JSON string, not a map. A new required inbox field must be added to that list and to `sendToUser`.
+Workshop collections (`settings`, `printers`, `filaments`, `customers`, `orders`, `products`) are read-write for that uid only, through one shared rule. Products are not a separate policy. `users/{uid}` itself is get and delete for the owner. Anything else is denied.
 
-`userDirectory` create and update require `request.resource.data.uid == request.auth.uid` and a document id equal to `request.auth.token.email.lower()`.
+`userDirectory/{lowercaseEmail}` stores `uid` and `displayName` only. The email is the document id. `allow get` for any signed-in user. Do not allow `list` or a collection query. Create and update require a verified email, `request.resource.data.uid == request.auth.uid`, and a document id equal to `request.auth.token.email.lower()`. An optional `email` field is accepted only when it equals that id, so the released app can still publish its directory row.
 
-Do not deploy. After `firestore.rules` changes, tell the user to run `firebase deploy --only firestore:rules`.
+The inbox create rule is the only cross-user write. The sender is a different verified user, `senderUid` is `request.auth.uid`, `senderEmail` is `request.auth.token.email`, and `createdAt` is `request.time` (`FieldValue.serverTimestamp()`). `keys().hasOnly` whitelists `type`, `payloadJson`, `senderUid`, `senderName`, `senderEmail`, `createdAt`, and an optional `id` equal to the document id. `payloadJson` is a JSON object string, at most 100000 characters. The sender must already have a `userDirectory` row whose `uid` is theirs. The owner can read and delete inbox items, not update them. A new inbox field must be added to that whitelist and to `sendToUser`.
+
+Do not turn on App Check enforcement. Flutter Windows has no App Check provider, and Firestore enforcement is project-wide, so it would reject the Windows app.
+
+Rules tests live in `test/firestore_rules` (`npm test`) and run against the Firestore emulator. Do not deploy. After `firestore.rules` changes, tell the user to run `firebase deploy --only firestore:rules`.
