@@ -61,5 +61,12 @@ Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Run]
-; Also runs after /SILENT and /VERYSILENT so an in-app update opens Gramnota again.
-Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait postinstall
+; Runs after an in-app /SILENT update so Gramnota opens again.
+; CI passes /NORUN=1. skipifsilent would also skip that in-app relaunch.
+Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait postinstall; Check: WizardShouldLaunchApp
+
+[Code]
+function WizardShouldLaunchApp: Boolean;
+begin
+  Result := ExpandConstant('{param:NORUN|0}') = '0';
+end;

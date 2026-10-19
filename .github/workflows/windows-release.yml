@@ -128,12 +128,22 @@ jobs:
           Write-Host "Running $($setup.FullName)"
           # Setup is a GUI executable. Start-Process records its exit code; the
           # call operator often leaves $LASTEXITCODE empty for GUI programs.
+          # /NORUN=1 skips the [Run] relaunch. nowait is not enough: a running
+          # gramnota.exe keeps this step open. The timeout is the backstop.
           $proc = Start-Process -FilePath $setup.FullName -ArgumentList @(
             "/VERYSILENT",
             "/SUPPRESSMSGBOXES",
             "/NORESTART",
+            "/NORUN=1",
             "/LOG=$log"
-          ) -Wait -PassThru
+          ) -PassThru
+          if (-not $proc.WaitForExit(300000)) {
+            Write-Host "Installer still running after 5 minutes."
+            Get-Process gramnota -ErrorAction SilentlyContinue | Stop-Process -Force
+            if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
+            if (Test-Path $log) { Get-Content $log -Tail 80 }
+            throw "Silent install timed out"
+          }
           Write-Host "Installer exit code: $($proc.ExitCode)"
           if (Test-Path $log) { Get-Content $log -Tail 80 } else { Write-Host "No install log at $log" }
           if ($proc.ExitCode -ne 0) {
@@ -173,6 +183,7 @@ jobs:
           if (-not $desktop) { throw "Desktop shortcut was not created" }
           Write-Host "Shortcuts: $($start[0].FullName); $($desktop[0].FullName)"
           Get-Process gramnota -ErrorAction SilentlyContinue | Stop-Process -Force
+          if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force }
 
       - name: Publish on the latest release
         shell: bash
