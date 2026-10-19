@@ -56,7 +56,7 @@ If you change the upload keystore, register the new SHA-1/SHA-256 in Firebase, r
 
 ## Windows app (GitHub)
 
-Every push to `master` builds a release Windows app and publishes it on the **`windows`** release:
+Every push to `master` builds a release Windows app in [GitHub Actions](.github/workflows/windows-release.yml) and publishes it on the **`windows`** release:
 
 https://github.com/Mahinika/gramnota/releases/tag/windows
 
@@ -65,7 +65,7 @@ Download while signed in to GitHub (the repo is private). You can also start a b
 - `Gramnota-Setup-<version>.exe` — installer. Windows asks for administrator permission. It adds a Start menu shortcut and, unless you clear the checkbox, a desktop shortcut. Run a newer installer to upgrade in place. Uninstall later from Windows Settings, under Apps. The app is installed in `C:\Program Files\Gramnota`.
 - `Gramnota-<version>-windows-x64.zip` — the same build as a folder. Unzip it and run `gramnota.exe`.
 
-Both include the Visual C++ runtime libraries next to `gramnota.exe`, so a clean Windows 10 or 11 PC does not need a separate Visual C++ download.
+Both include the Visual C++ runtime libraries next to `gramnota.exe` (`msvcp140.dll`, `vcruntime140.dll`, `vcruntime140_1.dll`, and the other runtime DLLs from the build), so a clean Windows 10 or 11 PC does not need a separate Visual C++ download.
 
 Windows may show "Windows protected your PC" the first time, because the app is not code-signed. Choose **More info**, then **Run anyway**.
 
