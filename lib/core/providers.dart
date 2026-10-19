@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 import '../firebase_options.dart';
+import 'firebase_emulator.dart';
 import 'user_store.dart';
 
 final authUserProvider = StreamProvider<User?>((ref) {
@@ -89,14 +90,53 @@ Future<void> signInWithGoogle() async {
       GoogleAuthProvider(),
     );
   }
-  final user = credential.user;
-  final email = user?.email;
-  if (user != null && email != null) {
-    await UserStore(FirebaseFirestore.instance, user.uid).ensureDirectory(
-      email: email,
-      displayName: user.displayName ?? email,
+  await _rememberSignedInUser(credential.user);
+}
+
+/// Email sign-in for the local Auth emulator only. The button is compiled in
+/// when [useFirebaseEmulator] is true, and the call is a no-op otherwise.
+Future<void> signInWithEmulatorTester() async {
+  if (!useFirebaseEmulator) {
+    return;
+  }
+  UserCredential credential;
+  try {
+    credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: emulatorTesterEmail,
+      password: emulatorTesterPassword,
+    );
+  } on FirebaseAuthException catch (error) {
+    const missing = {
+      'user-not-found',
+      'invalid-credential',
+      'invalid-login-credentials',
+    };
+    if (!missing.contains(error.code)) {
+      rethrow;
+    }
+    credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: emulatorTesterEmail,
+      password: emulatorTesterPassword,
+    );
+    await credential.user?.updateDisplayName(emulatorTesterName);
+    await credential.user?.reload();
+    credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: emulatorTesterEmail,
+      password: emulatorTesterPassword,
     );
   }
+  await _rememberSignedInUser(credential.user);
+}
+
+Future<void> _rememberSignedInUser(User? user) async {
+  final email = user?.email;
+  if (user == null || email == null) {
+    return;
+  }
+  await UserStore(FirebaseFirestore.instance, user.uid).ensureDirectory(
+    email: email,
+    displayName: user.displayName ?? email,
+  );
 }
 
 Future<void> signOut() async {

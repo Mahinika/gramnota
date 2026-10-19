@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/money.dart';
@@ -139,8 +140,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
     _currency.text = settings.currencyCode;
-    _electricity.text = (settings.electricityMinorPerKwh / 100).toString();
-    _labor.text = (settings.laborMinorPerHour / 100).toString();
+    _electricity.text = formatMinorAmount(settings.electricityMinorPerKwh);
+    _labor.text = formatMinorAmount(settings.laborMinorPerHour);
     _markup.text = basisPointsLabel(settings.defaultMarkupBasisPoints);
     _vat.text = basisPointsLabel(settings.vatBasisPoints);
     _failure.text = basisPointsLabel(settings.defaultFailureBasisPoints);

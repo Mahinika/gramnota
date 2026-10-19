@@ -11,9 +11,7 @@ import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../customers/domain/customer.dart';
 import '../../filaments/domain/filament_spool.dart';
-import '../../filaments/presentation/filaments_screen.dart';
 import '../../printers/domain/printer_profile.dart';
-import '../../printers/presentation/printers_screen.dart';
 import '../../settings/domain/workshop_settings.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
@@ -400,11 +398,24 @@ class OrderDetailScreen extends ConsumerWidget {
             actions: [
               IconButton(
                 tooltip: 'Share quote',
-                onPressed: () => shareQuotePdf(
-                  order: order,
-                  settings: settings.asData?.value ?? const WorkshopSettings(),
-                  customer: customer,
-                ),
+                onPressed: () async {
+                  try {
+                    await shareQuotePdf(
+                      order: order,
+                      settings:
+                          settings.asData?.value ?? const WorkshopSettings(),
+                      customer: customer,
+                    );
+                  } on Object catch (error) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Could not share the quote. $error'),
+                        ),
+                      );
+                    }
+                  }
+                },
                 icon: const Icon(Icons.ios_share),
               ),
               IconButton(
@@ -604,6 +615,7 @@ class OrderDetailScreen extends ConsumerWidget {
               BreakdownCard(
                 breakdown: order.breakdown,
                 currencyCode: order.currencyCode,
+                showPerUnit: prints.length == 1,
               ),
             ],
           ),
@@ -785,7 +797,7 @@ class _PrintLineTile extends StatelessWidget {
                   ),
             ),
             Text(
-              formatMoney(line.breakdown.totalMinor, order.currencyCode),
+              '${formatMoney(line.breakdown.totalMinor, order.currencyCode)} incl. VAT',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     color: scheme.primary,
                   ),

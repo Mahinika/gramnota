@@ -8,11 +8,15 @@ class BreakdownCard extends StatelessWidget {
   const BreakdownCard({
     required this.breakdown,
     required this.currencyCode,
+    this.showPerUnit = true,
     super.key,
   });
 
   final PriceBreakdown breakdown;
   final String currencyCode;
+
+  /// A quote with several different prints has no single unit price.
+  final bool showPerUnit;
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +58,10 @@ class BreakdownCard extends StatelessWidget {
                 ),
               ],
             ),
-            Text(
-              '${formatMoney(breakdown.perUnitMinor, currencyCode)} per unit · qty ${breakdown.quantity}',
-            ),
+            if (showPerUnit)
+              Text(
+                '${formatMoney(breakdown.perUnitMinor, currencyCode)} per unit · qty ${breakdown.quantity}',
+              ),
           ],
         ),
       ),

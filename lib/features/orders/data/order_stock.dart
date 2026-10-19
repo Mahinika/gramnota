@@ -35,9 +35,17 @@ class OrderStock {
     required OrderStatus next,
   }) {
     return store.db.runTransaction((transaction) async {
-      final holdsNow = statusHoldsStock(order.status) && order.stockDeducted;
+      final orderRef = store.orders.doc(order.id);
+      final orderSnap = await transaction.get(orderRef);
+      final current = orderSnap.exists && orderSnap.data() != null
+          ? PrintOrder.fromJson({...orderSnap.data()!, 'id': order.id})
+          : order;
+      if (current.status == next) {
+        return StockChange(order: current, warning: '');
+      }
+      final holdsNow = statusHoldsStock(current.status) && current.stockDeducted;
       final holdsNext = statusHoldsStock(next);
-      var updated = order.copyWith(
+      var updated = current.copyWith(
         status: next,
         updatedAt: DateTime.now().toUtc().toIso8601String(),
       );
@@ -45,7 +53,7 @@ class OrderStock {
 
       if (!holdsNow && holdsNext) {
         final requested = <String, double>{};
-        for (final line in orderPrints(order)) {
+        for (final line in orderPrints(current)) {
           for (final usage in line.filaments) {
             if (usage.filamentId.isEmpty) {
               continue;
@@ -67,14 +75,16 @@ class OrderStock {
             ...snapshot.data()!,
             'id': snapshot.id,
           });
-          final take = entry.value > spool.remainingGrams
-              ? spool.remainingGrams
-              : entry.value;
+          final available = spool.remainingGrams < 0
+              ? 0.0
+              : spool.remainingGrams;
+          final take = entry.value > available ? available : entry.value;
           final short = entry.value - take;
           deducted[entry.key] = take;
-          transaction.update(ref, {
-            'remainingGrams': spool.remainingGrams - take,
-          });
+          final nextRemaining = available - take;
+          if (nextRemaining != spool.remainingGrams) {
+            transaction.update(ref, {'remainingGrams': nextRemaining});
+          }
           if (short > 0.0001) {
             final label = '${spool.brand} ${spool.material}'.trim();
             shortfalls.add('${short.toStringAsFixed(1)} g of $label');
@@ -89,7 +99,7 @@ class OrderStock {
           stockWarning: warning,
         );
       } else if (holdsNow && !holdsNext) {
-        for (final entry in order.deductedGrams.entries) {
+        for (final entry in current.deductedGrams.entries) {
           final ref = store.filaments.doc(entry.key);
           final snapshot = await transaction.get(ref);
           if (!snapshot.exists || snapshot.data() == null) {
@@ -110,7 +120,7 @@ class OrderStock {
         );
       }
 
-      transaction.set(store.orders.doc(order.id), updated.toJson());
+      transaction.set(orderRef, updated.toJson());
       return StockChange(order: updated, warning: warning);
     });
   }

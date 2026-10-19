@@ -183,4 +183,138 @@ void main() {
     expect(sumBreakdowns([stand]).perUnitMinor, 61560);
     expect(sumBreakdowns([stand]).quantity, 1);
   });
+
+  test('treats quantity below 1 as one print', () {
+    final breakdown = calculator.calculate(
+      const PriceInput(
+        materials: [MaterialUse(grams: 100, pricePerKgMinor: 20000)],
+        powerWatts: 0,
+        printTimeSeconds: 0,
+        electricityMinorPerKwh: 0,
+        purchasePriceMinor: 0,
+        lifetimeHours: 1,
+        maintenanceMinorPerHour: 0,
+        failureBasisPoints: 0,
+        prepMinutes: 0,
+        postMinutes: 0,
+        laborMinorPerHour: 0,
+        extraMinors: [],
+        markupBasisPoints: 0,
+        vatBasisPoints: 0,
+        quantity: 0,
+      ),
+    );
+
+    expect(breakdown.quantity, 1);
+    expect(breakdown.materialMinor, 2000);
+    expect(breakdown.perUnitMinor, 2000);
+  });
+
+  test('rounds a half öre up for the unit price', () {
+    final breakdown = calculator.calculate(
+      const PriceInput(
+        materials: [],
+        powerWatts: 0,
+        printTimeSeconds: 0,
+        electricityMinorPerKwh: 0,
+        purchasePriceMinor: 0,
+        lifetimeHours: 1,
+        maintenanceMinorPerHour: 0,
+        failureBasisPoints: 0,
+        prepMinutes: 0,
+        postMinutes: 0,
+        laborMinorPerHour: 0,
+        extraMinors: [1],
+        markupBasisPoints: 0,
+        vatBasisPoints: 0,
+        quantity: 2,
+      ),
+    );
+
+    expect(breakdown.totalMinor, 1);
+    expect(breakdown.perUnitMinor, 1);
+  });
+
+  test('failure ignores labor and extras', () {
+    final breakdown = calculator.calculate(
+      const PriceInput(
+        materials: [],
+        powerWatts: 0,
+        printTimeSeconds: 0,
+        electricityMinorPerKwh: 0,
+        purchasePriceMinor: 0,
+        lifetimeHours: 1,
+        maintenanceMinorPerHour: 0,
+        failureBasisPoints: 10000,
+        prepMinutes: 60,
+        postMinutes: 0,
+        laborMinorPerHour: 10000,
+        extraMinors: [500],
+        markupBasisPoints: 0,
+        vatBasisPoints: 0,
+        quantity: 1,
+      ),
+    );
+
+    expect(breakdown.failureMinor, 0);
+    expect(breakdown.laborMinor, 10000);
+    expect(breakdown.extrasMinor, 500);
+    expect(breakdown.costMinor, 10500);
+  });
+
+  test('sums filament lines before rounding', () {
+    final breakdown = calculator.calculate(
+      const PriceInput(
+        materials: [
+          MaterialUse(grams: 0.4, pricePerKgMinor: 1000),
+          MaterialUse(grams: 0.4, pricePerKgMinor: 1000),
+        ],
+        powerWatts: 0,
+        printTimeSeconds: 0,
+        electricityMinorPerKwh: 0,
+        purchasePriceMinor: 0,
+        lifetimeHours: 1,
+        maintenanceMinorPerHour: 0,
+        failureBasisPoints: 0,
+        prepMinutes: 0,
+        postMinutes: 0,
+        laborMinorPerHour: 0,
+        extraMinors: [],
+        markupBasisPoints: 0,
+        vatBasisPoints: 0,
+        quantity: 1,
+      ),
+    );
+
+    expect(breakdown.materialMinor, 1);
+  });
+
+  test('ignores negative grams and negative rates', () {
+    final breakdown = calculator.calculate(
+      const PriceInput(
+        materials: [MaterialUse(grams: -20, pricePerKgMinor: 20000)],
+        powerWatts: -100,
+        printTimeSeconds: -30,
+        electricityMinorPerKwh: -200,
+        purchasePriceMinor: -500,
+        lifetimeHours: -10,
+        maintenanceMinorPerHour: -5,
+        failureBasisPoints: -1000,
+        prepMinutes: -15,
+        postMinutes: -15,
+        laborMinorPerHour: -100,
+        extraMinors: [],
+        markupBasisPoints: -3000,
+        vatBasisPoints: -2500,
+        quantity: -2,
+      ),
+    );
+
+    expect(breakdown.materialMinor, 0);
+    expect(breakdown.electricityMinor, 0);
+    expect(breakdown.machineMinor, 0);
+    expect(breakdown.laborMinor, 0);
+    expect(breakdown.totalMinor, 0);
+    expect(breakdown.quantity, 1);
+  });
 }

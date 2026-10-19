@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
-import '../../../core/user_store.dart';
+import '../../orders/data/orders_providers.dart';
 import '../../sharing/domain/inbox_item.dart';
 import '../../sharing/presentation/inbox_screen.dart';
 import '../domain/common_printers.dart';
@@ -123,9 +124,9 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
     }
     _name.text = printer.name;
     _watts.text = printer.powerWatts.toString();
-    _price.text = (printer.purchasePriceMinor / 100).toString();
+    _price.text = formatMinorAmount(printer.purchasePriceMinor);
     _life.text = printer.lifetimeHours.toString();
-    _maintenance.text = (printer.maintenanceMinorPerHour / 100).toString();
+    _maintenance.text = formatMinorAmount(printer.maintenanceMinorPerHour);
     _loaded = true;
   }
 
@@ -294,7 +295,3 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
     );
   }
 }
-
-final printersProvider = StreamProvider.family<List<PrinterProfile>, UserStore>(
-  (ref, store) => store.watchPrinters(),
-);

@@ -14,6 +14,7 @@ import '../../filaments/domain/filament_spool.dart';
 import '../../import/data/link_import_service.dart';
 import '../../import/domain/import_models.dart';
 import '../../orders/data/order_stock.dart';
+import '../../orders/data/orders_providers.dart';
 import '../../orders/domain/print_order.dart';
 import '../../printers/domain/printer_profile.dart';
 import '../../settings/domain/workshop_settings.dart';
@@ -66,6 +67,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   String? _importNote;
   var _importing = false;
   var _saving = false;
+  var _mute = false;
+  var _extraSeconds = 0;
   String? _appliedKey;
   String? _scheduledKey;
 
@@ -76,8 +79,6 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     super.initState();
     for (final controller in [
       _title,
-      _hours,
-      _minutes,
       _prep,
       _post,
       _quantity,
@@ -87,13 +88,43 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     ]) {
       controller.addListener(_refresh);
     }
+    _hours.addListener(_onDurationEdited);
+    _minutes.addListener(_onDurationEdited);
     _rows.first.grams.addListener(_refresh);
   }
 
   void _refresh() {
-    if (mounted) {
-      setState(() {});
+    if (_mute || !mounted) {
+      return;
     }
+    setState(() {});
+  }
+
+  void _onDurationEdited() {
+    if (!_mute) {
+      _extraSeconds = 0;
+    }
+    _refresh();
+  }
+
+  void _write(TextEditingController controller, String value) {
+    if (controller.text == value) {
+      return;
+    }
+    final previous = _mute;
+    _mute = true;
+    controller.text = value;
+    _mute = previous;
+  }
+
+  void _setDuration(int seconds) {
+    final safe = seconds < 0 ? 0 : seconds;
+    final previous = _mute;
+    _mute = true;
+    _extraSeconds = safe % 60;
+    _hours.text = '${safe ~/ 3600}';
+    _minutes.text = '${(safe % 3600) ~/ 60}';
+    _mute = previous;
   }
 
   @override
@@ -125,7 +156,41 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   int _seconds() {
     final hours = parsePositiveInt(_hours.text) ?? 0;
     final minutes = parsePositiveInt(_minutes.text) ?? 0;
-    return hours * 3600 + minutes * 60;
+    return hours * 3600 + minutes * 60 + _extraSeconds;
+  }
+
+  int _quantityValue() {
+    final parsed = parsePositiveInt(_quantity.text) ?? 1;
+    return parsed < 1 ? 1 : parsed;
+  }
+
+  void _scheduleDefaultPrinter(List<PrinterProfile> printers) {
+    if (widget.lineId != null || printers.length != 1 || _printerId != null) {
+      return;
+    }
+    final id = printers.single.id;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _printerId != null || widget.lineId != null) {
+        return;
+      }
+      if (widget.orderId != null && _appliedKey != _targetKey) {
+        return;
+      }
+      setState(() => _printerId = id);
+    });
+  }
+
+  PrinterProfile? _selectedPrinter(List<PrinterProfile> printers) {
+    final id = _printerId;
+    if (id == null) {
+      return null;
+    }
+    for (final printer in printers) {
+      if (printer.id == id) {
+        return printer;
+      }
+    }
+    return null;
   }
 
   String _resolvedSourceUrl() {
@@ -177,10 +242,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 return row;
               }),
       );
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    _hours.text = '$hours';
-    _minutes.text = '$minutes';
+    _setDuration(seconds);
     _printerId = printerId;
     _profileTitle = profile.title;
   }
@@ -267,10 +329,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     required List<PrinterProfile> printers,
     required List<FilamentSpool> spools,
   }) {
-    final printer = printers.cast<PrinterProfile?>().firstWhere(
-      (printer) => printer!.id == _printerId,
-      orElse: () => printers.isEmpty ? null : printers.first,
-    );
+    final printer = _selectedPrinter(printers);
     final materials = <MaterialUse>[];
     for (final row in _rows) {
       final grams = parseNonNegativeDouble(row.grams.text) ?? 0;
@@ -301,7 +360,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       markupBasisPoints:
           parseBasisPoints(_markup.text) ?? settings.defaultMarkupBasisPoints,
       vatBasisPoints: parseBasisPoints(_vat.text) ?? settings.vatBasisPoints,
-      quantity: parsePositiveInt(_quantity.text) ?? 1,
+      quantity: _quantityValue(),
     );
   }
 
@@ -352,8 +411,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   void _clearForm(WorkshopSettings? settings) {
+    _mute = true;
     _title.clear();
     _link.clear();
+    _extraSeconds = 0;
     _hours.text = '0';
     _minutes.text = '0';
     _prep.text = '$defaultPrepPostMinutes';
@@ -368,6 +429,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _vat.text = settings == null
         ? ''
         : basisPointsLabel(settings.vatBasisPoints);
+    _mute = false;
     _printerId = null;
     _sourceUrl = '';
     _profileTitle = '';
@@ -390,16 +452,17 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   void _fillFromLine(QuoteLine line) {
+    _mute = true;
     _title.text = line.title;
     _link.text = line.sourceUrl;
-    _hours.text = '${line.printTimeSeconds ~/ 3600}';
-    _minutes.text = '${(line.printTimeSeconds % 3600) ~/ 60}';
+    _setDuration(line.printTimeSeconds);
     _prep.text = '${line.prepMinutes}';
     _post.text = '${line.postMinutes}';
-    _quantity.text = '${line.quantity}';
+    _quantity.text = '${line.quantity < 1 ? 1 : line.quantity}';
     _markup.text = basisPointsLabel(line.markupBasisPoints);
     _failure.text = basisPointsLabel(line.failureBasisPoints);
     _vat.text = basisPointsLabel(line.vatBasisPoints);
+    _mute = false;
     _printerId = line.printerId.isEmpty ? null : line.printerId;
     _sourceUrl = line.sourceUrl;
     _profileTitle = line.sourceProfileTitle;
@@ -438,10 +501,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         line.extras.map((extra) {
           final row = _ExtraRow();
           row.name.text = extra.name;
-          final amount = extra.costMinor / 100;
-          row.cost.text = amount == amount.roundToDouble()
-              ? amount.round().toString()
-              : amount.toStringAsFixed(2);
+          row.cost.text = formatMinorAmount(extra.costMinor);
           row.cost.addListener(_refresh);
           return row;
         }),
@@ -462,22 +522,24 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       printTimeSeconds: input.printTimeSeconds,
       filaments: [
         for (final row in _rows)
-          FilamentUsage(
-            filamentId: row.filamentId ?? '',
-            grams: parseNonNegativeDouble(row.grams.text) ?? 0,
-            material: row.material.isNotEmpty
-                ? row.material
-                : _spool(spools, row.filamentId)?.material ?? '',
-            colorHex: row.colorHex,
-          ),
+          if (_keepsFilament(row))
+            FilamentUsage(
+              filamentId: row.filamentId ?? '',
+              grams: parseNonNegativeDouble(row.grams.text) ?? 0,
+              material: _pricedMaterial(row, spools),
+              colorHex: _pricedColor(row, spools),
+            ),
       ],
       prepMinutes: input.prepMinutes,
       postMinutes: input.postMinutes,
       extras: [
         for (final extra in _extras)
-          if (extra.name.text.trim().isNotEmpty)
+          if (extra.name.text.trim().isNotEmpty ||
+              (parseMinor(extra.cost.text) ?? 0) > 0)
             ExtraCost(
-              name: extra.name.text.trim(),
+              name: extra.name.text.trim().isEmpty
+                  ? 'Extra'
+                  : extra.name.text.trim(),
               costMinor: parseMinor(extra.cost.text) ?? 0,
             ),
       ],
@@ -627,6 +689,28 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     }
   }
 
+  bool _keepsFilament(_FilamentRow row) {
+    final grams = parseNonNegativeDouble(row.grams.text) ?? 0;
+    return grams > 0 ||
+        (row.filamentId?.isNotEmpty ?? false) ||
+        row.material.trim().isNotEmpty;
+  }
+
+  String _pricedMaterial(_FilamentRow row, List<FilamentSpool> spools) {
+    final spool = _spool(spools, row.filamentId);
+    if (spool != null && spool.material.trim().isNotEmpty) {
+      return spool.material;
+    }
+    return row.material;
+  }
+
+  String _pricedColor(_FilamentRow row, List<FilamentSpool> spools) {
+    if (row.colorHex.isNotEmpty) {
+      return row.colorHex;
+    }
+    return _spool(spools, row.filamentId)?.colorHex ?? '';
+  }
+
   FilamentSpool? _spool(List<FilamentSpool> spools, String? id) {
     for (final spool in spools) {
       if (spool.id == id) {
@@ -698,12 +782,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (store == null) {
       return const Scaffold(body: EmptyView(message: 'Sign in to calculate.'));
     }
-    final settings = ref.watch(_settingsProvider(store)).asData?.value;
+    final settings = ref.watch(settingsProvider(store)).asData?.value;
     final printers =
-        ref.watch(_printersProvider(store)).asData?.value ?? const [];
+        ref.watch(printersProvider(store)).asData?.value ?? const [];
     final spools =
-        ref.watch(_filamentsProvider(store)).asData?.value ?? const [];
-    final orders = ref.watch(_ordersProvider(store)).asData?.value;
+        ref.watch(filamentsProvider(store)).asData?.value ?? const [];
+    final orders = ref.watch(ordersProvider(store)).asData?.value;
     PrintOrder? target;
     if (widget.orderId != null && orders != null) {
       for (final order in orders) {
@@ -718,10 +802,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         _markup.text.isEmpty &&
         _vat.text.isEmpty &&
         _failure.text.isEmpty) {
-      _markup.text = basisPointsLabel(settings.defaultMarkupBasisPoints);
-      _failure.text = basisPointsLabel(settings.defaultFailureBasisPoints);
-      _vat.text = basisPointsLabel(settings.vatBasisPoints);
+      _write(_markup, basisPointsLabel(settings.defaultMarkupBasisPoints));
+      _write(_failure, basisPointsLabel(settings.defaultFailureBasisPoints));
+      _write(_vat, basisPointsLabel(settings.vatBasisPoints));
     }
+    _scheduleDefaultPrinter(printers);
     final activeSettings = settings ?? const WorkshopSettings();
     final input = _input(
       settings: activeSettings,
@@ -818,9 +903,21 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ],
             onChanged: (value) => setState(() => _printerId = value),
           ),
+          if (_selectedPrinter(printers) == null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'No printer selected, so electricity and machine wear stay at 0.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: 12),
           for (var index = 0; index < _rows.length; index++)
-            _filamentEditor(index, spools),
+            _filamentEditor(
+              index,
+              spools,
+              activeSettings.currencyCode,
+              input.quantity,
+            ),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton(
@@ -874,7 +971,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _quantity,
-            decoration: const InputDecoration(labelText: 'Quantity'),
+            decoration: InputDecoration(
+              labelText: 'Quantity',
+              helperText: (parsePositiveInt(_quantity.text) ?? 1) < 1
+                  ? 'Quantity below 1 is priced as 1.'
+                  : 'Material, time, and post-processing scale with quantity. Prep is charged once.',
+            ),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 12),
@@ -913,25 +1015,38 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           ),
           const SizedBox(height: 12),
           for (var index = 0; index < _extras.length; index++)
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _extras[index].name,
-                    decoration: const InputDecoration(labelText: 'Extra'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _extras[index].cost,
-                    decoration: const InputDecoration(labelText: 'Cost'),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _extras[index].name,
+                      decoration: const InputDecoration(labelText: 'Extra'),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _extras[index].cost,
+                      decoration: const InputDecoration(labelText: 'Cost'),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Remove extra',
+                    onPressed: () => setState(() {
+                      final extra = _extras.removeAt(index);
+                      extra.cost.removeListener(_refresh);
+                      extra.name.dispose();
+                      extra.cost.dispose();
+                    }),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
             ),
           Align(
             alignment: Alignment.centerLeft,
@@ -944,6 +1059,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               child: const Text('Add extra cost'),
             ),
           ),
+          if (_extras.isNotEmpty)
+            Text(
+              'Extras are a flat amount for the whole print, not per unit. A cost without a name is saved as Extra.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             DetailRow(
               label: 'Print time',
               value: formatDuration(_seconds()),
@@ -987,10 +1107,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     );
   }
 
-  Widget _filamentEditor(int index, List<FilamentSpool> spools) {
+  Widget _filamentEditor(
+    int index,
+    List<FilamentSpool> spools,
+    String currencyCode,
+    int quantity,
+  ) {
     final row = _rows[index];
     final spool = _spool(spools, row.filamentId);
     final grams = parseNonNegativeDouble(row.grams.text);
+    final needed = grams == null ? null : grams * quantity;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Padding(
@@ -1037,8 +1163,32 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   onChanged: (_) => setState(() {}),
                 ),
               ),
+              if (_rows.length > 1)
+                IconButton(
+                  tooltip: 'Remove filament',
+                  onPressed: () => setState(() {
+                    final removed = _rows.removeAt(index);
+                    removed.grams.removeListener(_refresh);
+                    removed.grams.dispose();
+                  }),
+                  icon: const Icon(Icons.close),
+                ),
             ],
           ),
+          if (grams != null && grams > 0 && spool == null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Pick a spool. These grams are priced at 0.',
+              style: theme.textTheme.bodySmall?.copyWith(color: scheme.error),
+            ),
+          ],
+          if (spool != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              '${formatMoney(spool.pricePerKgMinor, currencyCode)} / kg',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
           if (spool != null && spool.isLowStock) ...[
             const SizedBox(height: 4),
             Text(
@@ -1047,11 +1197,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ),
           ],
           if (spool != null &&
-              grams != null &&
-              grams > spool.remainingGrams) ...[
+              needed != null &&
+              needed > spool.remainingGrams) ...[
             const SizedBox(height: 4),
             Text(
-              'This line uses ${formatGrams(grams)} but only ${formatGrams(spool.remainingGrams)} remains.',
+              quantity > 1
+                  ? 'This print needs ${formatGrams(needed)} (${formatGrams(grams!)} × $quantity) but only ${formatGrams(spool.remainingGrams)} remains.'
+                  : 'This line uses ${formatGrams(needed)} but only ${formatGrams(spool.remainingGrams)} remains.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: scheme.tertiary,
               ),
@@ -1155,18 +1307,3 @@ class _CustomerQuotePickerState extends State<_CustomerQuotePicker> {
   }
 }
 
-final _settingsProvider = StreamProvider.family<WorkshopSettings, UserStore>(
-  (ref, store) => store.watchSettings(),
-);
-
-final _printersProvider = StreamProvider.family<List<PrinterProfile>, UserStore>(
-  (ref, store) => store.watchPrinters(),
-);
-
-final _filamentsProvider = StreamProvider.family<List<FilamentSpool>, UserStore>(
-  (ref, store) => store.watchFilaments(),
-);
-
-final _ordersProvider = StreamProvider.family<List<PrintOrder>, UserStore>(
-  (ref, store) => store.watchOrders(),
-);

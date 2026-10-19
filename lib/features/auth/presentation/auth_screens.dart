@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/firebase_emulator.dart';
 import '../../../core/gate_scaffold.dart';
 import '../../../core/providers.dart';
 import '../../../firebase_options.dart';
@@ -35,13 +36,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   var _busy = false;
   String? _error;
 
-  Future<void> _signIn() async {
+  Future<void> _run(Future<void> Function() action) async {
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      await signInWithGoogle();
+      await action();
     } on Object catch (error) {
       setState(() => _error = '$error');
     } finally {
@@ -66,9 +67,26 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             const SizedBox(height: 12),
           ],
           FilledButton(
-            onPressed: _busy || !firebaseIsConfigured ? null : _signIn,
+            onPressed: _busy || !firebaseIsConfigured
+                ? null
+                : () => _run(signInWithGoogle),
             child: Text(_busy ? 'Signing in…' : 'Sign in with Google'),
           ),
+          if (useFirebaseEmulator) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: _busy || !firebaseIsConfigured
+                  ? null
+                  : () => _run(signInWithEmulatorTester),
+              child: const Text('Sign in as test seller'),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Local Firebase emulators. This account is $emulatorTesterEmail.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
         ],
       ),
     );
