@@ -553,7 +553,10 @@ as int,
 /// @nodoc
 mixin _$QuoteLine {
 
- String get id; String get title; int get quantity; String get printerId; int get printTimeSeconds; List<FilamentUsage> get filaments; int get prepMinutes; int get postMinutes; List<ExtraCost> get extras; int get markupBasisPoints; int get failureBasisPoints; int get vatBasisPoints; PriceBreakdown get breakdown; String get sourceUrl; String get sourceModelTitle; String get sourceProfileTitle;
+ String get id;/// Catalog product this print was taken from. Empty on older quotes and
+/// on prints that were never saved as a product. Home groups by this id
+/// so a renamed title still counts as the same product.
+ String get productId; String get title; int get quantity; String get printerId; int get printTimeSeconds; List<FilamentUsage> get filaments; int get prepMinutes; int get postMinutes; List<ExtraCost> get extras; int get markupBasisPoints; int get failureBasisPoints; int get vatBasisPoints; PriceBreakdown get breakdown; String get sourceUrl; String get sourceModelTitle; String get sourceProfileTitle;
 /// Create a copy of QuoteLine
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -566,16 +569,16 @@ $QuoteLineCopyWith<QuoteLine> get copyWith => _$QuoteLineCopyWithImpl<QuoteLine>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuoteLine&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.printerId, printerId) || other.printerId == printerId)&&(identical(other.printTimeSeconds, printTimeSeconds) || other.printTimeSeconds == printTimeSeconds)&&const DeepCollectionEquality().equals(other.filaments, filaments)&&(identical(other.prepMinutes, prepMinutes) || other.prepMinutes == prepMinutes)&&(identical(other.postMinutes, postMinutes) || other.postMinutes == postMinutes)&&const DeepCollectionEquality().equals(other.extras, extras)&&(identical(other.markupBasisPoints, markupBasisPoints) || other.markupBasisPoints == markupBasisPoints)&&(identical(other.failureBasisPoints, failureBasisPoints) || other.failureBasisPoints == failureBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.breakdown, breakdown) || other.breakdown == breakdown)&&(identical(other.sourceUrl, sourceUrl) || other.sourceUrl == sourceUrl)&&(identical(other.sourceModelTitle, sourceModelTitle) || other.sourceModelTitle == sourceModelTitle)&&(identical(other.sourceProfileTitle, sourceProfileTitle) || other.sourceProfileTitle == sourceProfileTitle));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuoteLine&&(identical(other.id, id) || other.id == id)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.title, title) || other.title == title)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.printerId, printerId) || other.printerId == printerId)&&(identical(other.printTimeSeconds, printTimeSeconds) || other.printTimeSeconds == printTimeSeconds)&&const DeepCollectionEquality().equals(other.filaments, filaments)&&(identical(other.prepMinutes, prepMinutes) || other.prepMinutes == prepMinutes)&&(identical(other.postMinutes, postMinutes) || other.postMinutes == postMinutes)&&const DeepCollectionEquality().equals(other.extras, extras)&&(identical(other.markupBasisPoints, markupBasisPoints) || other.markupBasisPoints == markupBasisPoints)&&(identical(other.failureBasisPoints, failureBasisPoints) || other.failureBasisPoints == failureBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.breakdown, breakdown) || other.breakdown == breakdown)&&(identical(other.sourceUrl, sourceUrl) || other.sourceUrl == sourceUrl)&&(identical(other.sourceModelTitle, sourceModelTitle) || other.sourceModelTitle == sourceModelTitle)&&(identical(other.sourceProfileTitle, sourceProfileTitle) || other.sourceProfileTitle == sourceProfileTitle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,quantity,printerId,printTimeSeconds,const DeepCollectionEquality().hash(filaments),prepMinutes,postMinutes,const DeepCollectionEquality().hash(extras),markupBasisPoints,failureBasisPoints,vatBasisPoints,breakdown,sourceUrl,sourceModelTitle,sourceProfileTitle);
+int get hashCode => Object.hash(runtimeType,id,productId,title,quantity,printerId,printTimeSeconds,const DeepCollectionEquality().hash(filaments),prepMinutes,postMinutes,const DeepCollectionEquality().hash(extras),markupBasisPoints,failureBasisPoints,vatBasisPoints,breakdown,sourceUrl,sourceModelTitle,sourceProfileTitle);
 
 @override
 String toString() {
-  return 'QuoteLine(id: $id, title: $title, quantity: $quantity, printerId: $printerId, printTimeSeconds: $printTimeSeconds, filaments: $filaments, prepMinutes: $prepMinutes, postMinutes: $postMinutes, extras: $extras, markupBasisPoints: $markupBasisPoints, failureBasisPoints: $failureBasisPoints, vatBasisPoints: $vatBasisPoints, breakdown: $breakdown, sourceUrl: $sourceUrl, sourceModelTitle: $sourceModelTitle, sourceProfileTitle: $sourceProfileTitle)';
+  return 'QuoteLine(id: $id, productId: $productId, title: $title, quantity: $quantity, printerId: $printerId, printTimeSeconds: $printTimeSeconds, filaments: $filaments, prepMinutes: $prepMinutes, postMinutes: $postMinutes, extras: $extras, markupBasisPoints: $markupBasisPoints, failureBasisPoints: $failureBasisPoints, vatBasisPoints: $vatBasisPoints, breakdown: $breakdown, sourceUrl: $sourceUrl, sourceModelTitle: $sourceModelTitle, sourceProfileTitle: $sourceProfileTitle)';
 }
 
 
@@ -586,7 +589,7 @@ abstract mixin class $QuoteLineCopyWith<$Res>  {
   factory $QuoteLineCopyWith(QuoteLine value, $Res Function(QuoteLine) _then) = _$QuoteLineCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, int quantity, String printerId, int printTimeSeconds, List<FilamentUsage> filaments, int prepMinutes, int postMinutes, List<ExtraCost> extras, int markupBasisPoints, int failureBasisPoints, int vatBasisPoints, PriceBreakdown breakdown, String sourceUrl, String sourceModelTitle, String sourceProfileTitle
+ String id, String productId, String title, int quantity, String printerId, int printTimeSeconds, List<FilamentUsage> filaments, int prepMinutes, int postMinutes, List<ExtraCost> extras, int markupBasisPoints, int failureBasisPoints, int vatBasisPoints, PriceBreakdown breakdown, String sourceUrl, String sourceModelTitle, String sourceProfileTitle
 });
 
 
@@ -603,9 +606,10 @@ class _$QuoteLineCopyWithImpl<$Res>
 
 /// Create a copy of QuoteLine
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? quantity = null,Object? printerId = null,Object? printTimeSeconds = null,Object? filaments = null,Object? prepMinutes = null,Object? postMinutes = null,Object? extras = null,Object? markupBasisPoints = null,Object? failureBasisPoints = null,Object? vatBasisPoints = null,Object? breakdown = null,Object? sourceUrl = null,Object? sourceModelTitle = null,Object? sourceProfileTitle = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? productId = null,Object? title = null,Object? quantity = null,Object? printerId = null,Object? printTimeSeconds = null,Object? filaments = null,Object? prepMinutes = null,Object? postMinutes = null,Object? extras = null,Object? markupBasisPoints = null,Object? failureBasisPoints = null,Object? vatBasisPoints = null,Object? breakdown = null,Object? sourceUrl = null,Object? sourceModelTitle = null,Object? sourceProfileTitle = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,printerId: null == printerId ? _self.printerId : printerId // ignore: cast_nullable_to_non_nullable
@@ -715,10 +719,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  PriceBreakdown breakdown,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String productId,  String title,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  PriceBreakdown breakdown,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _QuoteLine() when $default != null:
-return $default(_that.id,_that.title,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.breakdown,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle);case _:
+return $default(_that.id,_that.productId,_that.title,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.breakdown,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle);case _:
   return orElse();
 
 }
@@ -736,10 +740,10 @@ return $default(_that.id,_that.title,_that.quantity,_that.printerId,_that.printT
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  PriceBreakdown breakdown,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String productId,  String title,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  PriceBreakdown breakdown,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle)  $default,) {final _that = this;
 switch (_that) {
 case _QuoteLine():
-return $default(_that.id,_that.title,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.breakdown,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle);case _:
+return $default(_that.id,_that.productId,_that.title,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.breakdown,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -756,10 +760,10 @@ return $default(_that.id,_that.title,_that.quantity,_that.printerId,_that.printT
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  PriceBreakdown breakdown,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String productId,  String title,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  PriceBreakdown breakdown,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle)?  $default,) {final _that = this;
 switch (_that) {
 case _QuoteLine() when $default != null:
-return $default(_that.id,_that.title,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.breakdown,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle);case _:
+return $default(_that.id,_that.productId,_that.title,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.breakdown,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle);case _:
   return null;
 
 }
@@ -771,10 +775,14 @@ return $default(_that.id,_that.title,_that.quantity,_that.printerId,_that.printT
 @JsonSerializable()
 
 class _QuoteLine implements QuoteLine {
-  const _QuoteLine({required this.id, required this.title, required this.quantity, this.printerId = '', required this.printTimeSeconds, required final  List<FilamentUsage> filaments, this.prepMinutes = 0, this.postMinutes = 0, final  List<ExtraCost> extras = const [], required this.markupBasisPoints, required this.failureBasisPoints, required this.vatBasisPoints, required this.breakdown, this.sourceUrl = '', this.sourceModelTitle = '', this.sourceProfileTitle = ''}): _filaments = filaments,_extras = extras;
+  const _QuoteLine({required this.id, this.productId = '', required this.title, required this.quantity, this.printerId = '', required this.printTimeSeconds, required final  List<FilamentUsage> filaments, this.prepMinutes = 0, this.postMinutes = 0, final  List<ExtraCost> extras = const [], required this.markupBasisPoints, required this.failureBasisPoints, required this.vatBasisPoints, required this.breakdown, this.sourceUrl = '', this.sourceModelTitle = '', this.sourceProfileTitle = ''}): _filaments = filaments,_extras = extras;
   factory _QuoteLine.fromJson(Map<String, dynamic> json) => _$QuoteLineFromJson(json);
 
 @override final  String id;
+/// Catalog product this print was taken from. Empty on older quotes and
+/// on prints that were never saved as a product. Home groups by this id
+/// so a renamed title still counts as the same product.
+@override@JsonKey() final  String productId;
 @override final  String title;
 @override final  int quantity;
 @override@JsonKey() final  String printerId;
@@ -816,16 +824,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuoteLine&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.printerId, printerId) || other.printerId == printerId)&&(identical(other.printTimeSeconds, printTimeSeconds) || other.printTimeSeconds == printTimeSeconds)&&const DeepCollectionEquality().equals(other._filaments, _filaments)&&(identical(other.prepMinutes, prepMinutes) || other.prepMinutes == prepMinutes)&&(identical(other.postMinutes, postMinutes) || other.postMinutes == postMinutes)&&const DeepCollectionEquality().equals(other._extras, _extras)&&(identical(other.markupBasisPoints, markupBasisPoints) || other.markupBasisPoints == markupBasisPoints)&&(identical(other.failureBasisPoints, failureBasisPoints) || other.failureBasisPoints == failureBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.breakdown, breakdown) || other.breakdown == breakdown)&&(identical(other.sourceUrl, sourceUrl) || other.sourceUrl == sourceUrl)&&(identical(other.sourceModelTitle, sourceModelTitle) || other.sourceModelTitle == sourceModelTitle)&&(identical(other.sourceProfileTitle, sourceProfileTitle) || other.sourceProfileTitle == sourceProfileTitle));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuoteLine&&(identical(other.id, id) || other.id == id)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.title, title) || other.title == title)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.printerId, printerId) || other.printerId == printerId)&&(identical(other.printTimeSeconds, printTimeSeconds) || other.printTimeSeconds == printTimeSeconds)&&const DeepCollectionEquality().equals(other._filaments, _filaments)&&(identical(other.prepMinutes, prepMinutes) || other.prepMinutes == prepMinutes)&&(identical(other.postMinutes, postMinutes) || other.postMinutes == postMinutes)&&const DeepCollectionEquality().equals(other._extras, _extras)&&(identical(other.markupBasisPoints, markupBasisPoints) || other.markupBasisPoints == markupBasisPoints)&&(identical(other.failureBasisPoints, failureBasisPoints) || other.failureBasisPoints == failureBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.breakdown, breakdown) || other.breakdown == breakdown)&&(identical(other.sourceUrl, sourceUrl) || other.sourceUrl == sourceUrl)&&(identical(other.sourceModelTitle, sourceModelTitle) || other.sourceModelTitle == sourceModelTitle)&&(identical(other.sourceProfileTitle, sourceProfileTitle) || other.sourceProfileTitle == sourceProfileTitle));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,quantity,printerId,printTimeSeconds,const DeepCollectionEquality().hash(_filaments),prepMinutes,postMinutes,const DeepCollectionEquality().hash(_extras),markupBasisPoints,failureBasisPoints,vatBasisPoints,breakdown,sourceUrl,sourceModelTitle,sourceProfileTitle);
+int get hashCode => Object.hash(runtimeType,id,productId,title,quantity,printerId,printTimeSeconds,const DeepCollectionEquality().hash(_filaments),prepMinutes,postMinutes,const DeepCollectionEquality().hash(_extras),markupBasisPoints,failureBasisPoints,vatBasisPoints,breakdown,sourceUrl,sourceModelTitle,sourceProfileTitle);
 
 @override
 String toString() {
-  return 'QuoteLine(id: $id, title: $title, quantity: $quantity, printerId: $printerId, printTimeSeconds: $printTimeSeconds, filaments: $filaments, prepMinutes: $prepMinutes, postMinutes: $postMinutes, extras: $extras, markupBasisPoints: $markupBasisPoints, failureBasisPoints: $failureBasisPoints, vatBasisPoints: $vatBasisPoints, breakdown: $breakdown, sourceUrl: $sourceUrl, sourceModelTitle: $sourceModelTitle, sourceProfileTitle: $sourceProfileTitle)';
+  return 'QuoteLine(id: $id, productId: $productId, title: $title, quantity: $quantity, printerId: $printerId, printTimeSeconds: $printTimeSeconds, filaments: $filaments, prepMinutes: $prepMinutes, postMinutes: $postMinutes, extras: $extras, markupBasisPoints: $markupBasisPoints, failureBasisPoints: $failureBasisPoints, vatBasisPoints: $vatBasisPoints, breakdown: $breakdown, sourceUrl: $sourceUrl, sourceModelTitle: $sourceModelTitle, sourceProfileTitle: $sourceProfileTitle)';
 }
 
 
@@ -836,7 +844,7 @@ abstract mixin class _$QuoteLineCopyWith<$Res> implements $QuoteLineCopyWith<$Re
   factory _$QuoteLineCopyWith(_QuoteLine value, $Res Function(_QuoteLine) _then) = __$QuoteLineCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, int quantity, String printerId, int printTimeSeconds, List<FilamentUsage> filaments, int prepMinutes, int postMinutes, List<ExtraCost> extras, int markupBasisPoints, int failureBasisPoints, int vatBasisPoints, PriceBreakdown breakdown, String sourceUrl, String sourceModelTitle, String sourceProfileTitle
+ String id, String productId, String title, int quantity, String printerId, int printTimeSeconds, List<FilamentUsage> filaments, int prepMinutes, int postMinutes, List<ExtraCost> extras, int markupBasisPoints, int failureBasisPoints, int vatBasisPoints, PriceBreakdown breakdown, String sourceUrl, String sourceModelTitle, String sourceProfileTitle
 });
 
 
@@ -853,9 +861,10 @@ class __$QuoteLineCopyWithImpl<$Res>
 
 /// Create a copy of QuoteLine
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? quantity = null,Object? printerId = null,Object? printTimeSeconds = null,Object? filaments = null,Object? prepMinutes = null,Object? postMinutes = null,Object? extras = null,Object? markupBasisPoints = null,Object? failureBasisPoints = null,Object? vatBasisPoints = null,Object? breakdown = null,Object? sourceUrl = null,Object? sourceModelTitle = null,Object? sourceProfileTitle = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? productId = null,Object? title = null,Object? quantity = null,Object? printerId = null,Object? printTimeSeconds = null,Object? filaments = null,Object? prepMinutes = null,Object? postMinutes = null,Object? extras = null,Object? markupBasisPoints = null,Object? failureBasisPoints = null,Object? vatBasisPoints = null,Object? breakdown = null,Object? sourceUrl = null,Object? sourceModelTitle = null,Object? sourceProfileTitle = null,}) {
   return _then(_QuoteLine(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,printerId: null == printerId ? _self.printerId : printerId // ignore: cast_nullable_to_non_nullable
@@ -891,7 +900,9 @@ $PriceBreakdownCopyWith<$Res> get breakdown {
 /// @nodoc
 mixin _$PrintOrder {
 
- String get id; int get quoteNumber; String get customerId; String get title;@JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson) OrderStatus get status; String get validUntil; int get quantity; String get printerId; int get printTimeSeconds; List<FilamentUsage> get filaments; int get prepMinutes; int get postMinutes; List<ExtraCost> get extras; int get markupBasisPoints; int get failureBasisPoints; int get vatBasisPoints; String get currencyCode; PriceBreakdown get breakdown; bool get stockDeducted; Map<String, double> get deductedGrams; String get stockWarning; int get depositMinor; String get revenueAt; String get sourceUrl; String get sourceModelTitle; String get sourceProfileTitle; String get note; List<QuoteLine> get lines; String get createdAt; String get updatedAt;
+ String get id; int get quoteNumber; String get customerId; String get title;@JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson) OrderStatus get status; String get validUntil; int get quantity; String get printerId; int get printTimeSeconds; List<FilamentUsage> get filaments; int get prepMinutes; int get postMinutes; List<ExtraCost> get extras; int get markupBasisPoints; int get failureBasisPoints; int get vatBasisPoints; String get currencyCode; PriceBreakdown get breakdown; bool get stockDeducted; Map<String, double> get deductedGrams; String get stockWarning; int get depositMinor;/// When the deposit was received, as a UTC timestamp. Empty on older
+/// orders: Home then keeps the whole total in the print month.
+ String get depositAt; String get revenueAt; String get sourceUrl; String get sourceModelTitle; String get sourceProfileTitle; String get note; List<QuoteLine> get lines; String get createdAt; String get updatedAt;
 /// Create a copy of PrintOrder
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -904,16 +915,16 @@ $PrintOrderCopyWith<PrintOrder> get copyWith => _$PrintOrderCopyWithImpl<PrintOr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrintOrder&&(identical(other.id, id) || other.id == id)&&(identical(other.quoteNumber, quoteNumber) || other.quoteNumber == quoteNumber)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.title, title) || other.title == title)&&(identical(other.status, status) || other.status == status)&&(identical(other.validUntil, validUntil) || other.validUntil == validUntil)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.printerId, printerId) || other.printerId == printerId)&&(identical(other.printTimeSeconds, printTimeSeconds) || other.printTimeSeconds == printTimeSeconds)&&const DeepCollectionEquality().equals(other.filaments, filaments)&&(identical(other.prepMinutes, prepMinutes) || other.prepMinutes == prepMinutes)&&(identical(other.postMinutes, postMinutes) || other.postMinutes == postMinutes)&&const DeepCollectionEquality().equals(other.extras, extras)&&(identical(other.markupBasisPoints, markupBasisPoints) || other.markupBasisPoints == markupBasisPoints)&&(identical(other.failureBasisPoints, failureBasisPoints) || other.failureBasisPoints == failureBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.breakdown, breakdown) || other.breakdown == breakdown)&&(identical(other.stockDeducted, stockDeducted) || other.stockDeducted == stockDeducted)&&const DeepCollectionEquality().equals(other.deductedGrams, deductedGrams)&&(identical(other.stockWarning, stockWarning) || other.stockWarning == stockWarning)&&(identical(other.depositMinor, depositMinor) || other.depositMinor == depositMinor)&&(identical(other.revenueAt, revenueAt) || other.revenueAt == revenueAt)&&(identical(other.sourceUrl, sourceUrl) || other.sourceUrl == sourceUrl)&&(identical(other.sourceModelTitle, sourceModelTitle) || other.sourceModelTitle == sourceModelTitle)&&(identical(other.sourceProfileTitle, sourceProfileTitle) || other.sourceProfileTitle == sourceProfileTitle)&&(identical(other.note, note) || other.note == note)&&const DeepCollectionEquality().equals(other.lines, lines)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrintOrder&&(identical(other.id, id) || other.id == id)&&(identical(other.quoteNumber, quoteNumber) || other.quoteNumber == quoteNumber)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.title, title) || other.title == title)&&(identical(other.status, status) || other.status == status)&&(identical(other.validUntil, validUntil) || other.validUntil == validUntil)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.printerId, printerId) || other.printerId == printerId)&&(identical(other.printTimeSeconds, printTimeSeconds) || other.printTimeSeconds == printTimeSeconds)&&const DeepCollectionEquality().equals(other.filaments, filaments)&&(identical(other.prepMinutes, prepMinutes) || other.prepMinutes == prepMinutes)&&(identical(other.postMinutes, postMinutes) || other.postMinutes == postMinutes)&&const DeepCollectionEquality().equals(other.extras, extras)&&(identical(other.markupBasisPoints, markupBasisPoints) || other.markupBasisPoints == markupBasisPoints)&&(identical(other.failureBasisPoints, failureBasisPoints) || other.failureBasisPoints == failureBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.breakdown, breakdown) || other.breakdown == breakdown)&&(identical(other.stockDeducted, stockDeducted) || other.stockDeducted == stockDeducted)&&const DeepCollectionEquality().equals(other.deductedGrams, deductedGrams)&&(identical(other.stockWarning, stockWarning) || other.stockWarning == stockWarning)&&(identical(other.depositMinor, depositMinor) || other.depositMinor == depositMinor)&&(identical(other.depositAt, depositAt) || other.depositAt == depositAt)&&(identical(other.revenueAt, revenueAt) || other.revenueAt == revenueAt)&&(identical(other.sourceUrl, sourceUrl) || other.sourceUrl == sourceUrl)&&(identical(other.sourceModelTitle, sourceModelTitle) || other.sourceModelTitle == sourceModelTitle)&&(identical(other.sourceProfileTitle, sourceProfileTitle) || other.sourceProfileTitle == sourceProfileTitle)&&(identical(other.note, note) || other.note == note)&&const DeepCollectionEquality().equals(other.lines, lines)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,quoteNumber,customerId,title,status,validUntil,quantity,printerId,printTimeSeconds,const DeepCollectionEquality().hash(filaments),prepMinutes,postMinutes,const DeepCollectionEquality().hash(extras),markupBasisPoints,failureBasisPoints,vatBasisPoints,currencyCode,breakdown,stockDeducted,const DeepCollectionEquality().hash(deductedGrams),stockWarning,depositMinor,revenueAt,sourceUrl,sourceModelTitle,sourceProfileTitle,note,const DeepCollectionEquality().hash(lines),createdAt,updatedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,quoteNumber,customerId,title,status,validUntil,quantity,printerId,printTimeSeconds,const DeepCollectionEquality().hash(filaments),prepMinutes,postMinutes,const DeepCollectionEquality().hash(extras),markupBasisPoints,failureBasisPoints,vatBasisPoints,currencyCode,breakdown,stockDeducted,const DeepCollectionEquality().hash(deductedGrams),stockWarning,depositMinor,depositAt,revenueAt,sourceUrl,sourceModelTitle,sourceProfileTitle,note,const DeepCollectionEquality().hash(lines),createdAt,updatedAt]);
 
 @override
 String toString() {
-  return 'PrintOrder(id: $id, quoteNumber: $quoteNumber, customerId: $customerId, title: $title, status: $status, validUntil: $validUntil, quantity: $quantity, printerId: $printerId, printTimeSeconds: $printTimeSeconds, filaments: $filaments, prepMinutes: $prepMinutes, postMinutes: $postMinutes, extras: $extras, markupBasisPoints: $markupBasisPoints, failureBasisPoints: $failureBasisPoints, vatBasisPoints: $vatBasisPoints, currencyCode: $currencyCode, breakdown: $breakdown, stockDeducted: $stockDeducted, deductedGrams: $deductedGrams, stockWarning: $stockWarning, depositMinor: $depositMinor, revenueAt: $revenueAt, sourceUrl: $sourceUrl, sourceModelTitle: $sourceModelTitle, sourceProfileTitle: $sourceProfileTitle, note: $note, lines: $lines, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'PrintOrder(id: $id, quoteNumber: $quoteNumber, customerId: $customerId, title: $title, status: $status, validUntil: $validUntil, quantity: $quantity, printerId: $printerId, printTimeSeconds: $printTimeSeconds, filaments: $filaments, prepMinutes: $prepMinutes, postMinutes: $postMinutes, extras: $extras, markupBasisPoints: $markupBasisPoints, failureBasisPoints: $failureBasisPoints, vatBasisPoints: $vatBasisPoints, currencyCode: $currencyCode, breakdown: $breakdown, stockDeducted: $stockDeducted, deductedGrams: $deductedGrams, stockWarning: $stockWarning, depositMinor: $depositMinor, depositAt: $depositAt, revenueAt: $revenueAt, sourceUrl: $sourceUrl, sourceModelTitle: $sourceModelTitle, sourceProfileTitle: $sourceProfileTitle, note: $note, lines: $lines, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -924,7 +935,7 @@ abstract mixin class $PrintOrderCopyWith<$Res>  {
   factory $PrintOrderCopyWith(PrintOrder value, $Res Function(PrintOrder) _then) = _$PrintOrderCopyWithImpl;
 @useResult
 $Res call({
- String id, int quoteNumber, String customerId, String title,@JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson) OrderStatus status, String validUntil, int quantity, String printerId, int printTimeSeconds, List<FilamentUsage> filaments, int prepMinutes, int postMinutes, List<ExtraCost> extras, int markupBasisPoints, int failureBasisPoints, int vatBasisPoints, String currencyCode, PriceBreakdown breakdown, bool stockDeducted, Map<String, double> deductedGrams, String stockWarning, int depositMinor, String revenueAt, String sourceUrl, String sourceModelTitle, String sourceProfileTitle, String note, List<QuoteLine> lines, String createdAt, String updatedAt
+ String id, int quoteNumber, String customerId, String title,@JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson) OrderStatus status, String validUntil, int quantity, String printerId, int printTimeSeconds, List<FilamentUsage> filaments, int prepMinutes, int postMinutes, List<ExtraCost> extras, int markupBasisPoints, int failureBasisPoints, int vatBasisPoints, String currencyCode, PriceBreakdown breakdown, bool stockDeducted, Map<String, double> deductedGrams, String stockWarning, int depositMinor, String depositAt, String revenueAt, String sourceUrl, String sourceModelTitle, String sourceProfileTitle, String note, List<QuoteLine> lines, String createdAt, String updatedAt
 });
 
 
@@ -941,7 +952,7 @@ class _$PrintOrderCopyWithImpl<$Res>
 
 /// Create a copy of PrintOrder
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? quoteNumber = null,Object? customerId = null,Object? title = null,Object? status = null,Object? validUntil = null,Object? quantity = null,Object? printerId = null,Object? printTimeSeconds = null,Object? filaments = null,Object? prepMinutes = null,Object? postMinutes = null,Object? extras = null,Object? markupBasisPoints = null,Object? failureBasisPoints = null,Object? vatBasisPoints = null,Object? currencyCode = null,Object? breakdown = null,Object? stockDeducted = null,Object? deductedGrams = null,Object? stockWarning = null,Object? depositMinor = null,Object? revenueAt = null,Object? sourceUrl = null,Object? sourceModelTitle = null,Object? sourceProfileTitle = null,Object? note = null,Object? lines = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? quoteNumber = null,Object? customerId = null,Object? title = null,Object? status = null,Object? validUntil = null,Object? quantity = null,Object? printerId = null,Object? printTimeSeconds = null,Object? filaments = null,Object? prepMinutes = null,Object? postMinutes = null,Object? extras = null,Object? markupBasisPoints = null,Object? failureBasisPoints = null,Object? vatBasisPoints = null,Object? currencyCode = null,Object? breakdown = null,Object? stockDeducted = null,Object? deductedGrams = null,Object? stockWarning = null,Object? depositMinor = null,Object? depositAt = null,Object? revenueAt = null,Object? sourceUrl = null,Object? sourceModelTitle = null,Object? sourceProfileTitle = null,Object? note = null,Object? lines = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,quoteNumber: null == quoteNumber ? _self.quoteNumber : quoteNumber // ignore: cast_nullable_to_non_nullable
@@ -965,7 +976,8 @@ as PriceBreakdown,stockDeducted: null == stockDeducted ? _self.stockDeducted : s
 as bool,deductedGrams: null == deductedGrams ? _self.deductedGrams : deductedGrams // ignore: cast_nullable_to_non_nullable
 as Map<String, double>,stockWarning: null == stockWarning ? _self.stockWarning : stockWarning // ignore: cast_nullable_to_non_nullable
 as String,depositMinor: null == depositMinor ? _self.depositMinor : depositMinor // ignore: cast_nullable_to_non_nullable
-as int,revenueAt: null == revenueAt ? _self.revenueAt : revenueAt // ignore: cast_nullable_to_non_nullable
+as int,depositAt: null == depositAt ? _self.depositAt : depositAt // ignore: cast_nullable_to_non_nullable
+as String,revenueAt: null == revenueAt ? _self.revenueAt : revenueAt // ignore: cast_nullable_to_non_nullable
 as String,sourceUrl: null == sourceUrl ? _self.sourceUrl : sourceUrl // ignore: cast_nullable_to_non_nullable
 as String,sourceModelTitle: null == sourceModelTitle ? _self.sourceModelTitle : sourceModelTitle // ignore: cast_nullable_to_non_nullable
 as String,sourceProfileTitle: null == sourceProfileTitle ? _self.sourceProfileTitle : sourceProfileTitle // ignore: cast_nullable_to_non_nullable
@@ -1067,10 +1079,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  int quoteNumber,  String customerId,  String title, @JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson)  OrderStatus status,  String validUntil,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  String currencyCode,  PriceBreakdown breakdown,  bool stockDeducted,  Map<String, double> deductedGrams,  String stockWarning,  int depositMinor,  String revenueAt,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle,  String note,  List<QuoteLine> lines,  String createdAt,  String updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  int quoteNumber,  String customerId,  String title, @JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson)  OrderStatus status,  String validUntil,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  String currencyCode,  PriceBreakdown breakdown,  bool stockDeducted,  Map<String, double> deductedGrams,  String stockWarning,  int depositMinor,  String depositAt,  String revenueAt,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle,  String note,  List<QuoteLine> lines,  String createdAt,  String updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PrintOrder() when $default != null:
-return $default(_that.id,_that.quoteNumber,_that.customerId,_that.title,_that.status,_that.validUntil,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.currencyCode,_that.breakdown,_that.stockDeducted,_that.deductedGrams,_that.stockWarning,_that.depositMinor,_that.revenueAt,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle,_that.note,_that.lines,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.quoteNumber,_that.customerId,_that.title,_that.status,_that.validUntil,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.currencyCode,_that.breakdown,_that.stockDeducted,_that.deductedGrams,_that.stockWarning,_that.depositMinor,_that.depositAt,_that.revenueAt,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle,_that.note,_that.lines,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -1088,10 +1100,10 @@ return $default(_that.id,_that.quoteNumber,_that.customerId,_that.title,_that.st
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  int quoteNumber,  String customerId,  String title, @JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson)  OrderStatus status,  String validUntil,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  String currencyCode,  PriceBreakdown breakdown,  bool stockDeducted,  Map<String, double> deductedGrams,  String stockWarning,  int depositMinor,  String revenueAt,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle,  String note,  List<QuoteLine> lines,  String createdAt,  String updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  int quoteNumber,  String customerId,  String title, @JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson)  OrderStatus status,  String validUntil,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  String currencyCode,  PriceBreakdown breakdown,  bool stockDeducted,  Map<String, double> deductedGrams,  String stockWarning,  int depositMinor,  String depositAt,  String revenueAt,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle,  String note,  List<QuoteLine> lines,  String createdAt,  String updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _PrintOrder():
-return $default(_that.id,_that.quoteNumber,_that.customerId,_that.title,_that.status,_that.validUntil,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.currencyCode,_that.breakdown,_that.stockDeducted,_that.deductedGrams,_that.stockWarning,_that.depositMinor,_that.revenueAt,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle,_that.note,_that.lines,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.quoteNumber,_that.customerId,_that.title,_that.status,_that.validUntil,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.currencyCode,_that.breakdown,_that.stockDeducted,_that.deductedGrams,_that.stockWarning,_that.depositMinor,_that.depositAt,_that.revenueAt,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle,_that.note,_that.lines,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1108,10 +1120,10 @@ return $default(_that.id,_that.quoteNumber,_that.customerId,_that.title,_that.st
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  int quoteNumber,  String customerId,  String title, @JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson)  OrderStatus status,  String validUntil,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  String currencyCode,  PriceBreakdown breakdown,  bool stockDeducted,  Map<String, double> deductedGrams,  String stockWarning,  int depositMinor,  String revenueAt,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle,  String note,  List<QuoteLine> lines,  String createdAt,  String updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  int quoteNumber,  String customerId,  String title, @JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson)  OrderStatus status,  String validUntil,  int quantity,  String printerId,  int printTimeSeconds,  List<FilamentUsage> filaments,  int prepMinutes,  int postMinutes,  List<ExtraCost> extras,  int markupBasisPoints,  int failureBasisPoints,  int vatBasisPoints,  String currencyCode,  PriceBreakdown breakdown,  bool stockDeducted,  Map<String, double> deductedGrams,  String stockWarning,  int depositMinor,  String depositAt,  String revenueAt,  String sourceUrl,  String sourceModelTitle,  String sourceProfileTitle,  String note,  List<QuoteLine> lines,  String createdAt,  String updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _PrintOrder() when $default != null:
-return $default(_that.id,_that.quoteNumber,_that.customerId,_that.title,_that.status,_that.validUntil,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.currencyCode,_that.breakdown,_that.stockDeducted,_that.deductedGrams,_that.stockWarning,_that.depositMinor,_that.revenueAt,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle,_that.note,_that.lines,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.quoteNumber,_that.customerId,_that.title,_that.status,_that.validUntil,_that.quantity,_that.printerId,_that.printTimeSeconds,_that.filaments,_that.prepMinutes,_that.postMinutes,_that.extras,_that.markupBasisPoints,_that.failureBasisPoints,_that.vatBasisPoints,_that.currencyCode,_that.breakdown,_that.stockDeducted,_that.deductedGrams,_that.stockWarning,_that.depositMinor,_that.depositAt,_that.revenueAt,_that.sourceUrl,_that.sourceModelTitle,_that.sourceProfileTitle,_that.note,_that.lines,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -1123,7 +1135,7 @@ return $default(_that.id,_that.quoteNumber,_that.customerId,_that.title,_that.st
 @JsonSerializable()
 
 class _PrintOrder implements PrintOrder {
-  const _PrintOrder({required this.id, required this.quoteNumber, this.customerId = '', required this.title, @JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson) required this.status, required this.validUntil, required this.quantity, this.printerId = '', required this.printTimeSeconds, required final  List<FilamentUsage> filaments, this.prepMinutes = 0, this.postMinutes = 0, final  List<ExtraCost> extras = const [], required this.markupBasisPoints, required this.failureBasisPoints, required this.vatBasisPoints, required this.currencyCode, required this.breakdown, this.stockDeducted = false, final  Map<String, double> deductedGrams = const <String, double>{}, this.stockWarning = '', this.depositMinor = 0, this.revenueAt = '', this.sourceUrl = '', this.sourceModelTitle = '', this.sourceProfileTitle = '', this.note = '', final  List<QuoteLine> lines = const [], required this.createdAt, required this.updatedAt}): _filaments = filaments,_extras = extras,_deductedGrams = deductedGrams,_lines = lines;
+  const _PrintOrder({required this.id, required this.quoteNumber, this.customerId = '', required this.title, @JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson) required this.status, required this.validUntil, required this.quantity, this.printerId = '', required this.printTimeSeconds, required final  List<FilamentUsage> filaments, this.prepMinutes = 0, this.postMinutes = 0, final  List<ExtraCost> extras = const [], required this.markupBasisPoints, required this.failureBasisPoints, required this.vatBasisPoints, required this.currencyCode, required this.breakdown, this.stockDeducted = false, final  Map<String, double> deductedGrams = const <String, double>{}, this.stockWarning = '', this.depositMinor = 0, this.depositAt = '', this.revenueAt = '', this.sourceUrl = '', this.sourceModelTitle = '', this.sourceProfileTitle = '', this.note = '', final  List<QuoteLine> lines = const [], required this.createdAt, required this.updatedAt}): _filaments = filaments,_extras = extras,_deductedGrams = deductedGrams,_lines = lines;
   factory _PrintOrder.fromJson(Map<String, dynamic> json) => _$PrintOrderFromJson(json);
 
 @override final  String id;
@@ -1166,6 +1178,9 @@ class _PrintOrder implements PrintOrder {
 
 @override@JsonKey() final  String stockWarning;
 @override@JsonKey() final  int depositMinor;
+/// When the deposit was received, as a UTC timestamp. Empty on older
+/// orders: Home then keeps the whole total in the print month.
+@override@JsonKey() final  String depositAt;
 @override@JsonKey() final  String revenueAt;
 @override@JsonKey() final  String sourceUrl;
 @override@JsonKey() final  String sourceModelTitle;
@@ -1194,16 +1209,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PrintOrder&&(identical(other.id, id) || other.id == id)&&(identical(other.quoteNumber, quoteNumber) || other.quoteNumber == quoteNumber)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.title, title) || other.title == title)&&(identical(other.status, status) || other.status == status)&&(identical(other.validUntil, validUntil) || other.validUntil == validUntil)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.printerId, printerId) || other.printerId == printerId)&&(identical(other.printTimeSeconds, printTimeSeconds) || other.printTimeSeconds == printTimeSeconds)&&const DeepCollectionEquality().equals(other._filaments, _filaments)&&(identical(other.prepMinutes, prepMinutes) || other.prepMinutes == prepMinutes)&&(identical(other.postMinutes, postMinutes) || other.postMinutes == postMinutes)&&const DeepCollectionEquality().equals(other._extras, _extras)&&(identical(other.markupBasisPoints, markupBasisPoints) || other.markupBasisPoints == markupBasisPoints)&&(identical(other.failureBasisPoints, failureBasisPoints) || other.failureBasisPoints == failureBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.breakdown, breakdown) || other.breakdown == breakdown)&&(identical(other.stockDeducted, stockDeducted) || other.stockDeducted == stockDeducted)&&const DeepCollectionEquality().equals(other._deductedGrams, _deductedGrams)&&(identical(other.stockWarning, stockWarning) || other.stockWarning == stockWarning)&&(identical(other.depositMinor, depositMinor) || other.depositMinor == depositMinor)&&(identical(other.revenueAt, revenueAt) || other.revenueAt == revenueAt)&&(identical(other.sourceUrl, sourceUrl) || other.sourceUrl == sourceUrl)&&(identical(other.sourceModelTitle, sourceModelTitle) || other.sourceModelTitle == sourceModelTitle)&&(identical(other.sourceProfileTitle, sourceProfileTitle) || other.sourceProfileTitle == sourceProfileTitle)&&(identical(other.note, note) || other.note == note)&&const DeepCollectionEquality().equals(other._lines, _lines)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PrintOrder&&(identical(other.id, id) || other.id == id)&&(identical(other.quoteNumber, quoteNumber) || other.quoteNumber == quoteNumber)&&(identical(other.customerId, customerId) || other.customerId == customerId)&&(identical(other.title, title) || other.title == title)&&(identical(other.status, status) || other.status == status)&&(identical(other.validUntil, validUntil) || other.validUntil == validUntil)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.printerId, printerId) || other.printerId == printerId)&&(identical(other.printTimeSeconds, printTimeSeconds) || other.printTimeSeconds == printTimeSeconds)&&const DeepCollectionEquality().equals(other._filaments, _filaments)&&(identical(other.prepMinutes, prepMinutes) || other.prepMinutes == prepMinutes)&&(identical(other.postMinutes, postMinutes) || other.postMinutes == postMinutes)&&const DeepCollectionEquality().equals(other._extras, _extras)&&(identical(other.markupBasisPoints, markupBasisPoints) || other.markupBasisPoints == markupBasisPoints)&&(identical(other.failureBasisPoints, failureBasisPoints) || other.failureBasisPoints == failureBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.breakdown, breakdown) || other.breakdown == breakdown)&&(identical(other.stockDeducted, stockDeducted) || other.stockDeducted == stockDeducted)&&const DeepCollectionEquality().equals(other._deductedGrams, _deductedGrams)&&(identical(other.stockWarning, stockWarning) || other.stockWarning == stockWarning)&&(identical(other.depositMinor, depositMinor) || other.depositMinor == depositMinor)&&(identical(other.depositAt, depositAt) || other.depositAt == depositAt)&&(identical(other.revenueAt, revenueAt) || other.revenueAt == revenueAt)&&(identical(other.sourceUrl, sourceUrl) || other.sourceUrl == sourceUrl)&&(identical(other.sourceModelTitle, sourceModelTitle) || other.sourceModelTitle == sourceModelTitle)&&(identical(other.sourceProfileTitle, sourceProfileTitle) || other.sourceProfileTitle == sourceProfileTitle)&&(identical(other.note, note) || other.note == note)&&const DeepCollectionEquality().equals(other._lines, _lines)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,quoteNumber,customerId,title,status,validUntil,quantity,printerId,printTimeSeconds,const DeepCollectionEquality().hash(_filaments),prepMinutes,postMinutes,const DeepCollectionEquality().hash(_extras),markupBasisPoints,failureBasisPoints,vatBasisPoints,currencyCode,breakdown,stockDeducted,const DeepCollectionEquality().hash(_deductedGrams),stockWarning,depositMinor,revenueAt,sourceUrl,sourceModelTitle,sourceProfileTitle,note,const DeepCollectionEquality().hash(_lines),createdAt,updatedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,quoteNumber,customerId,title,status,validUntil,quantity,printerId,printTimeSeconds,const DeepCollectionEquality().hash(_filaments),prepMinutes,postMinutes,const DeepCollectionEquality().hash(_extras),markupBasisPoints,failureBasisPoints,vatBasisPoints,currencyCode,breakdown,stockDeducted,const DeepCollectionEquality().hash(_deductedGrams),stockWarning,depositMinor,depositAt,revenueAt,sourceUrl,sourceModelTitle,sourceProfileTitle,note,const DeepCollectionEquality().hash(_lines),createdAt,updatedAt]);
 
 @override
 String toString() {
-  return 'PrintOrder(id: $id, quoteNumber: $quoteNumber, customerId: $customerId, title: $title, status: $status, validUntil: $validUntil, quantity: $quantity, printerId: $printerId, printTimeSeconds: $printTimeSeconds, filaments: $filaments, prepMinutes: $prepMinutes, postMinutes: $postMinutes, extras: $extras, markupBasisPoints: $markupBasisPoints, failureBasisPoints: $failureBasisPoints, vatBasisPoints: $vatBasisPoints, currencyCode: $currencyCode, breakdown: $breakdown, stockDeducted: $stockDeducted, deductedGrams: $deductedGrams, stockWarning: $stockWarning, depositMinor: $depositMinor, revenueAt: $revenueAt, sourceUrl: $sourceUrl, sourceModelTitle: $sourceModelTitle, sourceProfileTitle: $sourceProfileTitle, note: $note, lines: $lines, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'PrintOrder(id: $id, quoteNumber: $quoteNumber, customerId: $customerId, title: $title, status: $status, validUntil: $validUntil, quantity: $quantity, printerId: $printerId, printTimeSeconds: $printTimeSeconds, filaments: $filaments, prepMinutes: $prepMinutes, postMinutes: $postMinutes, extras: $extras, markupBasisPoints: $markupBasisPoints, failureBasisPoints: $failureBasisPoints, vatBasisPoints: $vatBasisPoints, currencyCode: $currencyCode, breakdown: $breakdown, stockDeducted: $stockDeducted, deductedGrams: $deductedGrams, stockWarning: $stockWarning, depositMinor: $depositMinor, depositAt: $depositAt, revenueAt: $revenueAt, sourceUrl: $sourceUrl, sourceModelTitle: $sourceModelTitle, sourceProfileTitle: $sourceProfileTitle, note: $note, lines: $lines, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -1214,7 +1229,7 @@ abstract mixin class _$PrintOrderCopyWith<$Res> implements $PrintOrderCopyWith<$
   factory _$PrintOrderCopyWith(_PrintOrder value, $Res Function(_PrintOrder) _then) = __$PrintOrderCopyWithImpl;
 @override @useResult
 $Res call({
- String id, int quoteNumber, String customerId, String title,@JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson) OrderStatus status, String validUntil, int quantity, String printerId, int printTimeSeconds, List<FilamentUsage> filaments, int prepMinutes, int postMinutes, List<ExtraCost> extras, int markupBasisPoints, int failureBasisPoints, int vatBasisPoints, String currencyCode, PriceBreakdown breakdown, bool stockDeducted, Map<String, double> deductedGrams, String stockWarning, int depositMinor, String revenueAt, String sourceUrl, String sourceModelTitle, String sourceProfileTitle, String note, List<QuoteLine> lines, String createdAt, String updatedAt
+ String id, int quoteNumber, String customerId, String title,@JsonKey(fromJson: orderStatusFromJson, toJson: orderStatusToJson) OrderStatus status, String validUntil, int quantity, String printerId, int printTimeSeconds, List<FilamentUsage> filaments, int prepMinutes, int postMinutes, List<ExtraCost> extras, int markupBasisPoints, int failureBasisPoints, int vatBasisPoints, String currencyCode, PriceBreakdown breakdown, bool stockDeducted, Map<String, double> deductedGrams, String stockWarning, int depositMinor, String depositAt, String revenueAt, String sourceUrl, String sourceModelTitle, String sourceProfileTitle, String note, List<QuoteLine> lines, String createdAt, String updatedAt
 });
 
 
@@ -1231,7 +1246,7 @@ class __$PrintOrderCopyWithImpl<$Res>
 
 /// Create a copy of PrintOrder
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? quoteNumber = null,Object? customerId = null,Object? title = null,Object? status = null,Object? validUntil = null,Object? quantity = null,Object? printerId = null,Object? printTimeSeconds = null,Object? filaments = null,Object? prepMinutes = null,Object? postMinutes = null,Object? extras = null,Object? markupBasisPoints = null,Object? failureBasisPoints = null,Object? vatBasisPoints = null,Object? currencyCode = null,Object? breakdown = null,Object? stockDeducted = null,Object? deductedGrams = null,Object? stockWarning = null,Object? depositMinor = null,Object? revenueAt = null,Object? sourceUrl = null,Object? sourceModelTitle = null,Object? sourceProfileTitle = null,Object? note = null,Object? lines = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? quoteNumber = null,Object? customerId = null,Object? title = null,Object? status = null,Object? validUntil = null,Object? quantity = null,Object? printerId = null,Object? printTimeSeconds = null,Object? filaments = null,Object? prepMinutes = null,Object? postMinutes = null,Object? extras = null,Object? markupBasisPoints = null,Object? failureBasisPoints = null,Object? vatBasisPoints = null,Object? currencyCode = null,Object? breakdown = null,Object? stockDeducted = null,Object? deductedGrams = null,Object? stockWarning = null,Object? depositMinor = null,Object? depositAt = null,Object? revenueAt = null,Object? sourceUrl = null,Object? sourceModelTitle = null,Object? sourceProfileTitle = null,Object? note = null,Object? lines = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_PrintOrder(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,quoteNumber: null == quoteNumber ? _self.quoteNumber : quoteNumber // ignore: cast_nullable_to_non_nullable
@@ -1255,7 +1270,8 @@ as PriceBreakdown,stockDeducted: null == stockDeducted ? _self.stockDeducted : s
 as bool,deductedGrams: null == deductedGrams ? _self._deductedGrams : deductedGrams // ignore: cast_nullable_to_non_nullable
 as Map<String, double>,stockWarning: null == stockWarning ? _self.stockWarning : stockWarning // ignore: cast_nullable_to_non_nullable
 as String,depositMinor: null == depositMinor ? _self.depositMinor : depositMinor // ignore: cast_nullable_to_non_nullable
-as int,revenueAt: null == revenueAt ? _self.revenueAt : revenueAt // ignore: cast_nullable_to_non_nullable
+as int,depositAt: null == depositAt ? _self.depositAt : depositAt // ignore: cast_nullable_to_non_nullable
+as String,revenueAt: null == revenueAt ? _self.revenueAt : revenueAt // ignore: cast_nullable_to_non_nullable
 as String,sourceUrl: null == sourceUrl ? _self.sourceUrl : sourceUrl // ignore: cast_nullable_to_non_nullable
 as String,sourceModelTitle: null == sourceModelTitle ? _self.sourceModelTitle : sourceModelTitle // ignore: cast_nullable_to_non_nullable
 as String,sourceProfileTitle: null == sourceProfileTitle ? _self.sourceProfileTitle : sourceProfileTitle // ignore: cast_nullable_to_non_nullable

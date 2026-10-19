@@ -36,6 +36,7 @@ PricedPrint pricePrint({
   String sourceUrl = '',
   String sourceModelTitle = '',
   String sourceProfileTitle = '',
+  String productId = '',
 }) {
   final warnings = <String>[];
   PrinterProfile? printer;
@@ -98,6 +99,7 @@ PricedPrint pricePrint({
   return PricedPrint(
     line: QuoteLine(
       id: id,
+      productId: productId,
       title: title,
       quantity: quantity < 1 ? 1 : quantity,
       printerId: printerId,
@@ -144,6 +146,7 @@ PricedPrint priceProduct({
     printers: printers,
     sourceUrl: product.sourceUrl,
     sourceModelTitle: product.name,
+    productId: product.id,
   );
 }
 

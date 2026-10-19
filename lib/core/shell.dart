@@ -67,6 +67,9 @@ class AppShell extends StatelessWidget {
               icon: GramnotaSvgIcon(destination.icon),
               selectedIcon: GramnotaSvgIcon('${destination.icon}_filled'),
               label: destination.label,
+              // Labels are already under the icons. The default tooltip
+              // floats over the form (the quantity field sits just above).
+              tooltip: '',
             ),
         ],
       ),

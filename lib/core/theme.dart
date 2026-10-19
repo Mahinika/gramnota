@@ -101,16 +101,27 @@ ThemeData buildGramnotaTheme() {
         borderSide: const BorderSide(color: gramnotaGreen, width: 1.6),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      // Narrow fields (grams beside the spool) otherwise ellipsize the error.
+      errorMaxLines: 3,
+      helperMaxLines: 3,
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
+        minimumSize: const Size(48, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
+        minimumSize: const Size(48, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: Colors.white,

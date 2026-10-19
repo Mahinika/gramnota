@@ -133,11 +133,24 @@ Future<void> addProductToQuote({
 Future<void> saveLineAsProduct({
   required BuildContext context,
   required UserStore store,
+  required PrintOrder order,
   required QuoteLine line,
 }) async {
   final now = DateTime.now().toUtc();
-  final product = productFromLine(line, id: const Uuid().v4(), now: now);
+  final existing = line.productId.trim();
+  final product = productFromLine(
+    line,
+    id: existing.isEmpty ? const Uuid().v4() : existing,
+    now: now,
+  );
   await store.saveProduct(product);
+  if (existing.isEmpty) {
+    await store.stampLineProductId(
+      orderId: order.id,
+      lineId: line.id,
+      productId: product.id,
+    );
+  }
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

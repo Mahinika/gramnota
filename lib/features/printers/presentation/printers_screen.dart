@@ -124,9 +124,9 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
     }
     _name.text = printer.name;
     _watts.text = printer.powerWatts.toString();
-    _price.text = formatMinorAmount(printer.purchasePriceMinor);
+    _price.text = formatMinorField(printer.purchasePriceMinor);
     _life.text = printer.lifetimeHours.toString();
-    _maintenance.text = formatMinorAmount(printer.maintenanceMinorPerHour);
+    _maintenance.text = formatMinorField(printer.maintenanceMinorPerHour);
     _loaded = true;
   }
 
@@ -291,7 +291,17 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                 lifetimeHours: lifetime,
                 maintenanceMinorPerHour: maintenance,
               );
-              await store.savePrinter(printer);
+              try {
+                await store.savePrinter(printer);
+              } on Object {
+                if (context.mounted) {
+                  setState(
+                    () => _error =
+                        'Could not save the printer. Check the connection and try again.',
+                  );
+                }
+                return;
+              }
               if (context.mounted) {
                 context.go('/more/printers');
               }

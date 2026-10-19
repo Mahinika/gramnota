@@ -402,7 +402,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
     _spoolWeight.text = preset.spoolWeightGrams.round().toString();
     _remaining.text = preset.spoolWeightGrams.round().toString();
     if (preset.pricePerSpoolMinor > 0) {
-      _price.text = formatMinorAmount(preset.pricePerSpoolMinor);
+      _price.text = formatMinorField(preset.pricePerSpoolMinor);
     }
     _error = null;
   }
@@ -438,7 +438,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
     _diameter.text = _plainNumber(spool.diameterMm);
     _spoolWeight.text = _plainNumber(spool.spoolWeightGrams);
     _remaining.text = _plainNumber(spool.remainingGrams);
-    _price.text = formatMinorAmount(spool.pricePerSpoolMinor);
+    _price.text = formatMinorField(spool.pricePerSpoolMinor);
     _low.text = _plainNumber(spool.lowStockGrams);
     _usesWorkshopDefault = spool.lowStockUsesDefault;
     _notes.text = spool.notes;
@@ -668,7 +668,17 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
                 setState(() => _error = 'Brand, material, weight, and price are required.');
                 return;
               }
-              await store.saveFilament(spool);
+              try {
+                await store.saveFilament(spool);
+              } on Object {
+                if (context.mounted) {
+                  setState(
+                    () => _error =
+                        'Could not save the spool. Check the connection and try again.',
+                  );
+                }
+                return;
+              }
               if (context.mounted) {
                 context.go('/filaments');
               }

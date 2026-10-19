@@ -340,6 +340,30 @@ Future<Uint8List> buildQuotePdf({
                     ],
                   ),
                 ),
+                if (order.depositMinor > 0) ...[
+                  _sumRow(
+                    'Deposit',
+                    formatMoney(order.depositMinor, currency),
+                    ink: ink,
+                    muted: muted,
+                  ),
+                  if (order.depositAt.isNotEmpty)
+                    _sumRow(
+                      'Deposit date',
+                      formatIsoDate(order.depositAt),
+                      ink: ink,
+                      muted: muted,
+                    ),
+                  _sumRow(
+                    order.status == OrderStatus.paid ? 'Balance' : 'Still to pay',
+                    formatMoney(
+                      order.breakdown.totalMinor - order.depositMinor,
+                      currency,
+                    ),
+                    ink: ink,
+                    muted: muted,
+                  ),
+                ],
               ],
             ),
           ),

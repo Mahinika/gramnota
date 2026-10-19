@@ -32,6 +32,11 @@ int? _parseHundredths(String text) {
   if (!RegExp(r'^\d+$').hasMatch(wholeText)) {
     return null;
   }
+  // Twelve digits is a trillion currency units. Longer input is rejected
+  // so a pasted wall of digits cannot throw or lose precision on the web.
+  if (wholeText.length > 12) {
+    return null;
+  }
   final whole = int.parse(wholeText);
   final frac = parts.length == 2 ? parts[1] : '';
   if (frac.isNotEmpty && !RegExp(r'^\d+$').hasMatch(frac)) {
@@ -59,7 +64,7 @@ String basisPointsLabel(int basisPoints) {
   if (percent == percent.roundToDouble()) {
     return percent.round().toString();
   }
-  return percent.toStringAsFixed(2);
+  return percent.toStringAsFixed(2).replaceAll('.', ',');
 }
 
 int? parsePositiveInt(String text) {
