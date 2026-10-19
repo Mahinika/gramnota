@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/brand_icon.dart';
 import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
+import '../../customers/domain/customer.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
@@ -19,81 +21,121 @@ class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = FirebaseAuth.instance.currentUser;
     final displayName = user?.displayName?.trim();
+    final email = user?.email;
     final title = displayName != null && displayName.isNotEmpty
         ? displayName
         : 'Signed in';
-    final email = user?.email;
+    final initialsSource = displayName != null && displayName.isNotEmpty
+        ? displayName
+        : (email?.split('@').first ?? '');
+    final initials = initialsSource.isEmpty
+        ? '?'
+        : Customer(id: '', name: initialsSource).initials;
     final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         children: [
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(title, style: Theme.of(context).textTheme.titleMedium),
-            subtitle: email == null ? null : Text(email),
-          ),
-          const SizedBox(height: 8),
-          const SectionHeading('Workshop'),
           TappableListCard(
-            onTap: () => context.go('/more/products'),
             child: Row(
               children: [
-                Icon(
-                  Icons.inventory_2_outlined,
-                  color: scheme.onSurfaceVariant,
+                CircleAvatar(
+                  backgroundColor: scheme.primaryContainer,
+                  foregroundColor: scheme.onPrimaryContainer,
+                  child: Text(initials),
                 ),
-                const SizedBox(width: 16),
-                const Expanded(child: Text('Products')),
-                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
-              ],
-            ),
-          ),
-          TappableListCard.listSeparator,
-          TappableListCard(
-            onTap: () => context.go('/more/printers'),
-            child: Row(
-              children: [
-                Icon(Icons.print_outlined, color: scheme.onSurfaceVariant),
-                const SizedBox(width: 16),
-                const Expanded(child: Text('Printers')),
-                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
-              ],
-            ),
-          ),
-          TappableListCard.listSeparator,
-          TappableListCard(
-            onTap: () => context.go('/more/settings'),
-            child: Row(
-              children: [
-                Icon(Icons.tune, color: scheme.onSurfaceVariant),
-                const SizedBox(width: 16),
-                const Expanded(child: Text('Settings')),
-                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: theme.textTheme.titleMedium),
+                      if (email != null)
+                        Text(
+                          email,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
+          const SectionHeading('Workshop'),
+          _MoreDestination(
+            label: 'Products',
+            icon: 'products',
+            onTap: () => context.go('/more/products'),
+          ),
+          TappableListCard.listSeparator,
+          _MoreDestination(
+            label: 'Printers',
+            icon: 'printer',
+            onTap: () => context.go('/more/printers'),
+          ),
+          TappableListCard.listSeparator,
+          _MoreDestination(
+            label: 'Settings',
+            icon: 'sliders',
+            onTap: () => context.go('/more/settings'),
+          ),
+          const SizedBox(height: 16),
           const SectionHeading('Sharing'),
-          TappableListCard(
+          _MoreDestination(
+            label: 'Inbox',
+            icon: 'inbox',
             onTap: () => context.go('/more/inbox'),
+          ),
+          TappableListCard.listSeparator,
+          TappableListCard(
+            onTap: signOut,
             child: Row(
               children: [
-                Icon(Icons.inbox_outlined, color: scheme.onSurfaceVariant),
-                const SizedBox(width: 16),
-                const Expanded(child: Text('Inbox')),
-                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+                const BrandIconWell(child: Icon(Icons.logout)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Sign out', style: theme.textTheme.titleMedium),
+                ),
               ],
             ),
           ),
-          const Divider(height: 1),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.logout),
-            title: const Text('Sign out'),
-            onTap: signOut,
+        ],
+      ),
+    );
+  }
+}
+
+class _MoreDestination extends StatelessWidget {
+  const _MoreDestination({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final String icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return TappableListCard(
+      onTap: onTap,
+      child: Row(
+        children: [
+          BrandIconWell(
+            child: GramnotaSvgIcon(icon, color: scheme.onPrimaryContainer),
           ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.titleMedium),
+          ),
+          Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
         ],
       ),
     );

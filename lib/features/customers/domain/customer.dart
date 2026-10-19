@@ -33,4 +33,33 @@ abstract class Customer with _$Customer {
       country,
     ].where((part) => part.trim().isNotEmpty).join(', ');
   }
+
+  String get initials {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.trim().isNotEmpty)
+        .toList();
+    if (parts.isEmpty) {
+      return '?';
+    }
+    String letter(String word) {
+      final trimmed = word.trim();
+      if (trimmed.isEmpty) {
+        return '';
+      }
+      return trimmed.substring(0, 1).toUpperCase();
+    }
+
+    if (parts.length == 1) {
+      final only = letter(parts.first);
+      return only.isEmpty ? '?' : only;
+    }
+    final first = letter(parts.first);
+    final last = letter(parts.last);
+    if (first.isEmpty && last.isEmpty) {
+      return '?';
+    }
+    return '$first$last';
+  }
 }

@@ -8,7 +8,8 @@ void main() {
     }
     expect(internalQuoteBreakdownFields, contains('Markup'));
     expect(internalQuoteBreakdownFields, contains('Failure buffer'));
-    expect(customerQuoteBreakdownFields, contains('VAT'));
-    expect(customerQuoteBreakdownFields, contains('Total'));
+    expect(customerQuoteBreakdownFields, {'Subtotal', 'VAT', 'Total'});
+    expect(customerQuoteBreakdownFields, isNot(contains('Price ex. VAT')));
+    expect(customerQuoteBreakdownFields, isNot(contains('Net')));
   });
 }

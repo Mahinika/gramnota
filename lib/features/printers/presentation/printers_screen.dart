@@ -187,12 +187,16 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
             else
               DropdownButtonFormField<String>(
                 key: ValueKey(_printerQuery.text.trim().toLowerCase()),
+                isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Common printer'),
                 items: [
                   for (final printer in _matchingPrinters())
                     DropdownMenuItem(
                       value: printer.name,
-                      child: Text('${printer.name} · ${printer.powerWatts} W'),
+                      child: Text(
+                        '${printer.name} · ${printer.powerWatts} W',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                 ],
                 onChanged: (name) {

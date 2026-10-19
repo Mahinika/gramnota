@@ -11,8 +11,10 @@ const internalQuoteBreakdownFields = {
   'Net',
 };
 
-/// Customer PDF summary. Line prices are before VAT, so these rows add up.
-const customerQuoteBreakdownFields = {'Price ex. VAT', 'VAT', 'Total'};
+/// Customer PDF summary. Subtotal is the ex-VAT amount (`netMinor`), so it
+/// matches the line amounts. VAT and Total follow. Internal cost words such
+/// as Net and Markup stay off the document.
+const customerQuoteBreakdownFields = {'Subtotal', 'VAT', 'Total'};
 
 bool isInternalQuoteBreakdownField(String label) =>
     internalQuoteBreakdownFields.contains(label);

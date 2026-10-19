@@ -123,31 +123,6 @@ Map<String, int> _quoteCounts(List<PrintOrder> orders) {
   return counts;
 }
 
-String _initialLetter(String word) {
-  final trimmed = word.trim();
-  if (trimmed.isEmpty) {
-    return '';
-  }
-  return trimmed.substring(0, 1).toUpperCase();
-}
-
-String _customerInitials(String name) {
-  final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
-  final list = parts.toList();
-  if (list.isEmpty) {
-    return '?';
-  }
-  if (list.length == 1) {
-    return _initialLetter(list.first).isEmpty ? '?' : _initialLetter(list.first);
-  }
-  final first = _initialLetter(list.first);
-  final last = _initialLetter(list.last);
-  if (first.isEmpty && last.isEmpty) {
-    return '?';
-  }
-  return '$first$last';
-}
-
 class _CustomerListCard extends StatelessWidget {
   const _CustomerListCard({
     required this.customer,
@@ -179,7 +154,7 @@ class _CustomerListCard extends StatelessWidget {
           CircleAvatar(
             backgroundColor: scheme.primaryContainer,
             foregroundColor: scheme.onPrimaryContainer,
-            child: Text(_customerInitials(customer.name)),
+            child: Text(customer.initials),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -383,7 +358,7 @@ class _CustomerEditScreenState extends ConsumerState<CustomerEditScreen> {
                       backgroundColor: scheme.primaryContainer,
                       foregroundColor: scheme.onPrimaryContainer,
                       child: Text(
-                        _customerInitials(_name.text),
+                        Customer(id: '', name: _name.text).initials,
                         style: theme.textTheme.titleLarge,
                       ),
                     ),
