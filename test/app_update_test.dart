@@ -32,7 +32,8 @@ void main() {
           'commit': 'abc',
           'date': '2026-10-19',
           'notes': 'Android 1.0.0 (build 9).',
-          'url': 'https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota.apk',
+          'url':
+              'https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota.apk',
           'sha256': 'ab' * 32,
         },
       }),
@@ -40,15 +41,16 @@ void main() {
     expect(manifest.version, '1.0.0');
     expect(manifest.android?.build, 9);
     expect(manifest.windows, isNull);
-    expect(
-      () => parseUpdateManifest('not-json'),
-      throwsFormatException,
-    );
+    expect(() => parseUpdateManifest('not-json'), throwsFormatException);
     expect(
       () => parseUpdateManifest(
         jsonEncode({
           'version': '1.0.0',
-          'android': {'build': 1, 'url': 'https://example.test/a', 'sha256': 'abcd'},
+          'android': {
+            'build': 1,
+            'url': 'https://example.test/a',
+            'sha256': 'abcd',
+          },
         }),
       ),
       throwsFormatException,
@@ -97,11 +99,17 @@ void main() {
     final now = DateTime.utc(2026, 10, 19, 12);
     expect(shouldAutoCheck(lastCheck: null, now: now), isTrue);
     expect(
-      shouldAutoCheck(lastCheck: now.subtract(const Duration(hours: 23)), now: now),
+      shouldAutoCheck(
+        lastCheck: now.subtract(const Duration(hours: 23)),
+        now: now,
+      ),
       isFalse,
     );
     expect(
-      shouldAutoCheck(lastCheck: now.subtract(const Duration(hours: 24)), now: now),
+      shouldAutoCheck(
+        lastCheck: now.subtract(const Duration(hours: 24)),
+        now: now,
+      ),
       isTrue,
     );
   });
@@ -123,7 +131,10 @@ void main() {
       updateFailureMessage(const FormatException('bad')),
       'Kunde inte läsa uppdateringsinformationen.',
     );
-    expect(updateFailureMessage(StateError('x')), 'Kunde inte söka efter uppdateringar.');
+    expect(
+      updateFailureMessage(StateError('x')),
+      'Kunde inte söka efter uppdateringar.',
+    );
   });
 
   test('the manifest URL is the public release asset', () {
@@ -192,101 +203,15 @@ void main() {
     expect(current.message, 'Du har redan den senaste versionen.');
   });
 
-  test('a local manifest offers the newer file and checks its checksum', () async {
-    final bytes = utf8.encode('gramnota-apk');
-    final digest = sha256.convert(bytes).toString();
-    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-    final root = 'http://${server.address.host}:${server.port}';
-    final manifest = utf8.encode(
-      jsonEncode({
-        'version': '1.0.0',
-        'android': {
-          'build': 20,
-          'commit': 'abc1234',
-          'date': '2026-10-19',
-          'notes': 'Ny version.',
-          'url': '$root/Gramnota.apk',
-          'sha256': digest,
-        },
-      }),
-    );
-    server.listen((request) async {
-      final List<int>? body = switch (request.uri.path) {
-        '/latest.json' => manifest,
-        '/Gramnota.apk' => bytes,
-        _ => null,
-      };
-      if (body == null) {
-        request.response.statusCode = HttpStatus.notFound;
-      } else {
-        request.response.statusCode = HttpStatus.ok;
-        request.response.contentLength = body.length;
-        request.response.add(body);
-      }
-      await request.response.close();
-    });
-    final httpClient = http.Client();
-    addTearDown(() async {
-      httpClient.close();
-      await server.close(force: true);
-    });
-
-    final client = UpdateClient(
-      client: httpClient,
-      manifestUrl: '$root/latest.json',
-    );
-    final outcome = await UpdateCoordinator(
-      client: client,
-      preferences: MemoryUpdatePreferences(),
-      platform: UpdatePlatform.android,
-      installedBuild: 1,
-      now: () => DateTime.utc(2026, 10, 19),
-    ).check(manual: false);
-    expect(outcome.artifact?.build, 20);
-    expect(outcome.artifact?.notes, 'Ny version.');
-
-    final file = File(
-      '${Directory.systemTemp.path}/gramnota-update-test/Gramnota.apk',
-    );
-    final saved = await client.download(
-      url: outcome.artifact!.url,
-      sha256: digest,
-      destination: file,
-    );
-    expect(await saved.readAsBytes(), bytes);
-    expect(File('${file.path}.part').existsSync(), isFalse);
-
-    await expectLater(
-      client.download(
-        url: outcome.artifact!.url,
-        sha256: 'cd' * 32,
-        destination: file,
-      ),
-      throwsA(isA<UpdateChecksumException>()),
-    );
-    expect(File('${file.path}.part').existsSync(), isFalse);
-    expect(await file.readAsBytes(), bytes);
-
-    final missing = UpdateClient(
-      client: httpClient,
-      manifestUrl: '$root/missing.json',
-    );
-    await expectLater(
-      missing.fetchManifest(),
-      throwsA(isA<UpdateManifestException>()),
-    );
-
-    final port = server.port;
-    await server.close(force: true);
-    final offline = UpdateClient(
-      client: httpClient,
-      manifestUrl: 'http://127.0.0.1:$port/latest.json',
-    );
-    await expectLater(
-      offline.fetchManifest(),
-      throwsA(isA<UpdateNetworkException>()),
-    );
-  });
+  test(
+    'a local manifest offers the newer file and checks its checksum',
+    () async {
+      await HttpOverrides.runWithHttpOverrides(
+        _downloadFromLocalServer,
+        _RealHttpOverrides(),
+      );
+    },
+  );
 
   test('the windows installer relaunches after a silent install', () {
     final iss = File('windows/installer/gramnota.iss').readAsStringSync();
@@ -330,12 +255,112 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(body: UpdateSection(versionLabel: 'Version 1.0.0 (build 1)')),
+        home: Scaffold(
+          body: UpdateSection(versionLabel: 'Version 1.0.0 (build 1)'),
+        ),
       ),
     );
     expect(find.text('Version 1.0.0 (build 1)'), findsOneWidget);
     expect(find.text('Sök efter uppdateringar'), findsOneWidget);
   });
+}
+
+class _RealHttpOverrides extends HttpOverrides {}
+
+Future<void> _downloadFromLocalServer() async {
+  final bytes = utf8.encode('gramnota-apk');
+  final digest = sha256.convert(bytes).toString();
+  final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+  final root = 'http://${server.address.host}:${server.port}';
+  final manifest = utf8.encode(
+    jsonEncode({
+      'version': '1.0.0',
+      'android': {
+        'build': 20,
+        'commit': 'abc1234',
+        'date': '2026-10-19',
+        'notes': 'Ny version.',
+        'url': '$root/Gramnota.apk',
+        'sha256': digest,
+      },
+    }),
+  );
+  server.listen((request) async {
+    final List<int>? body = switch (request.uri.path) {
+      '/latest.json' => manifest,
+      '/Gramnota.apk' => bytes,
+      _ => null,
+    };
+    if (body == null) {
+      request.response.statusCode = HttpStatus.notFound;
+    } else {
+      request.response.statusCode = HttpStatus.ok;
+      request.response.contentLength = body.length;
+      request.response.add(body);
+    }
+    await request.response.close();
+  });
+  final httpClient = http.Client();
+  addTearDown(() async {
+    httpClient.close();
+    await server.close(force: true);
+  });
+
+  final client = UpdateClient(
+    client: httpClient,
+    manifestUrl: '$root/latest.json',
+  );
+  final outcome = await UpdateCoordinator(
+    client: client,
+    preferences: MemoryUpdatePreferences(),
+    platform: UpdatePlatform.android,
+    installedBuild: 1,
+    now: () => DateTime.utc(2026, 10, 19),
+  ).check(manual: false);
+  expect(outcome.artifact?.build, 20);
+  expect(outcome.artifact?.notes, 'Ny version.');
+
+  final file = File(
+    '${Directory.systemTemp.path}/gramnota-update-test/Gramnota.apk',
+  );
+  final saved = await client.download(
+    url: outcome.artifact!.url,
+    sha256: digest,
+    destination: file,
+  );
+  expect(await saved.readAsBytes(), bytes);
+  expect(File('${file.path}.part').existsSync(), isFalse);
+
+  await expectLater(
+    client.download(
+      url: outcome.artifact!.url,
+      sha256: 'cd' * 32,
+      destination: file,
+    ),
+    throwsA(isA<UpdateChecksumException>()),
+  );
+  expect(File('${file.path}.part').existsSync(), isFalse);
+  expect(await file.readAsBytes(), bytes);
+
+  final missing = UpdateClient(
+    client: httpClient,
+    manifestUrl: '$root/missing.json',
+  );
+  await expectLater(
+    missing.fetchManifest(),
+    throwsA(isA<UpdateManifestException>()),
+  );
+
+  final port = server.port;
+  await server.close(force: true);
+  final offline = UpdateClient(
+    client: httpClient,
+    manifestUrl: 'http://127.0.0.1:$port/latest.json',
+  );
+  await expectLater(
+    offline.fetchManifest(),
+    throwsA(isA<UpdateNetworkException>()),
+  );
 }
 
 UpdateManifest _manifest({required int build, bool windowsOnly = false}) {

@@ -74,7 +74,7 @@ class UpdateClient implements ManifestSource {
     if (destination.existsSync()) {
       await destination.delete();
     }
-    return partial.rename(destination);
+    return partial.rename(destination.path);
   }
 
   Future<T> _send<T>(Future<T> Function() action) async {

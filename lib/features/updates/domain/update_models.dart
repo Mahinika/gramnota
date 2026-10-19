@@ -96,10 +96,14 @@ UpdateArtifact? _artifact(Object? raw, String version) {
   final url = raw['url'];
   final sha = raw['sha256'];
   if (build is! int || url is! String || sha is! String) {
-    throw const FormatException('A platform block is missing build, url, or sha256.');
+    throw const FormatException(
+      'A platform block is missing build, url, or sha256.',
+    );
   }
   if (url.trim().isEmpty || !_sha256Pattern.hasMatch(sha)) {
-    throw const FormatException('A platform block has an empty url or a bad sha256.');
+    throw const FormatException(
+      'A platform block has an empty url or a bad sha256.',
+    );
   }
   return UpdateArtifact(
     version: version,

@@ -14,11 +14,7 @@ class UpdateOfferDialog extends StatelessWidget {
     final notes = artifact.notes.trim();
     return AlertDialog(
       title: Text('Ny version ${artifact.version} finns'),
-      content: Text(
-        notes.isEmpty
-            ? 'Build ${artifact.build}.'
-            : notes,
-      ),
+      content: Text(notes.isEmpty ? 'Build ${artifact.build}.' : notes),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, UpdateChoice.skip),

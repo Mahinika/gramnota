@@ -61,7 +61,8 @@ class SharedUpdatePreferences implements UpdatePreferences {
   }
 
   @override
-  Future<int?> skippedBuild() async => _preferences.getInt(skippedUpdateBuildKey);
+  Future<int?> skippedBuild() async =>
+      _preferences.getInt(skippedUpdateBuildKey);
 
   @override
   Future<void> setSkippedBuild(int build) {

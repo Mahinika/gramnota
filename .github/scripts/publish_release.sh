@@ -3,6 +3,9 @@
 # The other platform's assets and version line are left in place.
 # Usage: publish_release.sh android|windows <file> [file...]
 set -euo pipefail
+# Windows Python otherwise writes the middle dot in the version line as cp1252.
+export PYTHONUTF8=1
+export PYTHONIOENCODING=utf-8
 
 PLATFORM="${1:?android or windows}"
 shift
@@ -60,7 +63,8 @@ py section-text \
   --version "$VERSION" \
   --build "$BUILD" \
   --date "$DATE" \
-  --sha "$SHORT_SHA" >"$WORKDIR/section.txt"
+  --sha "$SHORT_SHA" \
+  --out "$WORKDIR/section.txt"
 
 ensure_release() {
   if gh release view latest --repo "$REPO" >/dev/null 2>&1; then
