@@ -692,7 +692,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get calcPrepMinutes => 'Vorbereitungsminuten';
 
   @override
-  String get calcPostMinutes => 'Nachbearbeitungsminuten';
+  String get calcPostMinutes => 'Nacharbeit (Min.)';
 
   @override
   String get calcMarkupPercent => 'Aufschlag %';

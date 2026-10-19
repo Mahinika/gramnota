@@ -196,7 +196,7 @@
   "calcNoPrinterSelected": "Es ist kein Drucker ausgewählt, daher bleiben Strom und Maschinenverschleiß bei 0.",
   "calcAddFilament": "Filament hinzufügen",
   "calcPrepMinutes": "Vorbereitungsminuten",
-  "calcPostMinutes": "Nachbearbeitungsminuten",
+  "calcPostMinutes": "Nacharbeit (Min.)",
   "calcMarkupPercent": "Aufschlag %",
   "calcFailurePercent": "Ausschuss %",
   "calcVatPercent": "MwSt. %",
