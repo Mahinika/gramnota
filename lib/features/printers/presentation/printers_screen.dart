@@ -222,16 +222,19 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
             controller: _name,
             decoration: const InputDecoration(labelText: 'Name'),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _watts,
             decoration: const InputDecoration(labelText: 'Power W'),
             keyboardType: TextInputType.number,
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _price,
             decoration: const InputDecoration(labelText: 'Purchase price'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _life,
             decoration: const InputDecoration(
@@ -239,6 +242,7 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
             ),
             keyboardType: TextInputType.number,
           ),
+          const SizedBox(height: 12),
           TextField(
             controller: _maintenance,
             decoration: const InputDecoration(
@@ -253,13 +257,35 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                 setState(() => _error = 'Name is required.');
                 return;
               }
+              final watts = parsePositiveInt(_watts.text);
+              final price = parseMinor(_price.text);
+              final lifetime = parseNonNegativeDouble(_life.text);
+              final maintenance = parseMinor(_maintenance.text);
+              if (watts == null || watts <= 0) {
+                setState(() => _error = 'Enter the average power in watts.');
+                return;
+              }
+              if (price == null || maintenance == null) {
+                setState(
+                  () => _error =
+                      'Purchase price and maintenance must be amounts, like 2495 or 0. Use a comma or a dot.',
+                );
+                return;
+              }
+              if (lifetime == null) {
+                setState(
+                  () => _error =
+                      'Enter the expected lifetime in hours. Use 0 if you do not charge for machine wear.',
+                );
+                return;
+              }
               final printer = PrinterProfile(
                 id: widget.id == 'new' ? const Uuid().v4() : widget.id,
                 name: _name.text.trim(),
-                powerWatts: parsePositiveInt(_watts.text) ?? 0,
-                purchasePriceMinor: parseMinor(_price.text) ?? 0,
-                lifetimeHours: parseNonNegativeDouble(_life.text) ?? 0,
-                maintenanceMinorPerHour: parseMinor(_maintenance.text) ?? 0,
+                powerWatts: watts,
+                purchasePriceMinor: price,
+                lifetimeHours: lifetime,
+                maintenanceMinorPerHour: maintenance,
               );
               await store.savePrinter(printer);
               if (context.mounted) {

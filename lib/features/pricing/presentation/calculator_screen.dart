@@ -948,6 +948,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           TextField(
             controller: _title,
             decoration: const InputDecoration(labelText: 'Title'),
+            onChanged: (value) {
+              if (value.trim().isNotEmpty &&
+                  _importNote == 'Add a title before saving the quote.') {
+                setState(() => _importNote = null);
+              }
+            },
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(

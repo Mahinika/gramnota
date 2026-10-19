@@ -1,7 +1,8 @@
+import '../../../core/format.dart';
+import '../../../core/user_store.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../settings/domain/workshop_settings.dart';
 import '../domain/print_order.dart';
-import '../../../core/user_store.dart';
 
 class StockChange {
   const StockChange({required this.order, required this.warning});
@@ -68,7 +69,7 @@ class OrderStock {
           final ref = store.filaments.doc(entry.key);
           final snapshot = await transaction.get(ref);
           if (!snapshot.exists || snapshot.data() == null) {
-            shortfalls.add('${entry.value} g (missing spool)');
+            shortfalls.add('${formatGrams(entry.value)} (missing spool)');
             continue;
           }
           final spool = FilamentSpool.fromJson({
@@ -87,7 +88,7 @@ class OrderStock {
           }
           if (short > 0.0001) {
             final label = '${spool.brand} ${spool.material}'.trim();
-            shortfalls.add('${short.toStringAsFixed(1)} g of $label');
+            shortfalls.add('${formatGrams(short)} of $label');
           }
         }
         warning = shortfalls.isEmpty

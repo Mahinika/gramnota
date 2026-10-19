@@ -461,6 +461,8 @@ void main() {
     expect(spool.remainingGrams, 0);
     expect(change.order.deductedGrams['spool'], 0);
     expect(change.warning, contains('short'));
+    expect(change.warning, contains('30 g of Prusa PLA'));
+    expect(change.warning, isNot(contains('30.0')));
   });
 
   test('saving a note does not roll back a printed status', () async {

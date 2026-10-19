@@ -268,20 +268,49 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               final markup = parseBasisPoints(_markup.text);
               final vat = parseBasisPoints(_vat.text);
               final failure = parseBasisPoints(_failure.text);
+              final electricity = parseMinor(_electricity.text);
+              final labor = parseMinor(_labor.text);
+              final validity = parsePositiveInt(_validity.text);
+              final currency = _currency.text.trim().toUpperCase();
+              if (electricity == null) {
+                setState(
+                  () => _message =
+                      'Enter the electricity price. Use 0 if you do not charge for power.',
+                );
+                return;
+              }
+              if (labor == null) {
+                setState(
+                  () => _message =
+                      'Enter the labor rate. Use 0 if you do not charge for labor.',
+                );
+                return;
+              }
               if (markup == null || vat == null || failure == null) {
                 setState(
                   () => _message = 'Markup, VAT, and failure must be numbers.',
                 );
                 return;
               }
+              if (!RegExp(r'^[A-Z]{3}$').hasMatch(currency)) {
+                setState(
+                  () => _message =
+                      'Enter a 3-letter currency code, such as SEK.',
+                );
+                return;
+              }
+              if (validity == null || validity < 1) {
+                setState(
+                  () => _message = 'Enter how many days a quote stays valid.',
+                );
+                return;
+              }
               await store.saveSettings(
                 WorkshopSettings(
                   setupCompleted: _setupCompleted,
-                  currencyCode: _currency.text.trim().isEmpty
-                      ? 'SEK'
-                      : _currency.text.trim().toUpperCase(),
-                  electricityMinorPerKwh: parseMinor(_electricity.text) ?? 0,
-                  laborMinorPerHour: parseMinor(_labor.text) ?? 0,
+                  currencyCode: currency,
+                  electricityMinorPerKwh: electricity,
+                  laborMinorPerHour: labor,
                   defaultMarkupBasisPoints: markup,
                   vatBasisPoints: vat,
                   defaultFailureBasisPoints: failure,
@@ -293,7 +322,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   phone: _phone.text.trim(),
                   email: _email.text.trim(),
                   nextQuoteNumber: _nextQuote,
-                  quoteValidityDays: parsePositiveInt(_validity.text) ?? 14,
+                  quoteValidityDays: validity,
                 ),
               );
               setState(() => _message = 'Settings saved.');

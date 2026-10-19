@@ -125,5 +125,15 @@ void main() {
     await tester.enterText(find.widgetWithText(TextField, 'Prep minutes'), '15,4');
     await tester.pump();
     expect(find.text('Priced as 15 minutes.'), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Hours'), '0');
+    await tester.enterText(find.widgetWithText(TextField, 'Grams'), '1500');
+    await tester.enterText(find.widgetWithText(TextField, 'Quantity'), '1');
+    await tester.pump();
+    expect(
+      find.textContaining('1500 g'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('only 1000 g remains'), findsOneWidget);
   });
 }
