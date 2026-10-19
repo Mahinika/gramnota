@@ -9,7 +9,7 @@ description: >-
 
 # Android release
 
-Package id is `se.gramnota.app`. The private repo is `Mahinika/gramnota`. Debug installs and the GitHub APK use different certificates. Google sign-in works only when that certificate's SHA-1 is on the Firebase Android app and in `android/app/google-services.json`.
+Package id is `se.gramnota.app`. The public repo is `Mahinika/gramnota`. Debug installs and the GitHub APK use different certificates. Google sign-in works only when that certificate's SHA-1 is on the Firebase Android app and in `android/app/google-services.json`.
 
 ## Local signing
 
@@ -19,9 +19,11 @@ Package id is `se.gramnota.app`. The private repo is `Mahinika/gramnota`. Debug 
 
 ## GitHub APK
 
-`.github/workflows/android-apk.yml` runs on push to `master` and on `workflow_dispatch`. It writes the keystore and `google-services.json` from secrets, builds `flutter build apk --release`, and uploads `Gramnota.apk` on the shared `latest` release. `.github/scripts/publish_release.sh` replaces only that APK and the Android line in the release notes. It does not delete the Windows assets. The older `android` release keeps `app-release.apk`; its notes point at `latest`.
+`.github/workflows/android-apk.yml` runs on push to `master` and on `workflow_dispatch`. It writes the keystore and `google-services.json` from secrets, builds `flutter build apk --release` with `--build-number` set to `github.run_number`, and uploads `Gramnota.apk` on the shared `latest` release. `.github/scripts/publish_release.sh` replaces only that APK, the Android line in the release notes, and the Android block in `latest.json`. It does not delete the Windows assets. The older `android` release keeps `app-release.apk`; its notes point at `latest`.
 
-Secrets: `GOOGLE_SERVICES_JSON`, `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_PASSWORD`. Do not print those values.
+`latest.json` is a public release asset. The in-app updater reads it. Do not add a download token or a second releases repository.
+
+Secrets: `GOOGLE_SERVICES_JSON`, `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_PASSWORD`. Do not print those values. The workflow file names the secrets; it does not contain their values.
 
 A push to `master` publishes a new APK. Ask before pushing when the only change is unrelated to a release.
 

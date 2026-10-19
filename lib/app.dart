@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers.dart';
 import 'core/theme.dart';
+import 'features/updates/presentation/update_host.dart';
 import 'router.dart';
 
 class GramnotaApp extends ConsumerWidget {
@@ -16,6 +17,12 @@ class GramnotaApp extends ConsumerWidget {
       title: 'Gramnota',
       theme: buildGramnotaTheme(),
       routerConfig: router,
+      builder: (context, child) {
+        return UpdateHost(
+          navigatorKey: router.routerDelegate.navigatorKey,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

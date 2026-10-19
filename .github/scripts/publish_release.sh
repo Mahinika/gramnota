@@ -10,6 +10,7 @@ if [ "$#" -lt 1 ]; then
   echo "Pass the files to upload."
   exit 1
 fi
+PRIMARY="$1"
 
 case "$PLATFORM" in
   android | windows) ;;
@@ -22,6 +23,7 @@ esac
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 PY_SCRIPT="$ROOT/.github/scripts/release_notes.py"
+MANIFEST_PY="$ROOT/.github/scripts/release_manifest.py"
 TEMPLATE="$ROOT/.github/release-notes/latest.md"
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
 SHA="${GITHUB_SHA:?GITHUB_SHA is required}"
@@ -39,7 +41,17 @@ py() {
 
 TITLE="$(py title)"
 read -r VERSION BUILD < <(py version "$ROOT/pubspec.yaml")
+if [ -n "${RELEASE_BUILD:-}" ]; then
+  case "$RELEASE_BUILD" in
+    *[!0-9]*)
+      echo "RELEASE_BUILD must be a number."
+      exit 1
+      ;;
+  esac
+  BUILD="$RELEASE_BUILD"
+fi
 DATE="$(py today)"
+PRIMARY_SHA="$("${PY[@]}" "$MANIFEST_PY" sha256 "$PRIMARY")"
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
@@ -132,6 +144,11 @@ update_notes() {
       sleep $((1 + (attempt % 3)))
       continue
     fi
+    if ! publish_manifest; then
+      echo "Could not publish latest.json. Retrying."
+      sleep 2
+      continue
+    fi
     fetch_release "$WORKDIR/locked-live.json"
     set +e
     py unlock \
@@ -161,6 +178,51 @@ update_notes() {
     echo "The version line was overwritten. Retrying."
   done
   echo "Gave up updating the release notes."
+  return 1
+}
+
+publish_manifest() {
+  local download_dir="$WORKDIR/manifest-dl"
+  rm -rf "$download_dir"
+  mkdir -p "$download_dir"
+  if ! gh release download latest --repo "$REPO" --pattern latest.json --dir "$download_dir"; then
+    printf '%s\n' '{}' >"$download_dir/latest.json"
+  fi
+  "${PY[@]}" "$MANIFEST_PY" merge \
+    --current "$download_dir/latest.json" \
+    --platform "$PLATFORM" \
+    --version "$VERSION" \
+    --build "$BUILD" \
+    --commit "$SHORT_SHA" \
+    --date "$DATE" \
+    --sha256 "$PRIMARY_SHA" \
+    --out "$WORKDIR/latest.json"
+  local i
+  for i in 1 2 3 4 5; do
+    if gh release upload latest "$WORKDIR/latest.json" --clobber --repo "$REPO"; then
+      break
+    fi
+    if [ "$i" -eq 5 ]; then
+      echo "Upload of latest.json failed."
+      return 1
+    fi
+    sleep $((i * 2))
+  done
+  local check
+  for check in 1 2 3 4 5 6; do
+    local live="$WORKDIR/manifest-check"
+    rm -rf "$live"
+    mkdir -p "$live"
+    if gh release download latest --repo "$REPO" --pattern latest.json --dir "$live" \
+      && "${PY[@]}" "$MANIFEST_PY" check \
+        --file "$live/latest.json" \
+        --expected "$WORKDIR/latest.json" \
+        --platform "$PLATFORM"; then
+      return 0
+    fi
+    sleep 2
+  done
+  echo "latest.json did not keep this platform's build."
   return 1
 }
 
