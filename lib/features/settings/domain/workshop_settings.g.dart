@@ -12,6 +12,7 @@ _WorkshopSettings _$WorkshopSettingsFromJson(Map<String, dynamic> json) =>
           readSetupCompleted(json, 'setupCompleted') as bool? ?? false,
       languageCode: readLanguageCode(json, 'languageCode') as String? ?? 'sv',
       currencyCode: readCurrencyCode(json, 'currencyCode') as String? ?? 'SEK',
+      themeMode: readThemeMode(json, 'themeMode') as String? ?? 'system',
       electricityMinorPerKwh:
           (json['electricityMinorPerKwh'] as num?)?.toInt() ?? 0,
       laborMinorPerHour: (json['laborMinorPerHour'] as num?)?.toInt() ?? 0,
@@ -38,6 +39,7 @@ Map<String, dynamic> _$WorkshopSettingsToJson(_WorkshopSettings instance) =>
       'setupCompleted': instance.setupCompleted,
       'languageCode': instance.languageCode,
       'currencyCode': instance.currencyCode,
+      'themeMode': instance.themeMode,
       'electricityMinorPerKwh': instance.electricityMinorPerKwh,
       'laborMinorPerHour': instance.laborMinorPerHour,
       'defaultMarkupBasisPoints': instance.defaultMarkupBasisPoints,

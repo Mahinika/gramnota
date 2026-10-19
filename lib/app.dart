@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 
 import 'core/app_language_controller.dart';
 import 'core/app_languages.dart';
+import 'core/app_theme_controller.dart';
 import 'core/providers.dart';
 import 'core/theme.dart';
+import 'core/theme_mode.dart';
 import 'features/orders/data/orders_providers.dart';
 import 'features/updates/presentation/update_host.dart';
 import 'l10n/app_localizations.dart';
@@ -29,12 +31,17 @@ class GramnotaApp extends ConsumerWidget {
           return;
         }
         ref.read(appLanguageProvider.notifier).applyRemote(settings.languageCode);
+        ref.read(appThemeProvider.notifier).applyRemote(settings.themeMode);
       });
     }
+    final appearance =
+        ref.watch(appThemeProvider).asData?.value ?? defaultThemeCode;
     final explicit = localeForLanguageSetting(language);
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: buildGramnotaTheme(),
+      darkTheme: buildGramnotaTheme(brightness: Brightness.dark),
+      themeMode: themeModeForSetting(appearance),
       locale: explicit,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [

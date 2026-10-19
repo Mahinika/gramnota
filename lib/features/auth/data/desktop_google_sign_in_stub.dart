@@ -14,6 +14,7 @@ Future<DesktopGoogleCredential> requestDesktopGoogleCredential({
   Future<bool> Function(Uri url)? openBrowser,
   Duration timeout = const Duration(minutes: 5),
   AppLocalizations? l10n,
+  bool dark = false,
 }) async {
   throw SignInFailed((l10n ?? activeGramnotaL10n).authGooglePlatforms);
 }

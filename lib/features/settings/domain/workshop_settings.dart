@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../core/app_languages.dart';
 import '../../../core/currencies.dart';
+import '../../../core/theme_mode.dart';
 
 part 'workshop_settings.freezed.dart';
 part 'workshop_settings.g.dart';
@@ -23,6 +24,9 @@ abstract class WorkshopSettings with _$WorkshopSettings {
     /// [systemLanguageCode] follows the device language.
     @JsonKey(readValue: readLanguageCode) @Default('sv') String languageCode,
     @JsonKey(readValue: readCurrencyCode) @Default('SEK') String currencyCode,
+    /// `system` when the field is missing, so an existing workshop follows
+    /// the device until someone picks Light or Dark.
+    @JsonKey(readValue: readThemeMode) @Default('system') String themeMode,
     @Default(0) int electricityMinorPerKwh,
     @Default(0) int laborMinorPerHour,
     @Default(3000) int defaultMarkupBasisPoints,

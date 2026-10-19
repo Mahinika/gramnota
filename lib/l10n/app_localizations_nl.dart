@@ -18,6 +18,18 @@ class AppLocalizationsNl extends AppLocalizations {
   String get languageSystem => 'Systeemstandaard';
 
   @override
+  String get themeLabel => 'Weergave';
+
+  @override
+  String get themeSystem => 'Systeem';
+
+  @override
+  String get themeLight => 'Licht';
+
+  @override
+  String get themeDark => 'Donker';
+
+  @override
   String get currencyLabel => 'Valuta';
 
   @override

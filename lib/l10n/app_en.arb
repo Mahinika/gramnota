@@ -12,6 +12,22 @@
   "@languageSystem": {
     "description": "Language option that follows the device language"
   },
+  "themeLabel": "Appearance",
+  "@themeLabel": {
+    "description": "Settings field for light, dark, or system appearance"
+  },
+  "themeSystem": "System",
+  "@themeSystem": {
+    "description": "Appearance option that follows the device theme"
+  },
+  "themeLight": "Light",
+  "@themeLight": {
+    "description": "Light appearance"
+  },
+  "themeDark": "Dark",
+  "@themeDark": {
+    "description": "Dark appearance"
+  },
   "currencyLabel": "Currency",
   "@currencyLabel": {
     "description": "Settings field for the workshop currency"

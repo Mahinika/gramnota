@@ -18,6 +18,18 @@ class AppLocalizationsNb extends AppLocalizations {
   String get languageSystem => 'Systemstandard';
 
   @override
+  String get themeLabel => 'Utseende';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Lyst';
+
+  @override
+  String get themeDark => 'Mørkt';
+
+  @override
   String get currencyLabel => 'Valuta';
 
   @override

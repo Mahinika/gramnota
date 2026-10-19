@@ -18,6 +18,18 @@ class AppLocalizationsFi extends AppLocalizations {
   String get languageSystem => 'Järjestelmän oletus';
 
   @override
+  String get themeLabel => 'Ulkoasu';
+
+  @override
+  String get themeSystem => 'Järjestelmä';
+
+  @override
+  String get themeLight => 'Vaalea';
+
+  @override
+  String get themeDark => 'Tumma';
+
+  @override
   String get currencyLabel => 'Valuutta';
 
   @override

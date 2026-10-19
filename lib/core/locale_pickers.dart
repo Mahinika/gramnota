@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import 'app_languages.dart';
 import 'currencies.dart';
+import 'theme_mode.dart';
 
 /// Workshop language: system default, then each shipped language in its own name.
 class LanguageMenu extends StatelessWidget {
@@ -38,6 +39,48 @@ class LanguageMenu extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+      ],
+      onChanged: (next) {
+        if (next != null) {
+          onChanged(next);
+        }
+      },
+    );
+  }
+}
+
+/// Workshop appearance: system, light, or dark.
+class ThemeMenu extends StatelessWidget {
+  const ThemeMenu({
+    required this.themeMode,
+    required this.onChanged,
+    super.key,
+  });
+
+  final String themeMode;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final value = normalizeThemeMode(themeMode);
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(labelText: l10n.themeLabel),
+      items: [
+        DropdownMenuItem(
+          value: systemThemeCode,
+          child: Text(l10n.themeSystem, overflow: TextOverflow.ellipsis),
+        ),
+        DropdownMenuItem(
+          value: lightThemeCode,
+          child: Text(l10n.themeLight, overflow: TextOverflow.ellipsis),
+        ),
+        DropdownMenuItem(
+          value: darkThemeCode,
+          child: Text(l10n.themeDark, overflow: TextOverflow.ellipsis),
+        ),
       ],
       onChanged: (next) {
         if (next != null) {

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/app_language_controller.dart';
 import '../../../core/app_languages.dart';
+import '../../../core/app_theme_controller.dart';
+import '../../../core/theme_mode.dart';
 import '../../../core/brand_icon.dart';
 import '../../../core/currencies.dart';
 import '../../../core/format.dart';
@@ -179,6 +181,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   var _nextQuote = 1;
   var _languageCode = defaultLanguageCode;
   var _currencyCode = defaultCurrencyCode;
+  var _themeMode = defaultThemeCode;
   String? _message;
 
   @override
@@ -210,6 +213,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
     _languageCode = settings.languageCode;
     _currencyCode = normalizeCurrencyCode(settings.currencyCode);
+    _themeMode = normalizeThemeMode(settings.themeMode);
     final locale = context.formattingLocale;
     _electricity.text = formatMinorField(
       settings.electricityMinorPerKwh,
@@ -266,6 +270,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           LanguageMenu(
             languageCode: _languageCode,
             onChanged: (code) => setState(() => _languageCode = code),
+          ),
+          const SizedBox(height: 12),
+          ThemeMenu(
+            themeMode: _themeMode,
+            onChanged: (code) => setState(() => _themeMode = code),
           ),
           const SizedBox(height: 12),
           CurrencyField(
@@ -399,6 +408,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   setupCompleted: _setupCompleted,
                   languageCode: _languageCode,
                   currencyCode: currency,
+                  themeMode: normalizeThemeMode(_themeMode),
                   electricityMinorPerKwh: electricity,
                   laborMinorPerHour: labor,
                   defaultMarkupBasisPoints: markup,
@@ -417,6 +427,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               );
               await ref.read(appLanguageProvider.notifier).setLanguage(_languageCode);
+              await ref.read(appThemeProvider.notifier).setTheme(_themeMode);
               if (mounted) {
                 setState(() => _message = l10n.settingsSaved);
               }

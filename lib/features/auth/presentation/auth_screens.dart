@@ -81,7 +81,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             FilledButton(
               onPressed: _busy || !firebaseIsConfigured
                   ? null
-                  : () => _run(signInWithGoogle),
+                  : () => _run(
+                      () => signInWithGoogle(
+                        darkPage:
+                            Theme.of(context).brightness == Brightness.dark,
+                      ),
+                    ),
               child: Text(_busy ? l10n.authSigningIn : l10n.authSignInGoogle),
             ),
           if (_busy &&
