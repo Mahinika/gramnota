@@ -6,11 +6,7 @@ name: Windows release
 on:
   workflow_dispatch:
   push:
-    branches:
-      - master
-      # Removed after the first green run. Present so this workflow can run
-      # before the file exists on master (workflow_dispatch cannot).
-      - cursor/windows-release-1d55
+    branches: [master]
 
 permissions:
   contents: write
