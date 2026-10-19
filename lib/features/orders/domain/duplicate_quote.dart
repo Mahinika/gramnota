@@ -52,6 +52,7 @@ DuplicatedQuote duplicateAsNewQuote({
       sourceUrl: line.sourceUrl,
       sourceModelTitle: line.sourceModelTitle,
       sourceProfileTitle: line.sourceProfileTitle,
+      productId: line.productId,
     );
     lines.add(priced.line);
     warnings.addAll(priced.warnings);

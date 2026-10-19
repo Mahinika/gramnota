@@ -248,7 +248,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
         product.extras.map(
           (extra) => _ExtraDraft(
             name: extra.name,
-            cost: formatMinorAmount(extra.costMinor),
+            cost: formatMinorField(extra.costMinor),
           ),
         ),
       );
@@ -664,14 +664,7 @@ String? _moneyError(String text) {
   return 'Could not read the extra cost. Use a number, 0 or more.';
 }
 
-String _gramsText(double grams) {
-  if (grams == grams.roundToDouble()) {
-    return grams.round().toString();
-  }
-  var text = grams.toStringAsFixed(3);
-  text = text.replaceFirst(RegExp(r'0+$'), '');
-  return text.replaceFirst(RegExp(r'\.$'), '');
-}
+String _gramsText(double grams) => formatDecimalField(grams, fractionDigits: 3);
 
 String _material(List<FilamentSpool> spools, String? id) {
   for (final spool in spools) {

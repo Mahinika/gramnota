@@ -57,6 +57,17 @@ void main() {
     expect(formatMinorAmount(150), '1.50');
     expect(formatMinorAmount(200), '2');
     expect(formatMinorAmount(0), '0');
+    expect(formatMinorField(1999), '19,99');
+    expect(formatMinorField(200), '2');
+    expect(formatDecimalField(12.5, fractionDigits: 3), '12,5');
+    expect(formatDecimalField(10), '10');
+    expect(formatPercent(1250), '12,50%');
+    expect(formatPercent(2500), '25%');
+    expect(calendarDayStamp(DateTime(2026, 3, 15)), '2026-03-15T12:00:00.000Z');
+    expect(
+      calendarDayOf('2026-03-15T12:00:00.000Z'),
+      DateTime(2026, 3, 15),
+    );
   });
 
   test('derives the kilogram price from the spool', () {

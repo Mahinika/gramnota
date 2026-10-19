@@ -59,7 +59,7 @@ String basisPointsLabel(int basisPoints) {
   if (percent == percent.roundToDouble()) {
     return percent.round().toString();
   }
-  return percent.toStringAsFixed(2);
+  return percent.toStringAsFixed(2).replaceAll('.', ',');
 }
 
 int? parsePositiveInt(String text) {

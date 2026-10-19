@@ -55,6 +55,7 @@ void main() {
       lines: const [
         QuoteLine(
           id: 'line-old',
+          productId: 'dragon-product',
           title: 'Dragon',
           quantity: 2,
           printerId: 'a1',
@@ -113,6 +114,9 @@ void main() {
     expect(order.validUntil, '2026-10-26T12:00:00.000Z');
     expect(order.lines.single.id, 'line-0');
     expect(order.lines.single.sourceUrl, 'https://example.com/dragon');
+    expect(order.lines.single.productId, 'dragon-product');
+    expect(order.depositMinor, 0);
+    expect(order.depositAt, '');
     // 100 g at 40 kr/kg is 4 kr, twice. One hour at 2.50 kr. Prep 30 min is 30 kr.
     expect(order.breakdown.materialMinor, 8000);
     expect(order.breakdown.electricityMinor, 500);

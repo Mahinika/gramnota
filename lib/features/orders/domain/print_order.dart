@@ -143,6 +143,10 @@ abstract class ExtraCost with _$ExtraCost {
 abstract class QuoteLine with _$QuoteLine {
   const factory QuoteLine({
     required String id,
+    /// Catalog product this print was taken from. Empty on older quotes and
+    /// on prints that were never saved as a product. Home groups by this id
+    /// so a renamed title still counts as the same product.
+    @Default('') String productId,
     required String title,
     required int quantity,
     @Default('') String printerId,
@@ -190,6 +194,9 @@ abstract class PrintOrder with _$PrintOrder {
     @Default(<String, double>{}) Map<String, double> deductedGrams,
     @Default('') String stockWarning,
     @Default(0) int depositMinor,
+    /// When the deposit was received, as a UTC timestamp. Empty on older
+    /// orders: Home then keeps the whole total in the print month.
+    @Default('') String depositAt,
     @Default('') String revenueAt,
     @Default('') String sourceUrl,
     @Default('') String sourceModelTitle,

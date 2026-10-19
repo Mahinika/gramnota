@@ -32,6 +32,7 @@ Map<String, dynamic> _$ExtraCostToJson(_ExtraCost instance) =>
 
 _QuoteLine _$QuoteLineFromJson(Map<String, dynamic> json) => _QuoteLine(
   id: json['id'] as String,
+  productId: json['productId'] as String? ?? '',
   title: json['title'] as String,
   quantity: (json['quantity'] as num).toInt(),
   printerId: json['printerId'] as String? ?? '',
@@ -58,6 +59,7 @@ _QuoteLine _$QuoteLineFromJson(Map<String, dynamic> json) => _QuoteLine(
 Map<String, dynamic> _$QuoteLineToJson(_QuoteLine instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'productId': instance.productId,
       'title': instance.title,
       'quantity': instance.quantity,
       'printerId': instance.printerId,
@@ -108,6 +110,7 @@ _PrintOrder _$PrintOrderFromJson(Map<String, dynamic> json) => _PrintOrder(
       const <String, double>{},
   stockWarning: json['stockWarning'] as String? ?? '',
   depositMinor: (json['depositMinor'] as num?)?.toInt() ?? 0,
+  depositAt: json['depositAt'] as String? ?? '',
   revenueAt: json['revenueAt'] as String? ?? '',
   sourceUrl: json['sourceUrl'] as String? ?? '',
   sourceModelTitle: json['sourceModelTitle'] as String? ?? '',
@@ -146,6 +149,7 @@ Map<String, dynamic> _$PrintOrderToJson(_PrintOrder instance) =>
       'deductedGrams': instance.deductedGrams,
       'stockWarning': instance.stockWarning,
       'depositMinor': instance.depositMinor,
+      'depositAt': instance.depositAt,
       'revenueAt': instance.revenueAt,
       'sourceUrl': instance.sourceUrl,
       'sourceModelTitle': instance.sourceModelTitle,

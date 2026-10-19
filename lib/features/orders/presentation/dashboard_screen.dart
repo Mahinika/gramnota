@@ -49,9 +49,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final orders = ref.watch(ordersProvider(store));
     final customers = ref.watch(customersProvider(store)).asData?.value ?? const [];
     final spools = ref.watch(filamentsProvider(store)).asData?.value ?? const <FilamentSpool>[];
+    final products =
+        ref.watch(productsProvider(store)).asData?.value ?? const [];
     final settings = ref.watch(settingsProvider(store)).asData?.value;
     final currency = settings?.currencyCode ?? 'SEK';
     final names = {for (final customer in customers) customer.id: customer.name};
+    final productNames = {for (final product in products) product.id: product.name};
     return Scaffold(
       appBar: AppBar(title: const Text('Home')),
       body: orders.when(
@@ -62,6 +65,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             year: _year,
             month: _month,
             customerNames: names,
+            productNames: productNames,
             workshopLowStockGrams: settings?.defaultLowStockGrams ?? 100,
           );
           return DashboardView(
@@ -131,7 +135,7 @@ class DashboardView extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Printed and paid orders. Profit is revenue excl. VAT minus cost.',
+          'Deposits count on the date you record. The rest counts when the order is printed or paid. Profit is revenue excl. VAT minus the cost of work finished this month.',
           style: theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: 12),
@@ -159,6 +163,14 @@ class DashboardView extends StatelessWidget {
                 label: 'Profit',
                 value: formatMoney(snapshot.profitMinor, currencyCode),
               ),
+              DetailRow(
+                label: 'Deposits received',
+                value: formatMoney(snapshot.depositsReceivedMinor, currencyCode),
+              ),
+              DetailRow(
+                label: 'Final payments',
+                value: formatMoney(snapshot.finalPaymentsMinor, currencyCode),
+              ),
               const SizedBox(height: 12),
               MoneyBarChart(
                 currencyCode: currencyCode,
@@ -175,7 +187,9 @@ class DashboardView extends StatelessWidget {
         if (snapshot.orderCount == 0) ...[
           const SizedBox(height: 8),
           Text(
-            'No printed or paid orders this month.',
+            snapshot.depositsReceivedMinor == 0
+                ? 'No printed or paid orders this month.'
+                : 'No printed or paid orders this month. Deposits received are included above.',
             style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
@@ -200,6 +214,10 @@ class DashboardView extends StatelessWidget {
               DetailRow(
                 label: 'Deposits on open orders',
                 value: formatMoney(snapshot.openDepositMinor, currencyCode),
+              ),
+              DetailRow(
+                label: 'Overdue quotes',
+                value: '${snapshot.overdueCount}',
               ),
             ],
           ),

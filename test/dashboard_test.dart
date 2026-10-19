@@ -228,4 +228,173 @@ void main() {
     expect(above.isLowAt(100), isFalse);
     expect(own.lowStockThreshold(100), 50);
   });
+
+  test('a dated deposit and the final payment land in different months', () {
+    final job = sample(
+      id: 'split',
+      status: OrderStatus.paid,
+      stamp: '2026-04-10T10:00:00.000Z',
+      revenueAt: '2026-04-10T10:00:00.000Z',
+      breakdown: money(cost: 10000, net: 13000, vat: 3250, total: 16250),
+      depositMinor: 5000,
+    ).copyWith(depositAt: '2026-03-15T12:00:00.000Z');
+
+    final march = buildDashboard(
+      orders: [job],
+      spools: const [],
+      year: 2026,
+      month: 3,
+      toLocal: plusTwoHours,
+    );
+    expect(march.orderCount, 0);
+    expect(march.depositsReceivedMinor, 5000);
+    expect(march.finalPaymentsMinor, 0);
+    expect(march.revenueInclVatMinor, 5000);
+    expect(march.revenueExclVatMinor, 4000);
+    expect(march.costMinor, 0);
+    expect(march.profitMinor, 4000);
+
+    final april = buildDashboard(
+      orders: [job],
+      spools: const [],
+      year: 2026,
+      month: 4,
+      toLocal: plusTwoHours,
+    );
+    expect(april.orderCount, 1);
+    expect(april.depositsReceivedMinor, 0);
+    expect(april.finalPaymentsMinor, 11250);
+    expect(april.revenueInclVatMinor, 11250);
+    expect(april.revenueExclVatMinor, 9000);
+    expect(april.costMinor, 10000);
+    expect(april.profitMinor, -1000);
+    expect(april.revenueOrders.single.totalMinor, 11250);
+
+    final together = job.copyWith(
+      depositAt: '2026-04-02T12:00:00.000Z',
+    );
+    final sameMonth = buildDashboard(
+      orders: [together],
+      spools: const [],
+      year: 2026,
+      month: 4,
+      toLocal: plusTwoHours,
+    );
+    expect(sameMonth.revenueInclVatMinor, 16250);
+    expect(sameMonth.revenueExclVatMinor, 13000);
+    expect(sameMonth.profitMinor, 3000);
+    expect(sameMonth.depositsReceivedMinor, 5000);
+    expect(sameMonth.finalPaymentsMinor, 11250);
+  });
+
+  test('a deposit without a date stays in the finish month', () {
+    final job = sample(
+      id: 'legacy',
+      status: OrderStatus.printed,
+      stamp: '2026-05-02T10:00:00.000Z',
+      revenueAt: '2026-05-02T10:00:00.000Z',
+      breakdown: money(cost: 100, net: 200, vat: 50, total: 250),
+      depositMinor: 100,
+    );
+    expect(recognizedDepositMinor(job), 0);
+    final snapshot = buildDashboard(
+      orders: [job],
+      spools: const [],
+      year: 2026,
+      month: 5,
+      toLocal: plusTwoHours,
+    );
+    expect(snapshot.revenueInclVatMinor, 250);
+    expect(snapshot.depositsReceivedMinor, 0);
+    expect(snapshot.finalPaymentsMinor, 250);
+    expect(snapshot.openDepositMinor, 100);
+  });
+
+  test('top products stay together when the title changes', () {
+    QuoteLine line({
+      required String id,
+      required String title,
+      required String productId,
+      required int total,
+    }) {
+      return QuoteLine(
+        id: id,
+        productId: productId,
+        title: title,
+        quantity: 1,
+        printTimeSeconds: 60,
+        filaments: const [],
+        markupBasisPoints: 0,
+        failureBasisPoints: 0,
+        vatBasisPoints: 0,
+        breakdown: money(cost: 10, net: 10, vat: 0, total: total),
+      );
+    }
+
+    final renamed = sample(
+      id: 'a',
+      status: OrderStatus.paid,
+      stamp: '2026-06-02T10:00:00.000Z',
+      revenueAt: '2026-06-02T10:00:00.000Z',
+      title: 'Old clip name',
+      breakdown: money(cost: 10, net: 10, vat: 0, total: 400),
+      lines: [
+        line(id: '1', title: 'Old clip name', productId: 'clip', total: 400),
+      ],
+    );
+    final current = sample(
+      id: 'b',
+      status: OrderStatus.paid,
+      stamp: '2026-06-03T10:00:00.000Z',
+      revenueAt: '2026-06-03T10:00:00.000Z',
+      title: 'Benchy',
+      breakdown: money(cost: 10, net: 10, vat: 0, total: 100),
+      lines: [
+        line(id: '2', title: 'Clip v2', productId: 'clip', total: 100),
+        line(id: '3', title: 'Benchy', productId: '', total: 100),
+      ],
+    );
+    final snapshot = buildDashboard(
+      orders: [renamed, current],
+      spools: const [],
+      year: 2026,
+      month: 6,
+      productNames: const {'clip': 'Phone clip'},
+      toLocal: plusTwoHours,
+    );
+    expect(snapshot.topProducts.map((item) => item.label), [
+      'Phone clip',
+      'Benchy',
+    ]);
+    expect(snapshot.topProducts.first.totalMinor, 500);
+    expect(snapshot.topProducts.first.count, 2);
+  });
+
+  test('overdue quotes are counted outside the selected month', () {
+    final until = DateTime.parse('2026-03-01T12:00:00.000Z').toLocal();
+    final nextDay = DateTime(until.year, until.month, until.day).add(
+      const Duration(days: 1),
+    );
+    final expired = sample(
+      id: 'late',
+      status: OrderStatus.sent,
+      stamp: '2026-01-01T00:00:00.000Z',
+      breakdown: money(cost: 1, net: 1, vat: 0, total: 100),
+    ).copyWith(validUntil: '2026-03-01T12:00:00.000Z');
+    final fresh = expired.copyWith(
+      id: 'fresh',
+      validUntil: nextDay.toUtc().toIso8601String(),
+    );
+    final paid = expired.copyWith(id: 'paid', status: OrderStatus.paid);
+    final snapshot = buildDashboard(
+      orders: [expired, fresh, paid],
+      spools: const [],
+      year: 2026,
+      month: 8,
+      now: nextDay,
+      toLocal: plusTwoHours,
+    );
+    expect(snapshot.overdueCount, 1);
+    expect(snapshot.orderCount, 0);
+  });
 }

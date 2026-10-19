@@ -2,7 +2,7 @@
 
 Gramnota works out a sale price for a 3D print. It runs as an Android app and as a Windows desktop app from the same Flutter project.
 
-A quote can include filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT. One quote can hold several different prints, with one total and one stock deduction. Customers, filament spools, and printers stay with the signed-in user. Marking an order Printed or Paid takes filament out of stock once. Cancelling or moving it back before Printed puts those grams back. A PDF quote can be shared from the order.
+A quote can include filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT. One quote can hold several different prints, with one total and one stock deduction. Customers, filament spools, printers, and a product catalog stay with the signed-in user. Marking an order Printed or Paid takes filament out of stock once. Cancelling or moving it back before Printed puts those grams back. A PDF quote can be shared from the order. Home shows the month: revenue, deposits, open quotes, and low stock.
 
 ## Firebase
 
@@ -54,6 +54,23 @@ Download `app-release.apk` while signed in to GitHub (the repo is private). The 
 
 If you change the upload keystore, register the new SHA-1/SHA-256 in Firebase, refresh `GOOGLE_SERVICES_JSON`, and **uninstall** the old APK before installing the new one (Android treats it as a different app when the signature changes).
 
+## Windows app (GitHub)
+
+Every push to `master` builds a release Windows app and publishes it on the **`windows`** release:
+
+https://github.com/Mahinika/gramnota/releases/tag/windows
+
+Download while signed in to GitHub (the repo is private). You can also start a build from the Actions tab (**Windows release** → **Run workflow**). The workflow does not need repository secrets: Windows Firebase settings are already in `lib/firebase_options.dart`.
+
+- `Gramnota-Setup-<version>.exe` — installer. Windows asks for administrator permission. It adds a Start menu shortcut and, unless you clear the checkbox, a desktop shortcut. Run a newer installer to upgrade in place. Uninstall later from Windows Settings, under Apps. The app is installed in `C:\Program Files\Gramnota`.
+- `Gramnota-<version>-windows-x64.zip` — the same build as a folder. Unzip it and run `gramnota.exe`.
+
+Both include the Visual C++ runtime libraries next to `gramnota.exe`, so a clean Windows 10 or 11 PC does not need a separate Visual C++ download.
+
+Windows may show "Windows protected your PC" the first time, because the app is not code-signed. Choose **More info**, then **Run anyway**.
+
+Sign-in on Windows opens the browser through Firebase Auth.
+
 ## Model links
 
 Paste a link, or on Android share it into the app.
@@ -76,19 +93,21 @@ On a quote, **Duplicate as new quote** copies the prints, the customer, and the 
 
 **More → Products** stores a print you quote again: time, filaments, printer, labor minutes, extras, and percents. Save one from the calculator (**Save as product**) or from a print on a quote. **Add from catalog** on the calculator, or **Add product** on a quote, inserts it and prices filament, electricity, and machine wear from the spools, printer, and workshop rates you have at that moment. Markup, failure, and VAT stay as saved on the product.
 
+Each print keeps the catalog product's id. Home's top products follow that id, so renaming the product or the print title does not split the ranking. Quotes saved before this id existed are grouped by title.
+
 ## Quote status
 
-An order moves Quote → Sent → Accepted → Printed → Paid. Declined and Cancelled are the other exits. The order list has a chip for each status, plus All and In progress (everything that is not Paid, Declined, or Cancelled).
+An order moves Quote → Sent → Accepted → Printed → Paid. Declined and Cancelled are the other exits. The order list has a chip for each status, plus All, In progress (everything that is not Paid, Declined, or Cancelled), and Overdue.
 
 Filament leaves the spool when the order first becomes Printed or Paid. Changing Printed to Paid does not take filament again. Cancelling, declining, or moving the order back before Printed returns the grams that were actually taken, including when the spool was short. Older orders stored as Delivered open as Paid, with their stock and totals unchanged.
 
-A deposit is optional. Until the order is Paid, the quote shows what is still to pay.
+A deposit is optional. Pick the date it was received; if you leave the date empty, saving a deposit uses today. Until the order is Paid, the quote shows what is still to pay. The customer PDF lists the deposit, its date, and the balance when a deposit is set.
 
-A Quote or Sent order shows Expired the day after its valid-until date.
+A Quote or Sent order shows Overdue the day after its valid-until date. The Overdue filter lists those quotes. Home counts them as well.
 
 ## Home
 
-**Home** is the month view. Printed and Paid orders in that month count as revenue (incl. VAT and excl. VAT), cost, and profit. Profit is revenue excl. VAT minus cost. The month follows the device calendar, so an order just before local midnight stays in that month. Sent and Accepted quotes are an open pipeline and are not limited to the month. The page also lists filament grams by material, top customers, top products, and spools at or under their warning threshold.
+**Home** is the month view. A deposit counts in the month of its date. The rest of a Printed or Paid order counts in the month the work was first finished, so the deposit and the final payment can fall in different months. An older order with a deposit but no date keeps the whole total in the finish month. Profit is that month's revenue excl. VAT minus the cost of work finished in the month. The month follows the device calendar, so an order just before local midnight stays in that month. Sent and Accepted quotes, deposits still sitting on open orders, and overdue quotes are not limited to the month. The page also lists filament grams by material, top customers, top products, and spools at or under their warning threshold. Amounts in SEK, NOK, and DKK use a comma for öre and a space between thousands.
 
 ## Stock warnings
 
