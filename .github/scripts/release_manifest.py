@@ -24,7 +24,7 @@ def other_platform(platform: str) -> str:
 
 def notes(platform: str, version: str, build: int, date: str) -> str:
     label = "Android" if platform == "android" else "Windows"
-    return f"{label} {version} (build {build}), bygge {date}."
+    return f"{label} {version} (build {build}), built {date}."
 
 
 def artifact(

@@ -285,12 +285,12 @@ update_legacy_notes() {
     android)
       tag="android"
       notes="$ROOT/.github/release-notes/android-legacy.md"
-      title="Gramnota för Android (äldre länk)"
+      title="Gramnota for Android (older link)"
       ;;
     windows)
       tag="windows"
       notes="$ROOT/.github/release-notes/windows-legacy.md"
-      title="Gramnota för Windows (äldre länk)"
+      title="Gramnota for Windows (older link)"
       ;;
   esac
   if ! gh release view "$tag" --repo "$REPO" >/dev/null 2>&1; then

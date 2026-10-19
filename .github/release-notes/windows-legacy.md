@@ -1,12 +1,12 @@
-Den här sidan uppdateras inte längre.
+This page is no longer updated.
 
-Hämta den senaste Windows-versionen här:
+Get the latest Windows version here:
 
-- Installationsprogram: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe
-- Zip-fil: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip
+- Installer: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe
+- Zip: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip
 
-Alla filer ligger på utgåvan **Gramnota – senaste versionen**:
+Every file is on the release **Gramnota – latest version**:
 
 https://github.com/Mahinika/gramnota/releases/tag/latest
 
-Filerna `Gramnota-Setup-1.0.0.exe` och `Gramnota-1.0.0-windows-x64.zip` på den här sidan är ett äldre bygge och ligger kvar så att gamla länkar fortsätter att fungera.
+The files `Gramnota-Setup-1.0.0.exe` and `Gramnota-1.0.0-windows-x64.zip` on this page are an older build and stay so existing links keep working.
