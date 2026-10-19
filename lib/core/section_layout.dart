@@ -8,9 +8,17 @@ class SectionHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+      child: Text(
+        text,
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.4,
+        ),
+      ),
     );
   }
 }
@@ -31,7 +39,9 @@ class DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = dense ? theme.textTheme.bodySmall : theme.textTheme.bodyMedium;
+    final style = dense
+        ? theme.textTheme.bodySmall
+        : theme.textTheme.bodyMedium;
     return Padding(
       padding: EdgeInsets.symmetric(vertical: dense ? 1 : 2),
       child: Row(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'brand_icon.dart';
 import 'gate_scaffold.dart';
 
 class AppShell extends StatelessWidget {
@@ -9,11 +10,11 @@ class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   static const destinations = [
-    (label: 'Calculator', icon: Icons.calculate_outlined),
-    (label: 'Orders', icon: Icons.receipt_long_outlined),
-    (label: 'Customers', icon: Icons.people_outline),
-    (label: 'Filament', icon: Icons.color_lens_outlined),
-    (label: 'More', icon: Icons.menu),
+    (label: 'Calculator', icon: 'calculator'),
+    (label: 'Orders', icon: 'orders'),
+    (label: 'Customers', icon: 'customers'),
+    (label: 'Filament', icon: 'filament'),
+    (label: 'More', icon: 'more'),
   ];
 
   void _selectBranch(int index) {
@@ -42,7 +43,8 @@ class AppShell extends StatelessWidget {
               destinations: [
                 for (final destination in destinations)
                   NavigationRailDestination(
-                    icon: Icon(destination.icon),
+                    icon: GramnotaSvgIcon(destination.icon),
+                    selectedIcon: GramnotaSvgIcon('${destination.icon}_filled'),
                     label: Text(destination.label),
                   ),
               ],
@@ -61,7 +63,8 @@ class AppShell extends StatelessWidget {
         destinations: [
           for (final destination in destinations)
             NavigationDestination(
-              icon: Icon(destination.icon),
+              icon: GramnotaSvgIcon(destination.icon),
+              selectedIcon: GramnotaSvgIcon('${destination.icon}_filled'),
               label: destination.label,
             ),
         ],
@@ -103,13 +106,34 @@ class EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(message, textAlign: TextAlign.center),
+            Container(
+              width: 72,
+              height: 72,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset(
+                'assets/brand/gramnota_mark.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+            ),
             if (action != null) ...[const SizedBox(height: 16), action!],
           ],
         ),
