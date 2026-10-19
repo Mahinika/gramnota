@@ -49,7 +49,8 @@ RestartApplications=no
 UsedUserAreasWarning=no
 
 [Tasks]
-Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional icons:"; Flags: checked
+; Checked by default. There is no "checked" flag; "unchecked" would opt out.
+Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional icons:"
 
 [Files]
 Source: "{#ReleaseDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb,*.ilk,*.exp,*.lib"
