@@ -18,6 +18,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get languageSystem => 'Predeterminado del sistema';
 
   @override
+  String get chooseLanguageTitle => 'Elige el idioma';
+
+  @override
+  String get chooseLanguageBody =>
+      'Este idioma se usa en todo Gramnota. Puedes cambiarlo más tarde en Ajustes.';
+
+  @override
   String get themeLabel => 'Apariencia';
 
   @override
@@ -187,6 +194,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get settingsVatOptional => 'IVA % (0 si no estás registrado)';
 
   @override
+  String get settingsVatHint =>
+      'La mayoría de quienes venden por afición no están registrados en el IVA. Los talleres nuevos empiezan en 0 % de IVA, y los suecos en 25 %. Usa 0 % si no cobras IVA.';
+
+  @override
+  String get businessProfileTip =>
+      'Añade el nombre y la dirección de tu actividad para los presupuestos en PDF';
+
+  @override
   String get settingsFailure => 'Merma predeterminada %';
 
   @override
@@ -293,11 +308,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get setupIntro =>
-      'Los presupuestos usan tu impresora, tu precio de la electricidad y tu tarifa de mano de obra. Esta configuración pide cada dato una sola vez. Puedes cambiar cualquier respuesta más tarde en Ajustes.';
+      'Añade tu impresora, una bobina estándar y el precio de la electricidad. El margen, la mano de obra y el IVA parten de valores predeterminados que puedes cambiar en Ajustes.';
 
   @override
   String get setupSkipHint =>
-      'Omitir deja la electricidad y la mano de obra en cero, con un 30 % de margen y un 25 % de IVA, hasta que los completes.';
+      'Omitir guarda el idioma y la moneda, un margen del 30 % y el IVA predeterminado. La electricidad y la mano de obra quedan en cero hasta que los indiques en Ajustes.';
 
   @override
   String get setupProfileHint =>

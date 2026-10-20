@@ -18,6 +18,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get languageSystem => 'Domyślny systemowy';
 
   @override
+  String get chooseLanguageTitle => 'Wybierz język';
+
+  @override
+  String get chooseLanguageBody =>
+      'Ten język obowiązuje w całej aplikacji Gramnota. Możesz go później zmienić w Ustawieniach.';
+
+  @override
   String get themeLabel => 'Wygląd';
 
   @override
@@ -188,6 +195,13 @@ class AppLocalizationsPl extends AppLocalizations {
       'VAT % (0, jeśli nie jesteś zarejestrowany)';
 
   @override
+  String get settingsVatHint =>
+      'Większość hobbystów nie jest zarejestrowana do VAT. Nowe warsztaty zaczynają od 0% VAT, a szwedzkie od 25%. Ustaw 0%, jeśli nie doliczasz VAT.';
+
+  @override
+  String get businessProfileTip => 'Dodaj nazwę i adres firmy do ofert PDF';
+
+  @override
   String get settingsFailure => 'Domyślny odpad %';
 
   @override
@@ -294,11 +308,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get setupIntro =>
-      'Wyceny korzystają z drukarki, ceny prądu i stawki robocizny. Ta konfiguracja pyta o każde z nich raz. Każdą odpowiedź możesz później zmienić w Ustawieniach.';
+      'Dodaj drukarkę, standardową szpulę i cenę prądu. Marża, praca i VAT zaczynają od wartości, które zmienisz w Ustawieniach.';
 
   @override
   String get setupSkipHint =>
-      'Pomiń zostawia prąd i robociznę na zero, z marżą 30% i VAT 25%, dopóki ich nie uzupełnisz.';
+      'Pomiń zapisuje język i walutę, marżę 30% oraz domyślny VAT. Prąd i praca zostają na zero, dopóki nie ustawisz ich w Ustawieniach.';
 
   @override
   String get setupProfileHint =>

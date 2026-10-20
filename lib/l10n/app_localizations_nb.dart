@@ -18,6 +18,13 @@ class AppLocalizationsNb extends AppLocalizations {
   String get languageSystem => 'Systemstandard';
 
   @override
+  String get chooseLanguageTitle => 'Velg språk';
+
+  @override
+  String get chooseLanguageBody =>
+      'Dette språket brukes i hele Gramnota. Du kan endre det senere under Innstillinger.';
+
+  @override
   String get themeLabel => 'Utseende';
 
   @override
@@ -187,6 +194,14 @@ class AppLocalizationsNb extends AppLocalizations {
   String get settingsVatOptional => 'Mva. % (0 hvis du ikke er registrert)';
 
   @override
+  String get settingsVatHint =>
+      'De fleste hobby-selgere er ikke mva.-registrert. Nye verksteder starter på 0 % mva., svenske på 25 %. Bruk 0 % hvis du ikke legger på mva.';
+
+  @override
+  String get businessProfileTip =>
+      'Legg til firmanavn og adresse for PDF-tilbud';
+
+  @override
   String get settingsFailure => 'Standardsvinn %';
 
   @override
@@ -292,11 +307,11 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get setupIntro =>
-      'Tilbud bruker skriveren din, strømprisen din og timeprisen din for arbeid. Dette oppsettet spør om hver av dem én gang. Du kan endre alle svarene senere i Innstillinger.';
+      'Legg til skriveren, en standardspole og strømprisen. Påslag, arbeid og mva. starter med standarder som du kan endre i Innstillinger.';
 
   @override
   String get setupSkipHint =>
-      'Hvis du hopper over, blir strøm og arbeid stående på null, med 30 % påslag og 25 % mva., til du fyller dem inn.';
+      'Hopp over lagrer språk og valuta, 30 % påslag og mva.-standarden. Strøm og arbeid blir stående på null til du setter dem i Innstillinger.';
 
   @override
   String get setupProfileHint =>

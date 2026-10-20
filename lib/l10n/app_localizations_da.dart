@@ -18,6 +18,13 @@ class AppLocalizationsDa extends AppLocalizations {
   String get languageSystem => 'Systemstandard';
 
   @override
+  String get chooseLanguageTitle => 'Vælg sprog';
+
+  @override
+  String get chooseLanguageBody =>
+      'Dette sprog bruges i hele Gramnota. Du kan ændre det senere under Indstillinger.';
+
+  @override
   String get themeLabel => 'Udseende';
 
   @override
@@ -187,6 +194,13 @@ class AppLocalizationsDa extends AppLocalizations {
   String get settingsVatOptional => 'Moms % (0 hvis du ikke er registreret)';
 
   @override
+  String get settingsVatHint =>
+      'De fleste hobbysælgere er ikke momsregistrerede. Nye værksteder starter på 0 % moms, svenske på 25 %. Brug 0 %, hvis du ikke opkræver moms.';
+
+  @override
+  String get businessProfileTip => 'Tilføj firmanavn og adresse til PDF-tilbud';
+
+  @override
   String get settingsFailure => 'Standardspild %';
 
   @override
@@ -292,11 +306,11 @@ class AppLocalizationsDa extends AppLocalizations {
 
   @override
   String get setupIntro =>
-      'Tilbud bruger din printer, din elpris og din timepris for arbejde. Denne opsætning spørger om hver af dem én gang. Du kan ændre alle svarene senere i Indstillinger.';
+      'Tilføj din printer, en standardspole og din elpris. Tillæg, arbejde og moms starter med standarder, som du kan ændre under Indstillinger.';
 
   @override
   String get setupSkipHint =>
-      'Hvis du springer over, bliver el og arbejde stående på nul, med 30 % avance og 25 % moms, indtil du udfylder dem.';
+      'Spring over gemmer sprog og valuta, 30 % tillæg og moms-standarden. El og arbejde bliver på nul, indtil du sætter dem under Indstillinger.';
 
   @override
   String get setupProfileHint =>

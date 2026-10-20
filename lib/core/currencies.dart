@@ -5,6 +5,107 @@ import 'package:intl/intl.dart';
 /// existing quotes.
 const defaultCurrencyCode = 'SEK';
 
+/// Country codes whose everyday currency is known. English first-run uses
+/// this when the device region is set. Unknown regions stay on the euro.
+const _regionCurrencies = <String, String>{
+  'AE': 'AED',
+  'AR': 'ARS',
+  'AT': 'EUR',
+  'AU': 'AUD',
+  'BE': 'EUR',
+  'BG': 'BGN',
+  'BR': 'BRL',
+  'CA': 'CAD',
+  'CH': 'CHF',
+  'CL': 'CLP',
+  'CN': 'CNY',
+  'CO': 'COP',
+  'CZ': 'CZK',
+  'DE': 'EUR',
+  'DK': 'DKK',
+  'EE': 'EUR',
+  'EG': 'EGP',
+  'ES': 'EUR',
+  'FI': 'EUR',
+  'FR': 'EUR',
+  'GB': 'GBP',
+  'GR': 'EUR',
+  'HK': 'HKD',
+  'HR': 'EUR',
+  'HU': 'HUF',
+  'ID': 'IDR',
+  'IE': 'EUR',
+  'IL': 'ILS',
+  'IN': 'INR',
+  'IS': 'ISK',
+  'IT': 'EUR',
+  'JP': 'JPY',
+  'KR': 'KRW',
+  'LT': 'EUR',
+  'LU': 'EUR',
+  'LV': 'EUR',
+  'MX': 'MXN',
+  'MY': 'MYR',
+  'NL': 'EUR',
+  'NO': 'NOK',
+  'NZ': 'NZD',
+  'PH': 'PHP',
+  'PL': 'PLN',
+  'PT': 'EUR',
+  'RO': 'RON',
+  'SE': 'SEK',
+  'SG': 'SGD',
+  'SI': 'EUR',
+  'SK': 'EUR',
+  'TH': 'THB',
+  'TR': 'TRY',
+  'TW': 'TWD',
+  'UA': 'UAH',
+  'US': 'USD',
+  'VN': 'VND',
+  'ZA': 'ZAR',
+};
+
+/// Currency suggested for a new workshop. Swedish, Norwegian, Danish, and
+/// Polish follow the language. Finnish and the euro languages use EUR.
+/// English uses the device region when that currency is in the picker,
+/// and EUR when the region is missing or unknown.
+String currencyForLanguage({
+  required String languageCode,
+  String? regionCode,
+}) {
+  final language = languageCode
+      .trim()
+      .toLowerCase()
+      .replaceAll('_', '-')
+      .split('-')
+      .first;
+  final code = switch (language) {
+    'no' || 'nn' || 'nb' => 'NOK',
+    'sv' => 'SEK',
+    'da' => 'DKK',
+    'pl' => 'PLN',
+    'fi' || 'de' || 'fr' || 'nl' || 'es' => 'EUR',
+    'en' => currencyForRegion(regionCode) ?? 'EUR',
+    _ => 'EUR',
+  };
+  return normalizeCurrencyCode(code);
+}
+
+/// Region currency when it is one Gramnota can edit in Settings.
+/// Three-decimal currencies and unknown regions return null.
+String? currencyForRegion(String? regionCode) {
+  final region = regionCode?.trim().toUpperCase() ?? '';
+  if (region.isEmpty) {
+    return null;
+  }
+  final code = _regionCurrencies[region];
+  if (code == null || !isIsoCurrency(code) || !currencyOfferedInPicker(code)) {
+    return null;
+  }
+  return code;
+}
+
 /// Shown first in the picker. The rest of ISO 4217 follows alphabetically.
 const featuredCurrencyCodes = <String>[
   'SEK',

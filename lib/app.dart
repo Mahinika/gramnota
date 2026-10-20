@@ -22,7 +22,10 @@ class GramnotaApp extends ConsumerWidget {
     ref.watch(sharedLinkBootstrapProvider);
     final router = ref.watch(routerProvider);
     final language =
-        ref.watch(appLanguageProvider).asData?.value ?? defaultLanguageCode;
+        ref.watch(appLanguageProvider).asData?.value ??
+        languageForDeviceLocale(
+          WidgetsBinding.instance.platformDispatcher.locale,
+        );
     final store = ref.watch(userStoreProvider);
     if (store != null) {
       ref.listen(settingsProvider(store), (previous, next) {

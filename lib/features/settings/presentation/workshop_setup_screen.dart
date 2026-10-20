@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +10,6 @@ import '../../../core/app_languages.dart';
 import '../../../core/app_theme_controller.dart';
 import '../../../core/theme_mode.dart';
 import '../../../core/currencies.dart';
-import '../../../core/locale_pickers.dart';
 import '../../../core/money.dart';
 import '../../../core/gate_scaffold.dart';
 import '../../../core/providers.dart';
@@ -20,7 +20,10 @@ import '../../filaments/domain/common_spools.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../../printers/domain/common_printers.dart';
 import '../../printers/domain/printer_profile.dart';
-import '../domain/workshop_settings.dart';
+import '../domain/workshop_defaults.dart';
+
+/// Printer, standard spool, then electricity. Profile and rates live in Settings.
+const workshopSetupStepCount = 3;
 
 bool setupBypassForUid({
   required String? markedUid,
@@ -83,6 +86,18 @@ class StartingScreen extends StatelessWidget {
   }
 }
 
+/// Email of the signed-in account, or null when Firebase is not running.
+String? currentAccountEmail() {
+  try {
+    if (Firebase.apps.isEmpty) {
+      return null;
+    }
+    return FirebaseAuth.instance.currentUser?.email;
+  } on Object {
+    return null;
+  }
+}
+
 class WorkshopSetupScreen extends ConsumerStatefulWidget {
   const WorkshopSetupScreen({super.key});
 
@@ -92,21 +107,7 @@ class WorkshopSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
-  static const _stepCount = 9;
-
-  final _business = TextEditingController();
-  final _street = TextEditingController();
-  final _postal = TextEditingController();
-  final _city = TextEditingController();
-  final _org = TextEditingController();
-  final _phone = TextEditingController();
-  final _email = TextEditingController();
   final _electricity = TextEditingController();
-  final _labor = TextEditingController();
-  final _markup = TextEditingController(text: '30');
-  final _failure = TextEditingController(text: '0');
-  final _vat = TextEditingController(text: '25');
-  final _validity = TextEditingController(text: '14');
   final _printerQuery = TextEditingController();
   final _printerName = TextEditingController();
   final _watts = TextEditingController();
@@ -117,37 +118,25 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
 
   CommonSpool? _selectedSpool;
   var _currencyCode = defaultCurrencyCode;
-  var _languageCode = defaultLanguageCode;
-  var _themeMode = defaultThemeCode;
+  var _languageCode = firstRunFallbackLanguageCode;
+  String? _appliedLanguage;
+  final _themeMode = defaultThemeCode;
   var _step = 0;
   var _saving = false;
   String? _error;
+  var _email = '';
 
   @override
   void initState() {
     super.initState();
-    final email = FirebaseAuth.instance.currentUser?.email;
-    if (email != null) {
-      _email.text = email;
-    }
+    _email = currentAccountEmail()?.trim() ?? '';
+    _applyLanguage(null);
   }
 
   @override
   void dispose() {
     for (final controller in [
-      _business,
-      _street,
-      _postal,
-      _city,
-      _org,
-      _phone,
-      _email,
       _electricity,
-      _labor,
-      _markup,
-      _failure,
-      _vat,
-      _validity,
       _printerQuery,
       _printerName,
       _watts,
@@ -159,6 +148,20 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  void _applyLanguage(String? languageCode) {
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    final raw = languageCode ?? languageForDeviceLocale(locale);
+    final resolved = raw == systemLanguageCode
+        ? languageForDeviceLocale(locale)
+        : normalizeLanguageCode(raw);
+    _appliedLanguage = languageCode ?? resolved;
+    _languageCode = resolved;
+    _currencyCode = currencyForLanguage(
+      languageCode: resolved,
+      regionCode: locale.countryCode,
+    );
   }
 
   int? _money(String text) {
@@ -186,35 +189,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
 
   String? _validate() {
     switch (_step) {
-      case 1:
-        if (_business.text.trim().isEmpty) {
-          return context.l10n.setupNameRequired;
-        }
-        return null;
-      case 2:
-        if (_money(_electricity.text) == null) {
-          return context.l10n.settingsElectricityRequired;
-        }
-        return null;
-      case 3:
-        if (_money(_labor.text) == null) {
-          return context.l10n.settingsLaborRequired;
-        }
-        return null;
-      case 4:
-        if (parseBasisPoints(_markup.text) == null ||
-            parseBasisPoints(_failure.text) == null ||
-            parseBasisPoints(_vat.text) == null) {
-          return context.l10n.setupRatesRequired;
-        }
-        return null;
-      case 5:
-        final days = parsePositiveInt(_validity.text);
-        if (days == null || days < 1) {
-          return context.l10n.settingsValidityRequired;
-        }
-        return null;
-      case 6:
+      case 0:
         if (_printerName.text.trim().isEmpty) {
           return context.l10n.setupPrinterRequired;
         }
@@ -233,6 +208,11 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           return context.l10n.setupMaintenanceRequired;
         }
         return null;
+      case 2:
+        if (_money(_electricity.text) == null) {
+          return context.l10n.settingsElectricityRequired;
+        }
+        return null;
       default:
         return null;
     }
@@ -244,7 +224,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
       setState(() => _error = error);
       return;
     }
-    if (_step == _stepCount - 1) {
+    if (_step == workshopSetupStepCount - 1) {
       _save(skipped: false);
       return;
     }
@@ -266,35 +246,14 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
     try {
       final existing = ref.read(settingsProvider(store)).asData?.value;
       final nextQuote = existing?.nextQuoteNumber ?? 1;
-      final settings = skipped
-          ? WorkshopSettings(
-              setupCompleted: true,
-              languageCode: _languageCode,
-              currencyCode: _currencyCode,
-              themeMode: normalizeThemeMode(_themeMode),
-              nextQuoteNumber: nextQuote,
-              email: _email.text.trim(),
-            )
-          : WorkshopSettings(
-              setupCompleted: true,
-              languageCode: _languageCode,
-              currencyCode: normalizeCurrencyCode(_currencyCode),
-              themeMode: normalizeThemeMode(_themeMode),
-              electricityMinorPerKwh: _money(_electricity.text) ?? 0,
-              laborMinorPerHour: _money(_labor.text) ?? 0,
-              defaultMarkupBasisPoints: parseBasisPoints(_markup.text) ?? 3000,
-              vatBasisPoints: parseBasisPoints(_vat.text) ?? 2500,
-              defaultFailureBasisPoints: parseBasisPoints(_failure.text) ?? 0,
-              businessName: _business.text.trim(),
-              street: _street.text.trim(),
-              postalCode: _postal.text.trim(),
-              city: _city.text.trim(),
-              orgNumber: _org.text.trim(),
-              phone: _phone.text.trim(),
-              email: _email.text.trim(),
-              nextQuoteNumber: nextQuote,
-              quoteValidityDays: parsePositiveInt(_validity.text) ?? 14,
-            );
+      final settings = newWorkshopSettings(
+        languageCode: _languageCode,
+        currencyCode: _currencyCode,
+        nextQuoteNumber: nextQuote,
+        email: _email,
+        electricityMinorPerKwh: skipped ? 0 : (_money(_electricity.text) ?? 0),
+        themeMode: _themeMode,
+      );
       await store.saveSettings(settings);
       await ref.read(appLanguageProvider.notifier).setLanguage(_languageCode);
       await ref.read(appThemeProvider.notifier).setTheme(_themeMode);
@@ -341,15 +300,9 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
 
   String _title(AppLocalizations l10n) {
     return switch (_step) {
-      0 => l10n.setupTitle,
-      1 => l10n.settingsBusinessProfile,
-      2 => l10n.setupElectricityTitle,
-      3 => l10n.setupLaborTitle,
-      4 => l10n.setupRatesTitle,
-      5 => l10n.setupQuotesTitle,
-      6 => l10n.setupPrinterTitle,
-      7 => l10n.setupSpoolTitle,
-      _ => l10n.setupReviewTitle,
+      0 => l10n.setupPrinterTitle,
+      1 => l10n.setupSpoolTitle,
+      _ => l10n.setupElectricityTitle,
     };
   }
 
@@ -357,11 +310,13 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
   Widget build(BuildContext context) {
     final store = ref.watch(userStoreProvider);
     final l10n = context.l10n;
+    final watchedLanguage = ref.watch(appLanguageProvider).asData?.value;
+    if (watchedLanguage != _appliedLanguage && watchedLanguage != null) {
+      _applyLanguage(watchedLanguage);
+    }
     if (store == null) {
       return Scaffold(body: EmptyView(message: l10n.setupSignIn));
     }
-    final nextQuote =
-        ref.watch(settingsProvider(store)).asData?.value.nextQuoteNumber ?? 1;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -379,7 +334,9 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           title: Text(_title(l10n)),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(4),
-            child: LinearProgressIndicator(value: (_step + 1) / _stepCount),
+            child: LinearProgressIndicator(
+              value: (_step + 1) / workshopSetupStepCount,
+            ),
           ),
         ),
         body: Align(
@@ -393,7 +350,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
                     padding: const EdgeInsets.all(16),
                     children: [
                       Text(
-                        l10n.setupStep(_step + 1, _stepCount),
+                        l10n.setupStep(_step + 1, workshopSetupStepCount),
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       const SizedBox(height: 12),
@@ -406,7 +363,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
                         ),
                         const SizedBox(height: 12),
                       ],
-                      ..._stepBody(nextQuote),
+                      ..._stepBody(),
                     ],
                   ),
                 ),
@@ -416,7 +373,9 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
                     children: [
                       if (_step == 0)
                         TextButton(
-                          onPressed: _saving ? null : () => _save(skipped: true),
+                          onPressed: _saving
+                              ? null
+                              : () => _save(skipped: true),
                           child: Text(l10n.setupSkip),
                         )
                       else
@@ -435,10 +394,8 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
                         child: Text(
                           _saving
                               ? l10n.saving
-                              : _step == _stepCount - 1
+                              : _step == workshopSetupStepCount - 1
                               ? l10n.setupSaveStart
-                              : _step == 0
-                              ? l10n.setupStart
                               : l10n.setupNext,
                         ),
                       ),
@@ -453,133 +410,20 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
     );
   }
 
-  List<Widget> _stepBody(int nextQuote) {
+  List<Widget> _stepBody() {
     final l10n = context.l10n;
     switch (_step) {
       case 0:
-        return [
-          Text(l10n.setupIntro),
-          const SizedBox(height: 12),
-          Text(l10n.setupSkipHint),
-        ];
-      case 1:
-        return [
-          Text(l10n.setupProfileHint),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _business,
-            decoration: InputDecoration(labelText: l10n.setupBusinessName),
-            textCapitalization: TextCapitalization.words,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _street,
-            decoration: InputDecoration(labelText: l10n.fieldStreet),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _postal,
-            decoration: InputDecoration(labelText: l10n.fieldPostalCode),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _city,
-            decoration: InputDecoration(labelText: l10n.fieldCity),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _org,
-            decoration: InputDecoration(labelText: l10n.fieldOrgNumber),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _phone,
-            decoration: InputDecoration(labelText: l10n.fieldPhone),
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _email,
-            decoration: InputDecoration(labelText: l10n.fieldEmail),
-            keyboardType: TextInputType.emailAddress,
-          ),
-        ];
-      case 2:
-        return [
-          Text(l10n.setupElectricityHint),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _electricity,
-            decoration: InputDecoration(labelText: l10n.settingsElectricity),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          ),
-        ];
-      case 3:
-        return [
-          Text(l10n.setupLaborHint),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _labor,
-            decoration: InputDecoration(labelText: l10n.settingsLabor),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          ),
-        ];
-      case 4:
-        return [
-          Text(l10n.setupRatesHint),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _markup,
-            decoration: InputDecoration(labelText: l10n.settingsMarkup),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _failure,
-            decoration: InputDecoration(labelText: l10n.settingsFailure),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _vat,
-            decoration: InputDecoration(labelText: l10n.setupVat),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          ),
-        ];
-      case 5:
-        return [
-          Text(l10n.setupQuotesHint(nextQuote)),
-          const SizedBox(height: 12),
-          LanguageMenu(
-            languageCode: _languageCode,
-            onChanged: (code) => setState(() => _languageCode = code),
-          ),
-          const SizedBox(height: 12),
-          ThemeMenu(
-            themeMode: _themeMode,
-            onChanged: (code) => setState(() => _themeMode = code),
-          ),
-          const SizedBox(height: 12),
-          CurrencyField(
-            currencyCode: _currencyCode,
-            onChanged: (code) => setState(() => _currencyCode = code),
-          ),
-          const SizedBox(height: 8),
-          Text(l10n.currencyChangedHint),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _validity,
-            decoration: InputDecoration(labelText: l10n.settingsValidityDays),
-            keyboardType: TextInputType.number,
-          ),
-        ];
-      case 6:
         final matches = _matchingPrinters();
         final selected =
             matches.any((printer) => printer.name == _printerName.text)
             ? _printerName.text
             : null;
         return [
+          Text(l10n.setupIntro),
+          const SizedBox(height: 8),
+          Text(l10n.setupSkipHint),
+          const SizedBox(height: 12),
           Text(l10n.setupPrinterHint),
           const SizedBox(height: 12),
           TextField(
@@ -655,7 +499,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
         ];
-      case 7:
+      case 1:
         final spoolMatches = _matchingSpools();
         final selectedLabel = _selectedSpool?.label;
         return [
@@ -711,93 +555,15 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           ],
         ];
       default:
-        final currency = normalizeCurrencyCode(_currencyCode);
         return [
-          Text(
-            _selectedSpool == null
-                ? l10n.setupReviewNeedSpool
-                : l10n.setupReviewReady,
-          ),
+          Text(l10n.setupElectricityHint),
           const SizedBox(height: 12),
-          _ReviewRow(l10n.setupBusiness, _business.text.trim()),
-          _ReviewRow(l10n.fieldStreet, _street.text.trim()),
-          _ReviewRow(
-            l10n.fieldCity,
-            '${_postal.text.trim()} ${_city.text.trim()}'.trim(),
+          TextField(
+            controller: _electricity,
+            decoration: InputDecoration(labelText: l10n.settingsElectricity),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
-          _ReviewRow(l10n.fieldOrgNumber, _org.text.trim()),
-          _ReviewRow(l10n.fieldPhone, _phone.text.trim()),
-          _ReviewRow(l10n.fieldEmail, _email.text.trim()),
-          _ReviewRow(
-            l10n.setupElectricity,
-            context.money(_money(_electricity.text) ?? 0, currency),
-          ),
-          _ReviewRow(
-            l10n.setupLabor,
-            context.money(_money(_labor.text) ?? 0, currency),
-          ),
-          _ReviewRow(
-            l10n.setupMarkup,
-            context.percentText(parseBasisPoints(_markup.text) ?? 0),
-          ),
-          _ReviewRow(
-            l10n.setupFailure,
-            context.percentText(parseBasisPoints(_failure.text) ?? 0),
-          ),
-          _ReviewRow(
-            l10n.setupVatShort,
-            context.percentText(parseBasisPoints(_vat.text) ?? 0),
-          ),
-          _ReviewRow(l10n.currencyLabel, currency),
-          _ReviewRow(
-            l10n.settingsValidityDays,
-            l10n.setupValidityValue(_validity.text.trim()),
-          ),
-          _ReviewRow(l10n.setupNextQuote, '$nextQuote'),
-          _ReviewRow(l10n.setupPrinterTitle, _printerName.text.trim()),
-          _ReviewRow(l10n.setupPower, l10n.setupPowerValue(_watts.text.trim())),
-          _ReviewRow(
-            l10n.setupPurchasePrice,
-            context.money(_money(_price.text) ?? 0, currency),
-          ),
-          _ReviewRow(
-            l10n.setupLifetime,
-            l10n.setupLifetimeValue(_life.text.trim()),
-          ),
-          _ReviewRow(
-            l10n.setupMaintenance,
-            context.money(_money(_maintenance.text) ?? 0, currency),
-          ),
-          _ReviewRow(l10n.navFilament, _selectedSpool?.label ?? ''),
         ];
     }
-  }
-}
-
-class _ReviewRow extends StatelessWidget {
-  const _ReviewRow(this.label, this.value);
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    if (value.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(label, maxLines: 3, overflow: TextOverflow.ellipsis),
-          ),
-          const SizedBox(width: 8),
-          Expanded(flex: 3, child: Text(value)),
-        ],
-      ),
-    );
   }
 }

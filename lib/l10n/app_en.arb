@@ -12,6 +12,14 @@
   "@languageSystem": {
     "description": "Language option that follows the device language"
   },
+  "chooseLanguageTitle": "Choose language",
+  "@chooseLanguageTitle": {
+    "description": "Title of the first-run language screen"
+  },
+  "chooseLanguageBody": "This language is used across Gramnota. You can change it later in Settings.",
+  "@chooseLanguageBody": {
+    "description": "Explains the first-run language choice"
+  },
   "themeLabel": "Appearance",
   "@themeLabel": {
     "description": "Settings field for light, dark, or system appearance"
@@ -136,6 +144,14 @@
   "settingsVatOptional": "VAT % (0 if not registered)",
   "@settingsVatOptional": {
     "description": "settingsVatOptional"
+  },
+  "settingsVatHint": "Most hobby sellers are not VAT-registered. New workshops start at 0% VAT, except Swedish, which starts at 25%. Use 0% if you do not charge VAT.",
+  "@settingsVatHint": {
+    "description": "Hint under the VAT field in Settings"
+  },
+  "businessProfileTip": "Add your business name and address for PDF quotes",
+  "@businessProfileTip": {
+    "description": "Dismissible tip on Home and the calculator"
   },
   "settingsFailure": "Default failure %",
   "@settingsFailure": {
@@ -274,11 +290,11 @@
   "@setupNext": {
     "description": "setupNext"
   },
-  "setupIntro": "Quotes use your printer, your electricity price, and your labor rate. This setup asks for each of those once. You can change every answer later in Settings.",
+  "setupIntro": "Add your printer, a standard spool, and your electricity price. Markup, labor, and VAT start from defaults you can change in Settings.",
   "@setupIntro": {
     "description": "setupIntro"
   },
-  "setupSkipHint": "Skip keeps electricity and labor at zero, with 30% markup and 25% VAT, until you fill them in.",
+  "setupSkipHint": "Skip saves your language and currency, 30% markup, and the VAT default. Electricity and labor stay at zero until you set them in Settings.",
   "@setupSkipHint": {
     "description": "setupSkipHint"
   },

@@ -15,7 +15,7 @@ The shell is never the first screen. Gates run outside `AppShell` until Firebase
 
 Pure functions live in `lib/core/app_redirect.dart`:
 
-- `resolveRedirect` — full chain: `/setup` → `/starting` while auth loads → `/sign-in` when signed out → `workshopRedirect` when signed in.
+- `resolveRedirect` — full chain: `/setup` → `/starting` while auth or the language-onboarding flag loads → `/choose-language` once per device when signed out and no language is cached → `/sign-in` when signed out → `workshopRedirect` when signed in. A signed-in user skips the language screen.
 - `workshopRedirect` — `/starting` while `setupCompleted` is null (unless `finishedLocally`), `/workshop-setup` when setup is unfinished, then `/calculator` when leaving gate routes.
 
 `lib/router.dart` wires `GoRouter`: `initialLocation` is `/starting`, `redirect` calls `resolveRedirect`, and `refreshListenable` listens to `authUserProvider`, `setupCompletedProvider`, and `setupFinishedProvider`.
@@ -34,8 +34,9 @@ Do not return `null` from redirect while auth is still loading. That would build
 |-------|------|
 | `/setup` | Firebase not configured |
 | `/starting` | Spinner gate |
+| `/choose-language` | First-run language list, once per device, before sign-in |
 | `/sign-in` | Google sign-in |
-| `/workshop-setup` | Nine-step workshop guide (outside shell) |
+| `/workshop-setup` | Three-step workshop guide (printer, spool, electricity) |
 | `/calculator`, `/orders`, … | `StatefulShellRoute` branches in `AppShell` |
 
 Pre-app screens use `GateScaffold` and `GramnotaBrandMark` (`lib/core/gate_scaffold.dart`). Brand assets are under `assets/brand/`.

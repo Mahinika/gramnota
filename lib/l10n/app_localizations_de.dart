@@ -18,6 +18,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get languageSystem => 'Systemstandard';
 
   @override
+  String get chooseLanguageTitle => 'Sprache wählen';
+
+  @override
+  String get chooseLanguageBody =>
+      'Diese Sprache gilt in ganz Gramnota. Du kannst sie später in den Einstellungen ändern.';
+
+  @override
   String get themeLabel => 'Darstellung';
 
   @override
@@ -188,6 +195,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsVatOptional => 'MwSt. % (0, wenn nicht registriert)';
 
   @override
+  String get settingsVatHint =>
+      'Die meisten Hobbyverkäufer sind nicht umsatzsteuerpflichtig. Neue Werkstätten starten mit 0 % MwSt., schwedische mit 25 %. Setze 0 %, wenn du keine MwSt. berechnest.';
+
+  @override
+  String get businessProfileTip =>
+      'Füge Firmenname und Adresse für PDF-Angebote hinzu';
+
+  @override
   String get settingsFailure => 'Standard-Ausschuss %';
 
   @override
@@ -294,11 +309,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get setupIntro =>
-      'Angebote verwenden deinen Drucker, deinen Strompreis und deinen Stundensatz. Diese Einrichtung fragt jede dieser Angaben einmal ab. Du kannst jede Antwort später in den Einstellungen ändern.';
+      'Füge deinen Drucker, eine Standardspule und deinen Strompreis hinzu. Aufschlag, Arbeit und MwSt. starten mit Vorgaben, die du in den Einstellungen ändern kannst.';
 
   @override
   String get setupSkipHint =>
-      'Beim Überspringen bleiben Strom und Lohn bei null, mit 30 % Aufschlag und 25 % MwSt., bis du sie ausfüllst.';
+      'Überspringen speichert Sprache und Währung, 30 % Aufschlag und die MwSt.-Vorgabe. Strom und Arbeit bleiben bei null, bis du sie in den Einstellungen setzt.';
 
   @override
   String get setupProfileHint =>

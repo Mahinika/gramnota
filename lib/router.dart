@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/app_redirect.dart';
+import 'core/language_onboarding.dart';
 import 'core/providers.dart';
 import 'core/shell.dart';
 import 'features/auth/presentation/auth_screens.dart';
+import 'features/auth/presentation/choose_language_screen.dart';
 import 'features/catalog/presentation/products_screen.dart';
 import 'features/customers/presentation/customers_screen.dart';
 import 'features/filaments/presentation/filaments_screen.dart';
@@ -23,6 +25,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.listen(authUserProvider, (_, _) => refresh.value++);
   ref.listen(setupCompletedProvider, (_, _) => refresh.value++);
   ref.listen(setupFinishedProvider, (_, _) => refresh.value++);
+  ref.listen(showLanguageOnboardingProvider, (_, _) => refresh.value++);
   ref.onDispose(refresh.dispose);
   return GoRouter(
     initialLocation: '/starting',
@@ -30,17 +33,24 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final location = state.matchedLocation;
       final auth = ref.read(authUserProvider);
+      final onboarding = ref.read(showLanguageOnboardingProvider);
+      final signedIn = auth.asData?.value != null;
       return resolveRedirect(
         location: location,
         firebaseConfigured: firebaseIsConfigured,
-        authLoading: auth.isLoading,
-        signedIn: auth.asData?.value != null,
+        authLoading: auth.isLoading || (!signedIn && onboarding.isLoading),
+        signedIn: signedIn,
         setupCompleted: ref.read(setupCompletedProvider),
         finishedLocally: ref.read(setupFinishedProvider),
+        showLanguageOnboarding: onboarding.asData?.value ?? false,
       );
     },
     routes: [
       GoRoute(path: '/setup', builder: (_, _) => const SetupScreen()),
+      GoRoute(
+        path: '/choose-language',
+        builder: (_, _) => const ChooseLanguageScreen(),
+      ),
       GoRoute(path: '/sign-in', builder: (_, _) => const SignInScreen()),
       GoRoute(path: '/starting', builder: (_, _) => const StartingScreen()),
       GoRoute(

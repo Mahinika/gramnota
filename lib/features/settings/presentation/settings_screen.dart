@@ -400,6 +400,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             decoration: InputDecoration(labelText: l10n.settingsVatOptional),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
           ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.settingsVatHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _failure,

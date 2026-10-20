@@ -7,6 +7,7 @@ import '../../../core/providers.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/shell.dart';
 import '../../../l10n/l10n.dart';
+import '../../settings/presentation/business_profile_tip.dart';
 import '../../filaments/domain/filament_spool.dart';
 import '../data/orders_providers.dart';
 import '../domain/dashboard.dart';
@@ -78,6 +79,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             l10n: l10n,
           );
           return DashboardView(
+            leading: const BusinessProfileTip(),
             snapshot: snapshot,
             currencyCode: currency,
             onPreviousMonth: () => _shift(-1),
@@ -100,12 +102,14 @@ class DashboardView extends StatelessWidget {
     required this.currencyCode,
     required this.onPreviousMonth,
     required this.onNextMonth,
+    this.leading,
     this.onOpenOrder,
     this.onOpenSpool,
     this.onOpenCustomer,
     super.key,
   });
 
+  final Widget? leading;
   final DashboardSnapshot snapshot;
   final String currencyCode;
   final VoidCallback onPreviousMonth;
@@ -147,6 +151,7 @@ class DashboardView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
+        ?leading,
         Row(
           children: [
             IconButton(
