@@ -19,7 +19,11 @@ mixin _$WorkshopSettings {
 /// [systemLanguageCode] follows the device language.
 @JsonKey(readValue: readLanguageCode) String get languageCode;@JsonKey(readValue: readCurrencyCode) String get currencyCode;/// `system` when the field is missing, so an existing workshop follows
 /// the device until someone picks Light or Dark.
-@JsonKey(readValue: readThemeMode) String get themeMode; int get electricityMinorPerKwh; int get laborMinorPerHour; int get defaultMarkupBasisPoints; int get vatBasisPoints; int get defaultFailureBasisPoints; String get businessName; String get street; String get postalCode; String get city; String get orgNumber; String get phone; String get email; int get nextQuoteNumber; int get quoteValidityDays; double get defaultLowStockGrams;
+@JsonKey(readValue: readThemeMode) String get themeMode; int get electricityMinorPerKwh; int get laborMinorPerHour; int get defaultMarkupBasisPoints; int get vatBasisPoints; int get defaultFailureBasisPoints; String get businessName; String get street; String get postalCode; String get city; String get orgNumber; String get phone; String get email; int get nextQuoteNumber; int get quoteValidityDays; double get defaultLowStockGrams;/// When this device last saved the language. Empty on older documents.
+/// A snapshot with a missing or older stamp does not undo a newer choice.
+ String get languageUpdatedAt;/// When this device last saved the appearance.
+ String get themeUpdatedAt;/// When this device last saved the workshop currency.
+ String get currencyUpdatedAt;
 /// Create a copy of WorkshopSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -32,16 +36,16 @@ $WorkshopSettingsCopyWith<WorkshopSettings> get copyWith => _$WorkshopSettingsCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkshopSettings&&(identical(other.setupCompleted, setupCompleted) || other.setupCompleted == setupCompleted)&&(identical(other.languageCode, languageCode) || other.languageCode == languageCode)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.electricityMinorPerKwh, electricityMinorPerKwh) || other.electricityMinorPerKwh == electricityMinorPerKwh)&&(identical(other.laborMinorPerHour, laborMinorPerHour) || other.laborMinorPerHour == laborMinorPerHour)&&(identical(other.defaultMarkupBasisPoints, defaultMarkupBasisPoints) || other.defaultMarkupBasisPoints == defaultMarkupBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.defaultFailureBasisPoints, defaultFailureBasisPoints) || other.defaultFailureBasisPoints == defaultFailureBasisPoints)&&(identical(other.businessName, businessName) || other.businessName == businessName)&&(identical(other.street, street) || other.street == street)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.city, city) || other.city == city)&&(identical(other.orgNumber, orgNumber) || other.orgNumber == orgNumber)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.nextQuoteNumber, nextQuoteNumber) || other.nextQuoteNumber == nextQuoteNumber)&&(identical(other.quoteValidityDays, quoteValidityDays) || other.quoteValidityDays == quoteValidityDays)&&(identical(other.defaultLowStockGrams, defaultLowStockGrams) || other.defaultLowStockGrams == defaultLowStockGrams));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WorkshopSettings&&(identical(other.setupCompleted, setupCompleted) || other.setupCompleted == setupCompleted)&&(identical(other.languageCode, languageCode) || other.languageCode == languageCode)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.electricityMinorPerKwh, electricityMinorPerKwh) || other.electricityMinorPerKwh == electricityMinorPerKwh)&&(identical(other.laborMinorPerHour, laborMinorPerHour) || other.laborMinorPerHour == laborMinorPerHour)&&(identical(other.defaultMarkupBasisPoints, defaultMarkupBasisPoints) || other.defaultMarkupBasisPoints == defaultMarkupBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.defaultFailureBasisPoints, defaultFailureBasisPoints) || other.defaultFailureBasisPoints == defaultFailureBasisPoints)&&(identical(other.businessName, businessName) || other.businessName == businessName)&&(identical(other.street, street) || other.street == street)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.city, city) || other.city == city)&&(identical(other.orgNumber, orgNumber) || other.orgNumber == orgNumber)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.nextQuoteNumber, nextQuoteNumber) || other.nextQuoteNumber == nextQuoteNumber)&&(identical(other.quoteValidityDays, quoteValidityDays) || other.quoteValidityDays == quoteValidityDays)&&(identical(other.defaultLowStockGrams, defaultLowStockGrams) || other.defaultLowStockGrams == defaultLowStockGrams)&&(identical(other.languageUpdatedAt, languageUpdatedAt) || other.languageUpdatedAt == languageUpdatedAt)&&(identical(other.themeUpdatedAt, themeUpdatedAt) || other.themeUpdatedAt == themeUpdatedAt)&&(identical(other.currencyUpdatedAt, currencyUpdatedAt) || other.currencyUpdatedAt == currencyUpdatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,setupCompleted,languageCode,currencyCode,themeMode,electricityMinorPerKwh,laborMinorPerHour,defaultMarkupBasisPoints,vatBasisPoints,defaultFailureBasisPoints,businessName,street,postalCode,city,orgNumber,phone,email,nextQuoteNumber,quoteValidityDays,defaultLowStockGrams]);
+int get hashCode => Object.hashAll([runtimeType,setupCompleted,languageCode,currencyCode,themeMode,electricityMinorPerKwh,laborMinorPerHour,defaultMarkupBasisPoints,vatBasisPoints,defaultFailureBasisPoints,businessName,street,postalCode,city,orgNumber,phone,email,nextQuoteNumber,quoteValidityDays,defaultLowStockGrams,languageUpdatedAt,themeUpdatedAt,currencyUpdatedAt]);
 
 @override
 String toString() {
-  return 'WorkshopSettings(setupCompleted: $setupCompleted, languageCode: $languageCode, currencyCode: $currencyCode, themeMode: $themeMode, electricityMinorPerKwh: $electricityMinorPerKwh, laborMinorPerHour: $laborMinorPerHour, defaultMarkupBasisPoints: $defaultMarkupBasisPoints, vatBasisPoints: $vatBasisPoints, defaultFailureBasisPoints: $defaultFailureBasisPoints, businessName: $businessName, street: $street, postalCode: $postalCode, city: $city, orgNumber: $orgNumber, phone: $phone, email: $email, nextQuoteNumber: $nextQuoteNumber, quoteValidityDays: $quoteValidityDays, defaultLowStockGrams: $defaultLowStockGrams)';
+  return 'WorkshopSettings(setupCompleted: $setupCompleted, languageCode: $languageCode, currencyCode: $currencyCode, themeMode: $themeMode, electricityMinorPerKwh: $electricityMinorPerKwh, laborMinorPerHour: $laborMinorPerHour, defaultMarkupBasisPoints: $defaultMarkupBasisPoints, vatBasisPoints: $vatBasisPoints, defaultFailureBasisPoints: $defaultFailureBasisPoints, businessName: $businessName, street: $street, postalCode: $postalCode, city: $city, orgNumber: $orgNumber, phone: $phone, email: $email, nextQuoteNumber: $nextQuoteNumber, quoteValidityDays: $quoteValidityDays, defaultLowStockGrams: $defaultLowStockGrams, languageUpdatedAt: $languageUpdatedAt, themeUpdatedAt: $themeUpdatedAt, currencyUpdatedAt: $currencyUpdatedAt)';
 }
 
 
@@ -52,7 +56,7 @@ abstract mixin class $WorkshopSettingsCopyWith<$Res>  {
   factory $WorkshopSettingsCopyWith(WorkshopSettings value, $Res Function(WorkshopSettings) _then) = _$WorkshopSettingsCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(readValue: readSetupCompleted) bool setupCompleted,@JsonKey(readValue: readLanguageCode) String languageCode,@JsonKey(readValue: readCurrencyCode) String currencyCode,@JsonKey(readValue: readThemeMode) String themeMode, int electricityMinorPerKwh, int laborMinorPerHour, int defaultMarkupBasisPoints, int vatBasisPoints, int defaultFailureBasisPoints, String businessName, String street, String postalCode, String city, String orgNumber, String phone, String email, int nextQuoteNumber, int quoteValidityDays, double defaultLowStockGrams
+@JsonKey(readValue: readSetupCompleted) bool setupCompleted,@JsonKey(readValue: readLanguageCode) String languageCode,@JsonKey(readValue: readCurrencyCode) String currencyCode,@JsonKey(readValue: readThemeMode) String themeMode, int electricityMinorPerKwh, int laborMinorPerHour, int defaultMarkupBasisPoints, int vatBasisPoints, int defaultFailureBasisPoints, String businessName, String street, String postalCode, String city, String orgNumber, String phone, String email, int nextQuoteNumber, int quoteValidityDays, double defaultLowStockGrams, String languageUpdatedAt, String themeUpdatedAt, String currencyUpdatedAt
 });
 
 
@@ -69,7 +73,7 @@ class _$WorkshopSettingsCopyWithImpl<$Res>
 
 /// Create a copy of WorkshopSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? setupCompleted = null,Object? languageCode = null,Object? currencyCode = null,Object? themeMode = null,Object? electricityMinorPerKwh = null,Object? laborMinorPerHour = null,Object? defaultMarkupBasisPoints = null,Object? vatBasisPoints = null,Object? defaultFailureBasisPoints = null,Object? businessName = null,Object? street = null,Object? postalCode = null,Object? city = null,Object? orgNumber = null,Object? phone = null,Object? email = null,Object? nextQuoteNumber = null,Object? quoteValidityDays = null,Object? defaultLowStockGrams = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? setupCompleted = null,Object? languageCode = null,Object? currencyCode = null,Object? themeMode = null,Object? electricityMinorPerKwh = null,Object? laborMinorPerHour = null,Object? defaultMarkupBasisPoints = null,Object? vatBasisPoints = null,Object? defaultFailureBasisPoints = null,Object? businessName = null,Object? street = null,Object? postalCode = null,Object? city = null,Object? orgNumber = null,Object? phone = null,Object? email = null,Object? nextQuoteNumber = null,Object? quoteValidityDays = null,Object? defaultLowStockGrams = null,Object? languageUpdatedAt = null,Object? themeUpdatedAt = null,Object? currencyUpdatedAt = null,}) {
   return _then(_self.copyWith(
 setupCompleted: null == setupCompleted ? _self.setupCompleted : setupCompleted // ignore: cast_nullable_to_non_nullable
 as bool,languageCode: null == languageCode ? _self.languageCode : languageCode // ignore: cast_nullable_to_non_nullable
@@ -90,7 +94,10 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,nextQuoteNumber: null == nextQuoteNumber ? _self.nextQuoteNumber : nextQuoteNumber // ignore: cast_nullable_to_non_nullable
 as int,quoteValidityDays: null == quoteValidityDays ? _self.quoteValidityDays : quoteValidityDays // ignore: cast_nullable_to_non_nullable
 as int,defaultLowStockGrams: null == defaultLowStockGrams ? _self.defaultLowStockGrams : defaultLowStockGrams // ignore: cast_nullable_to_non_nullable
-as double,
+as double,languageUpdatedAt: null == languageUpdatedAt ? _self.languageUpdatedAt : languageUpdatedAt // ignore: cast_nullable_to_non_nullable
+as String,themeUpdatedAt: null == themeUpdatedAt ? _self.themeUpdatedAt : themeUpdatedAt // ignore: cast_nullable_to_non_nullable
+as String,currencyUpdatedAt: null == currencyUpdatedAt ? _self.currencyUpdatedAt : currencyUpdatedAt // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -175,10 +182,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted, @JsonKey(readValue: readLanguageCode)  String languageCode, @JsonKey(readValue: readCurrencyCode)  String currencyCode, @JsonKey(readValue: readThemeMode)  String themeMode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays,  double defaultLowStockGrams)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted, @JsonKey(readValue: readLanguageCode)  String languageCode, @JsonKey(readValue: readCurrencyCode)  String currencyCode, @JsonKey(readValue: readThemeMode)  String themeMode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays,  double defaultLowStockGrams,  String languageUpdatedAt,  String themeUpdatedAt,  String currencyUpdatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WorkshopSettings() when $default != null:
-return $default(_that.setupCompleted,_that.languageCode,_that.currencyCode,_that.themeMode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays,_that.defaultLowStockGrams);case _:
+return $default(_that.setupCompleted,_that.languageCode,_that.currencyCode,_that.themeMode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays,_that.defaultLowStockGrams,_that.languageUpdatedAt,_that.themeUpdatedAt,_that.currencyUpdatedAt);case _:
   return orElse();
 
 }
@@ -196,10 +203,10 @@ return $default(_that.setupCompleted,_that.languageCode,_that.currencyCode,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted, @JsonKey(readValue: readLanguageCode)  String languageCode, @JsonKey(readValue: readCurrencyCode)  String currencyCode, @JsonKey(readValue: readThemeMode)  String themeMode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays,  double defaultLowStockGrams)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted, @JsonKey(readValue: readLanguageCode)  String languageCode, @JsonKey(readValue: readCurrencyCode)  String currencyCode, @JsonKey(readValue: readThemeMode)  String themeMode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays,  double defaultLowStockGrams,  String languageUpdatedAt,  String themeUpdatedAt,  String currencyUpdatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _WorkshopSettings():
-return $default(_that.setupCompleted,_that.languageCode,_that.currencyCode,_that.themeMode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays,_that.defaultLowStockGrams);case _:
+return $default(_that.setupCompleted,_that.languageCode,_that.currencyCode,_that.themeMode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays,_that.defaultLowStockGrams,_that.languageUpdatedAt,_that.themeUpdatedAt,_that.currencyUpdatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -216,10 +223,10 @@ return $default(_that.setupCompleted,_that.languageCode,_that.currencyCode,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted, @JsonKey(readValue: readLanguageCode)  String languageCode, @JsonKey(readValue: readCurrencyCode)  String currencyCode, @JsonKey(readValue: readThemeMode)  String themeMode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays,  double defaultLowStockGrams)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: readSetupCompleted)  bool setupCompleted, @JsonKey(readValue: readLanguageCode)  String languageCode, @JsonKey(readValue: readCurrencyCode)  String currencyCode, @JsonKey(readValue: readThemeMode)  String themeMode,  int electricityMinorPerKwh,  int laborMinorPerHour,  int defaultMarkupBasisPoints,  int vatBasisPoints,  int defaultFailureBasisPoints,  String businessName,  String street,  String postalCode,  String city,  String orgNumber,  String phone,  String email,  int nextQuoteNumber,  int quoteValidityDays,  double defaultLowStockGrams,  String languageUpdatedAt,  String themeUpdatedAt,  String currencyUpdatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _WorkshopSettings() when $default != null:
-return $default(_that.setupCompleted,_that.languageCode,_that.currencyCode,_that.themeMode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays,_that.defaultLowStockGrams);case _:
+return $default(_that.setupCompleted,_that.languageCode,_that.currencyCode,_that.themeMode,_that.electricityMinorPerKwh,_that.laborMinorPerHour,_that.defaultMarkupBasisPoints,_that.vatBasisPoints,_that.defaultFailureBasisPoints,_that.businessName,_that.street,_that.postalCode,_that.city,_that.orgNumber,_that.phone,_that.email,_that.nextQuoteNumber,_that.quoteValidityDays,_that.defaultLowStockGrams,_that.languageUpdatedAt,_that.themeUpdatedAt,_that.currencyUpdatedAt);case _:
   return null;
 
 }
@@ -231,7 +238,7 @@ return $default(_that.setupCompleted,_that.languageCode,_that.currencyCode,_that
 @JsonSerializable()
 
 class _WorkshopSettings implements WorkshopSettings {
-  const _WorkshopSettings({@JsonKey(readValue: readSetupCompleted) this.setupCompleted = false, @JsonKey(readValue: readLanguageCode) this.languageCode = 'sv', @JsonKey(readValue: readCurrencyCode) this.currencyCode = 'SEK', @JsonKey(readValue: readThemeMode) this.themeMode = 'system', this.electricityMinorPerKwh = 0, this.laborMinorPerHour = 0, this.defaultMarkupBasisPoints = 3000, this.vatBasisPoints = 2500, this.defaultFailureBasisPoints = 0, this.businessName = '', this.street = '', this.postalCode = '', this.city = '', this.orgNumber = '', this.phone = '', this.email = '', this.nextQuoteNumber = 1, this.quoteValidityDays = 14, this.defaultLowStockGrams = 100});
+  const _WorkshopSettings({@JsonKey(readValue: readSetupCompleted) this.setupCompleted = false, @JsonKey(readValue: readLanguageCode) this.languageCode = 'sv', @JsonKey(readValue: readCurrencyCode) this.currencyCode = 'SEK', @JsonKey(readValue: readThemeMode) this.themeMode = 'system', this.electricityMinorPerKwh = 0, this.laborMinorPerHour = 0, this.defaultMarkupBasisPoints = 3000, this.vatBasisPoints = 2500, this.defaultFailureBasisPoints = 0, this.businessName = '', this.street = '', this.postalCode = '', this.city = '', this.orgNumber = '', this.phone = '', this.email = '', this.nextQuoteNumber = 1, this.quoteValidityDays = 14, this.defaultLowStockGrams = 100, this.languageUpdatedAt = '', this.themeUpdatedAt = '', this.currencyUpdatedAt = ''});
   factory _WorkshopSettings.fromJson(Map<String, dynamic> json) => _$WorkshopSettingsFromJson(json);
 
 @override@JsonKey(readValue: readSetupCompleted) final  bool setupCompleted;
@@ -257,6 +264,13 @@ class _WorkshopSettings implements WorkshopSettings {
 @override@JsonKey() final  int nextQuoteNumber;
 @override@JsonKey() final  int quoteValidityDays;
 @override@JsonKey() final  double defaultLowStockGrams;
+/// When this device last saved the language. Empty on older documents.
+/// A snapshot with a missing or older stamp does not undo a newer choice.
+@override@JsonKey() final  String languageUpdatedAt;
+/// When this device last saved the appearance.
+@override@JsonKey() final  String themeUpdatedAt;
+/// When this device last saved the workshop currency.
+@override@JsonKey() final  String currencyUpdatedAt;
 
 /// Create a copy of WorkshopSettings
 /// with the given fields replaced by the non-null parameter values.
@@ -271,16 +285,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkshopSettings&&(identical(other.setupCompleted, setupCompleted) || other.setupCompleted == setupCompleted)&&(identical(other.languageCode, languageCode) || other.languageCode == languageCode)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.electricityMinorPerKwh, electricityMinorPerKwh) || other.electricityMinorPerKwh == electricityMinorPerKwh)&&(identical(other.laborMinorPerHour, laborMinorPerHour) || other.laborMinorPerHour == laborMinorPerHour)&&(identical(other.defaultMarkupBasisPoints, defaultMarkupBasisPoints) || other.defaultMarkupBasisPoints == defaultMarkupBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.defaultFailureBasisPoints, defaultFailureBasisPoints) || other.defaultFailureBasisPoints == defaultFailureBasisPoints)&&(identical(other.businessName, businessName) || other.businessName == businessName)&&(identical(other.street, street) || other.street == street)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.city, city) || other.city == city)&&(identical(other.orgNumber, orgNumber) || other.orgNumber == orgNumber)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.nextQuoteNumber, nextQuoteNumber) || other.nextQuoteNumber == nextQuoteNumber)&&(identical(other.quoteValidityDays, quoteValidityDays) || other.quoteValidityDays == quoteValidityDays)&&(identical(other.defaultLowStockGrams, defaultLowStockGrams) || other.defaultLowStockGrams == defaultLowStockGrams));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WorkshopSettings&&(identical(other.setupCompleted, setupCompleted) || other.setupCompleted == setupCompleted)&&(identical(other.languageCode, languageCode) || other.languageCode == languageCode)&&(identical(other.currencyCode, currencyCode) || other.currencyCode == currencyCode)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.electricityMinorPerKwh, electricityMinorPerKwh) || other.electricityMinorPerKwh == electricityMinorPerKwh)&&(identical(other.laborMinorPerHour, laborMinorPerHour) || other.laborMinorPerHour == laborMinorPerHour)&&(identical(other.defaultMarkupBasisPoints, defaultMarkupBasisPoints) || other.defaultMarkupBasisPoints == defaultMarkupBasisPoints)&&(identical(other.vatBasisPoints, vatBasisPoints) || other.vatBasisPoints == vatBasisPoints)&&(identical(other.defaultFailureBasisPoints, defaultFailureBasisPoints) || other.defaultFailureBasisPoints == defaultFailureBasisPoints)&&(identical(other.businessName, businessName) || other.businessName == businessName)&&(identical(other.street, street) || other.street == street)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.city, city) || other.city == city)&&(identical(other.orgNumber, orgNumber) || other.orgNumber == orgNumber)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.nextQuoteNumber, nextQuoteNumber) || other.nextQuoteNumber == nextQuoteNumber)&&(identical(other.quoteValidityDays, quoteValidityDays) || other.quoteValidityDays == quoteValidityDays)&&(identical(other.defaultLowStockGrams, defaultLowStockGrams) || other.defaultLowStockGrams == defaultLowStockGrams)&&(identical(other.languageUpdatedAt, languageUpdatedAt) || other.languageUpdatedAt == languageUpdatedAt)&&(identical(other.themeUpdatedAt, themeUpdatedAt) || other.themeUpdatedAt == themeUpdatedAt)&&(identical(other.currencyUpdatedAt, currencyUpdatedAt) || other.currencyUpdatedAt == currencyUpdatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,setupCompleted,languageCode,currencyCode,themeMode,electricityMinorPerKwh,laborMinorPerHour,defaultMarkupBasisPoints,vatBasisPoints,defaultFailureBasisPoints,businessName,street,postalCode,city,orgNumber,phone,email,nextQuoteNumber,quoteValidityDays,defaultLowStockGrams]);
+int get hashCode => Object.hashAll([runtimeType,setupCompleted,languageCode,currencyCode,themeMode,electricityMinorPerKwh,laborMinorPerHour,defaultMarkupBasisPoints,vatBasisPoints,defaultFailureBasisPoints,businessName,street,postalCode,city,orgNumber,phone,email,nextQuoteNumber,quoteValidityDays,defaultLowStockGrams,languageUpdatedAt,themeUpdatedAt,currencyUpdatedAt]);
 
 @override
 String toString() {
-  return 'WorkshopSettings(setupCompleted: $setupCompleted, languageCode: $languageCode, currencyCode: $currencyCode, themeMode: $themeMode, electricityMinorPerKwh: $electricityMinorPerKwh, laborMinorPerHour: $laborMinorPerHour, defaultMarkupBasisPoints: $defaultMarkupBasisPoints, vatBasisPoints: $vatBasisPoints, defaultFailureBasisPoints: $defaultFailureBasisPoints, businessName: $businessName, street: $street, postalCode: $postalCode, city: $city, orgNumber: $orgNumber, phone: $phone, email: $email, nextQuoteNumber: $nextQuoteNumber, quoteValidityDays: $quoteValidityDays, defaultLowStockGrams: $defaultLowStockGrams)';
+  return 'WorkshopSettings(setupCompleted: $setupCompleted, languageCode: $languageCode, currencyCode: $currencyCode, themeMode: $themeMode, electricityMinorPerKwh: $electricityMinorPerKwh, laborMinorPerHour: $laborMinorPerHour, defaultMarkupBasisPoints: $defaultMarkupBasisPoints, vatBasisPoints: $vatBasisPoints, defaultFailureBasisPoints: $defaultFailureBasisPoints, businessName: $businessName, street: $street, postalCode: $postalCode, city: $city, orgNumber: $orgNumber, phone: $phone, email: $email, nextQuoteNumber: $nextQuoteNumber, quoteValidityDays: $quoteValidityDays, defaultLowStockGrams: $defaultLowStockGrams, languageUpdatedAt: $languageUpdatedAt, themeUpdatedAt: $themeUpdatedAt, currencyUpdatedAt: $currencyUpdatedAt)';
 }
 
 
@@ -291,7 +305,7 @@ abstract mixin class _$WorkshopSettingsCopyWith<$Res> implements $WorkshopSettin
   factory _$WorkshopSettingsCopyWith(_WorkshopSettings value, $Res Function(_WorkshopSettings) _then) = __$WorkshopSettingsCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(readValue: readSetupCompleted) bool setupCompleted,@JsonKey(readValue: readLanguageCode) String languageCode,@JsonKey(readValue: readCurrencyCode) String currencyCode,@JsonKey(readValue: readThemeMode) String themeMode, int electricityMinorPerKwh, int laborMinorPerHour, int defaultMarkupBasisPoints, int vatBasisPoints, int defaultFailureBasisPoints, String businessName, String street, String postalCode, String city, String orgNumber, String phone, String email, int nextQuoteNumber, int quoteValidityDays, double defaultLowStockGrams
+@JsonKey(readValue: readSetupCompleted) bool setupCompleted,@JsonKey(readValue: readLanguageCode) String languageCode,@JsonKey(readValue: readCurrencyCode) String currencyCode,@JsonKey(readValue: readThemeMode) String themeMode, int electricityMinorPerKwh, int laborMinorPerHour, int defaultMarkupBasisPoints, int vatBasisPoints, int defaultFailureBasisPoints, String businessName, String street, String postalCode, String city, String orgNumber, String phone, String email, int nextQuoteNumber, int quoteValidityDays, double defaultLowStockGrams, String languageUpdatedAt, String themeUpdatedAt, String currencyUpdatedAt
 });
 
 
@@ -308,7 +322,7 @@ class __$WorkshopSettingsCopyWithImpl<$Res>
 
 /// Create a copy of WorkshopSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? setupCompleted = null,Object? languageCode = null,Object? currencyCode = null,Object? themeMode = null,Object? electricityMinorPerKwh = null,Object? laborMinorPerHour = null,Object? defaultMarkupBasisPoints = null,Object? vatBasisPoints = null,Object? defaultFailureBasisPoints = null,Object? businessName = null,Object? street = null,Object? postalCode = null,Object? city = null,Object? orgNumber = null,Object? phone = null,Object? email = null,Object? nextQuoteNumber = null,Object? quoteValidityDays = null,Object? defaultLowStockGrams = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? setupCompleted = null,Object? languageCode = null,Object? currencyCode = null,Object? themeMode = null,Object? electricityMinorPerKwh = null,Object? laborMinorPerHour = null,Object? defaultMarkupBasisPoints = null,Object? vatBasisPoints = null,Object? defaultFailureBasisPoints = null,Object? businessName = null,Object? street = null,Object? postalCode = null,Object? city = null,Object? orgNumber = null,Object? phone = null,Object? email = null,Object? nextQuoteNumber = null,Object? quoteValidityDays = null,Object? defaultLowStockGrams = null,Object? languageUpdatedAt = null,Object? themeUpdatedAt = null,Object? currencyUpdatedAt = null,}) {
   return _then(_WorkshopSettings(
 setupCompleted: null == setupCompleted ? _self.setupCompleted : setupCompleted // ignore: cast_nullable_to_non_nullable
 as bool,languageCode: null == languageCode ? _self.languageCode : languageCode // ignore: cast_nullable_to_non_nullable
@@ -329,7 +343,10 @@ as String,email: null == email ? _self.email : email // ignore: cast_nullable_to
 as String,nextQuoteNumber: null == nextQuoteNumber ? _self.nextQuoteNumber : nextQuoteNumber // ignore: cast_nullable_to_non_nullable
 as int,quoteValidityDays: null == quoteValidityDays ? _self.quoteValidityDays : quoteValidityDays // ignore: cast_nullable_to_non_nullable
 as int,defaultLowStockGrams: null == defaultLowStockGrams ? _self.defaultLowStockGrams : defaultLowStockGrams // ignore: cast_nullable_to_non_nullable
-as double,
+as double,languageUpdatedAt: null == languageUpdatedAt ? _self.languageUpdatedAt : languageUpdatedAt // ignore: cast_nullable_to_non_nullable
+as String,themeUpdatedAt: null == themeUpdatedAt ? _self.themeUpdatedAt : themeUpdatedAt // ignore: cast_nullable_to_non_nullable
+as String,currencyUpdatedAt: null == currencyUpdatedAt ? _self.currencyUpdatedAt : currencyUpdatedAt // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

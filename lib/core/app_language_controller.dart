@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_languages.dart';
+import 'preference_echo.dart';
 
 const languagePreferenceKey = 'gramnota_language_code';
 
@@ -14,6 +15,9 @@ class AppLanguageController extends AsyncNotifier<String> {
   /// A tap or an explicit save that happened while [build] was still reading
   /// the cache. The in-flight read must not put the old value back.
   String? _chosen;
+
+  /// Local language write that a late Firestore snapshot must not undo.
+  final _echo = PreferenceEcho();
 
   @override
   Future<String> build() async {
@@ -45,9 +49,25 @@ class AppLanguageController extends AsyncNotifier<String> {
     await prefs.setString(languagePreferenceKey, next);
   }
 
+  /// Call before the Firestore write. [updatedAt] is the same stamp stored
+  /// on the settings document. A snapshot from before that write is ignored,
+  /// including one that arrives after the write has already been applied.
+  /// A newer stamp from another device still replaces this choice.
+  String expectEcho(String code, String updatedAt) {
+    return _echo.expect(_normalizeChoice(code), updatedAt);
+  }
+
+  void releaseEcho() => _echo.release();
+
   /// Firestore is the copy that syncs between devices. Apply it when it loads.
-  Future<void> applyRemote(String code) async {
+  /// [updatedAt] is the settings document's `languageUpdatedAt`. Empty on
+  /// older documents, which still win until this device has saved a newer stamp.
+  Future<void> applyRemote(String code, {String updatedAt = ''}) async {
     final next = _normalizeChoice(code);
+    final shown = _echo.resolve(remoteCode: next, updatedAt: updatedAt);
+    if (shown != next) {
+      return;
+    }
     final current = state.asData?.value;
     if (current == next) {
       return;

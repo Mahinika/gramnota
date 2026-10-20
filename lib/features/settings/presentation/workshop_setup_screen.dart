@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/app_language_controller.dart';
+import '../../../core/preference_echo.dart';
 import '../../../core/app_languages.dart';
 import '../../../core/app_theme_controller.dart';
 import '../../../core/theme_mode.dart';
@@ -246,6 +247,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
     try {
       final existing = ref.read(settingsProvider(store)).asData?.value;
       final nextQuote = existing?.nextQuoteNumber ?? 1;
+      final stamp = preferenceStamp();
       final settings = newWorkshopSettings(
         languageCode: _languageCode,
         currencyCode: _currencyCode,
@@ -253,10 +255,26 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
         email: _email,
         electricityMinorPerKwh: skipped ? 0 : (_money(_electricity.text) ?? 0),
         themeMode: _themeMode,
+      ).copyWith(
+        languageUpdatedAt: stamp,
+        themeUpdatedAt: stamp,
+        currencyUpdatedAt: stamp,
       );
-      await store.saveSettings(settings);
-      await ref.read(appLanguageProvider.notifier).setLanguage(_languageCode);
-      await ref.read(appThemeProvider.notifier).setTheme(_themeMode);
+      final language = ref.read(appLanguageProvider.notifier);
+      final theme = ref.read(appThemeProvider.notifier);
+      language.expectEcho(settings.languageCode, stamp);
+      theme.expectEcho(settings.themeMode, stamp);
+      store.expectCurrencyEcho(settings.currencyCode, stamp);
+      try {
+        await store.saveSettings(settings);
+      } on Object {
+        language.releaseEcho();
+        theme.releaseEcho();
+        store.releaseCurrencyEcho();
+        rethrow;
+      }
+      await language.setLanguage(settings.languageCode);
+      await theme.setTheme(settings.themeMode);
       if (!skipped) {
         await store.savePrinter(
           PrinterProfile(
