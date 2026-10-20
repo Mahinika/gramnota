@@ -1,20 +1,27 @@
 <p align="center">
-  <img src="assets/brand/gramnota_icon.png" alt="Gramnota" width="128">
+  <img src="assets/brand/gramnota_icon.png" alt="Gramnota" width="96">
 </p>
 
-# Gramnota
+<h1 align="center">Know what every print really costs</h1>
 
-Work out a sale price for a 3D print. The same app on Android and on Windows.
+<p align="center">
+  Price a 3D print from filament, power, and your time, then send a pro quote in a minute.<br>
+  Free, with no ads. The same workshop on Android and Windows, synced with your Google account.
+</p>
 
-## Download
+<p align="center">
+  <a href="https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota.apk"><img alt="Download for Android" src="https://img.shields.io/badge/Android-Download%20APK-0F6E56?style=for-the-badge&logo=android&logoColor=white"></a>
+  &nbsp;
+  <a href="https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe"><img alt="Install on Windows" src="https://img.shields.io/badge/Windows-Install-0F6E56?style=for-the-badge&logo=windows&logoColor=white"></a>
+  &nbsp;
+  <a href="https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip"><img alt="Windows zip, no install" src="https://img.shields.io/badge/Windows-Zip%2C%20no%20install-0F6E56?style=for-the-badge"></a>
+</p>
 
-These links always point at the latest version: [Gramnota – latest version](https://github.com/Mahinika/gramnota/releases/tag/latest).
-
-| Device | File |
-| --- | --- |
-| Phone or tablet | [![Download for Android](https://img.shields.io/badge/Android-Download%20APK-0F6E56?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota.apk) |
-| Windows PC | [![Install on Windows](https://img.shields.io/badge/Windows-Install-0F6E56?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe) |
-| Windows, no install | [![Zip for Windows](https://img.shields.io/badge/Windows-Zip%2C%20no%20install-0F6E56?style=for-the-badge)](https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip) |
+<p align="center">
+  <a href="https://github.com/Mahinika/gramnota/releases/tag/latest">Latest version</a>
+  ·
+  <a href="https://discord.gg/32c8gzgWcS"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-0F6E56?style=flat&logo=discord&logoColor=white"></a>
+</p>
 
 Direct links, if the buttons do not show:
 
@@ -22,49 +29,86 @@ Direct links, if the buttons do not show:
 - Windows installer: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe
 - Windows zip: https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip
 
-### Android
+On Android, open the APK. If your phone asks, allow installation from this source.
 
-1. Download `Gramnota.apk`.
-2. Open the file. If your phone asks, allow installation from this source (unknown sources).
-3. Open Gramnota and sign in with Google.
+The Windows installer is unsigned, so SmartScreen can say “Windows protected your PC” the first time. Choose **More info**, then **Run anyway**. It installs to `C:\Program Files\Gramnota` and can upgrade a copy that is already there. The zip is the same app without an install: unpack it and run `gramnota.exe`. That file can show the same SmartScreen note once. A normal Windows 10 or 11 PC needs nothing extra.
 
-### Windows
-
-1. Download `Gramnota-Setup.exe`.
-2. If Windows shows "Windows protected your PC", choose **More info**, then **Run anyway**. The installer is unsigned, so that dialog can appear the first time.
-3. The installer puts Gramnota in `C:\Program Files\Gramnota`, adds a Start menu shortcut, and (if the box is checked) a desktop shortcut. A newer version upgrades the app already installed, in the same place. Windows asks for administrator permission.
-4. Start Gramnota. Sign-in opens in your browser. Sign in with Google and return to the app.
-
-Uninstall later under Windows Settings, Apps.
-
-An installed app looks for a new version about once a day. **Check for updates** is under More and under Settings. Android asks you to confirm the install in the system dialog. On Windows the app closes, the installer runs, and Gramnota opens again.
-
-The zip is the same program without an install. Unpack it and run `gramnota.exe`. The same SmartScreen dialog can appear the first time. The Visual C++ libraries are included, so a normal Windows 10 or 11 PC needs nothing extra.
-
-## What you can do
-
-- Price a print from filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT.
-- Put several prints on one quote, with a single total.
-- Save customers, filament spools, printers, and products you quote often.
-- Take filament off the spool when an order is marked printed or paid. Cancel before that, and the grams go back.
-- Share a PDF quote.
-- See the month's revenue, deposits, and low stock on the home screen.
-- Paste a model link, or import G-code, and time and weight fill in when the page publishes them. The price still comes from your own spools.
+The installed app looks for a new version about once a day. **Check for updates** is under More and under Settings. Android asks you to confirm the install. On Windows the app closes, the installer runs, and Gramnota opens again.
 
 ## A look at the app
 
-<p>
-  <img src="docs/screenshots/home.webp" alt="Home screen with this month's numbers" width="220">
-  <img src="docs/screenshots/orders.webp" alt="The order list" width="220">
-  <img src="docs/screenshots/quote.webp" alt="A quote with its price" width="220">
-  <img src="docs/screenshots/filament.webp" alt="Filament spools and stock" width="220">
+<p align="center">
+  <img src="docs/screenshots/calculator.webp" alt="Calculator with filament, markup, failure, VAT, and the sale price" width="250">
+  <img src="docs/screenshots/quote-pdf.webp" alt="Customer quote PDF with line items, VAT, deposit, and total" width="320">
 </p>
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.webp" alt="Home screen for the month, with revenue, profit, and open quotes" width="220">
+  <img src="docs/screenshots/orders.webp" alt="Quotes filtered by status, including overdue" width="220">
+  <img src="docs/screenshots/filament.webp" alt="Filament spools with a low-stock warning" width="220">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/dark.webp" alt="Home screen in dark mode" width="220">
+  <img src="docs/screenshots/language.webp" alt="Language picker on first launch" width="220">
+</p>
+
+## Why Gramnota
+
+- The sale price includes the costs that are easy to skip: electricity, machine wear, a failure buffer, and your time, then markup and VAT.
+- The PDF your customer gets looks like an invoice: your workshop, their name, the prints, VAT, and the total.
+- Your phone and your PC share one workshop when you sign in with the same Google account.
+- Free to use, with no ads. Export a backup, or delete the account, from Settings.
+
+## What you can do
+
+- Price one print or several prints on the same quote. Quantity scales material, power, machine wear, the failure buffer, and production labor. Prep is charged once. Post-processing is charged per piece. Extras stay a flat amount.
+- Paste a MakerWorld, Printables, or Creality Cloud link and fill the title, print time, and grams when the page publishes them. Thingiverse, Thangs, Cults3D, MyMiniFactory, Makeronline, Nexprint, and GrabCAD can fill the title. The price still comes from your own spools.
+- Import `.gcode` or `.3mf` from PrusaSlicer, OrcaSlicer, Bambu Studio, Cura, or Creality Print. A file with several plates can become several prints on the quote, or fill the form from one plate. On Android you can also share a link or a slice file into the app.
+- Save a print you quote often in the product catalog, and add it again later. **Duplicate as new quote** copies a job, gives it a new number, and recalculates the price from today’s spools and rates. Markup, failure, and VAT stay as they were.
+- Move a job through Quote, Sent, Accepted, Printed, and Paid. Declined and Cancelled are the other exits. Record a deposit and the date it arrived; until the job is paid, the quote shows what is still to pay. A Quote or Sent job is overdue the day after its valid-until date.
+- Filament leaves the spool once, when the job is first marked Printed or Paid. Moving between those two does not take it again. Cancelling, declining, or moving it back returns the grams that were actually taken.
+- Home is the month: revenue, profit, deposits, open quotes, overdue quotes, filament used, and your top customers and products.
+- A spool warns when it is at or under its own threshold, or the workshop default. A quote also warns when accepted jobs plus this one need more grams than you have left. You can still print; a short spool only deducts what remains.
+- Customer PDFs in Swedish, English, German, Norwegian, Danish, Finnish, French, Spanish, Polish, and Dutch. Quotes can be in euros, dollars, pounds, kronor, zloty, francs, and most other everyday currencies. Each quote keeps the currency it was saved with. Amounts are not converted.
+- Appearance follows the device, or you can pick Light or Dark. The first screen asks for a language, before sign-in. Setup after that is a printer, an optional standard spool, and your electricity price. Business name, labor, markup, and VAT live in Settings.
+- Export or import the workshop as one JSON file: settings, printers, spools, customers, quotes, and products.
+
+## Get started in 3 steps
+
+1. Download the Android APK or the Windows installer above. Use the zip if you would rather not install.
+2. Open Gramnota, choose your language, and sign in with Google. On Windows, sign-in opens in the browser and then returns to the app.
+3. Add your printer. A standard spool and your electricity price are the next two short steps. You land on the calculator.
+
+## FAQ
+
+### Is Gramnota free?
+
+Yes. There is no subscription and there are no ads.
+
+### Where does my data live?
+
+Your workshop is stored under your Google sign-in, in a private space in Gramnota’s database (Cloud Firestore). Only that account can read and change your quotes, customers, spools, and printers. Settings can export a JSON backup, and **Delete account** removes the workshop data and the Gramnota sign-in.
+
+### Is it safe to run on Windows?
+
+The installer is unsigned, which is why SmartScreen asks the first time. Choose **More info**, then **Run anyway**. Sign-in uses Google in your browser. The workshop on the PC is the same private data as on the phone.
+
+### Does it work offline?
+
+The first sign-in needs internet. After that, Gramnota keeps a copy of the workshop on the device, so you can open it and keep working without a connection. Changes sync when the phone or PC is online again.
+
+### Which slicers can I import from?
+
+PrusaSlicer, OrcaSlicer, Bambu Studio, Cura, and Creality Print, as `.gcode` or as a `.3mf` that already contains the slice. Gramnota reads the slicer summary at the ends of the file. The sale price still comes from the spools you entered.
 
 ## Community
 
-[![Join the Gramnota Discord](https://img.shields.io/badge/Discord-Join%20the%20community-0F6E56?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/32c8gzgWcS)
+<p>
+  <a href="https://discord.gg/32c8gzgWcS"><img alt="Join the Gramnota Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-0F6E56?style=for-the-badge&logo=discord&logoColor=white"></a>
+</p>
 
-Join the Gramnota Discord for help, bug reports and feature ideas.
+The [Gramnota Discord](https://discord.gg/32c8gzgWcS) is the place for help, bugs, and ideas. A [GitHub issue](https://github.com/Mahinika/gramnota/issues) works too.
 
 All rights reserved.
 
@@ -72,110 +116,16 @@ All rights reserved.
 
 ## For developers
 
-Gramnota is a Flutter app (`gramnota`) for Android and Windows. The UI of the app is English. The default currency is SEK. Money is integer minor units (öre): `100` minor is one currency unit.
-
-A quote can include filament, electricity, machine wear, a failure buffer, labor, extras, markup, and VAT. One quote can hold several different prints, with one total and one stock deduction. Customers, filament spools, printers, and a product catalog stay with the signed-in user. Marking an order Printed or Paid takes filament out of stock once. Cancelling or moving it back before Printed puts those grams back. A PDF quote can be shared from the order. Home shows the month: revenue, deposits, open quotes, and low stock.
-
-### Firebase
-
-The app compiles before Firebase is connected and shows a setup screen until `lib/firebase_options.dart` has real keys.
-
-1. Create a Firebase project, enable Google sign-in, and create a Firestore database.
-2. `dart pub global activate flutterfire_cli`
-3. `flutterfire configure` (this overwrites `lib/firebase_options.dart` and writes `android/app/google-services.json`).
-4. Register **both** Android SHA-1 fingerprints on the Firebase Android app (`se.gramnota.app`):
-   - **Debug** — `cd android` then `./gradlew signingReport` (or Android Studio signing report).
-   - **Upload / release** — the certificate used for `android/app/upload-keystore.jks` when `android/key.properties` exists (GitHub APK builds use this key).
-5. Download a fresh `google-services.json` so it lists an OAuth Android client for each SHA-1 you use.
-6. Deploy rules: `firebase deploy --only firestore:rules` using [firestore.rules](firestore.rules).
-
-`google-services.json`, `android/key.properties`, and `*.jks` are gitignored. The checked-in `firebase_options.dart` is not a secret; replace it with the file FlutterFire generates. Include both the Android and Windows apps when you configure Firebase. Do not commit keystores or paste secret values into this file.
-
-On Android, sign-in uses the Google Sign-In plugin. On Windows, sign-in opens your browser. Continue with Google there, then return to Gramnota.
-
-### Run
+Gramnota is a Flutter app (`gramnota`) for Android and Windows. UI strings are in `lib/l10n`. Money is integer minor units (`100` minor is one currency unit). Percents are basis points (`10000` is 100%).
 
 ```
+flutter pub get
+flutter analyze
+flutter test
 flutter run -d android
 flutter run -d windows
 ```
 
-### Local Firebase emulators
+An unconfigured build shows a setup screen and does not touch Firebase. To connect your own project: enable Google sign-in and Firestore, then `flutterfire configure`. Register both the debug SHA-1 and the upload-keystore SHA-1 on the Android app `se.gramnota.app`, and keep both OAuth clients in `google-services.json`. Rules are in [firestore.rules](firestore.rules). Do not commit `google-services.json`, `android/key.properties`, or keystores.
 
-The Auth and Firestore emulators let you walk the app without Google sign-in. Production builds do not use them. Install the [Firebase CLI](https://firebase.google.com/docs/cli), then from the repo root:
-
-```
-firebase emulators:start --only auth,firestore
-```
-
-In another terminal:
-
-```
-flutter run -d chrome --dart-define=USE_FIREBASE_EMULATOR=true
-```
-
-The same flag works with `-d windows` or a web server. The sign-in screen then offers **Sign in as test seller** (`seller@gramnota.test`). That account is created on the Auth emulator the first time you use it. A browser refresh signs you out (emulator persistence is off) but keeps talking to the emulators, including when the page is opened at `127.0.0.1`. Sign in as the test seller again. The emulator UI is at http://127.0.0.1:4000. Rules from [firestore.rules](firestore.rules) apply. In the browser build, Google sign-in is not available; use the test seller button.
-
-### Releases
-
-Every push to `master` builds a release APK ([android-apk.yml](.github/workflows/android-apk.yml)) and a Windows installer ([windows-release.yml](.github/workflows/windows-release.yml)). Both publish on the **`latest`** release, with stable file names:
-
-- https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota.apk
-- https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-Setup.exe
-- https://github.com/Mahinika/gramnota/releases/download/latest/Gramnota-windows.zip
-
-[`.github/scripts/publish_release.sh`](.github/scripts/publish_release.sh) uploads only that job's files, deletes renamed leftovers from the same platform (so a version bump does not leave `Gramnota-Setup-1.0.0.exe` next to `Gramnota-Setup.exe`), and rewrites only that platform's version line. A lock in the release body keeps the two jobs from saving a stale copy over each other when they finish together. You can also start a build from the Actions tab.
-
-Each master build keeps the version name from `pubspec.yaml` (`1.0.0`) and sets the build number from `github.run_number`, so a newer build is detectable. The same publish step writes [`latest.json`](https://github.com/Mahinika/gramnota/releases/download/latest/latest.json) on that release: version, build, commit, date, English notes, the public APK and installer URLs, and a sha256 for each file. The two jobs merge their own platform block and leave the other one in place. The app reads that public URL. There is no download token. A local build can point somewhere else with `--dart-define=UPDATE_MANIFEST_URL=...`.
-
-The APK job needs the repository secrets `GOOGLE_SERVICES_JSON`, `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, and `ANDROID_KEY_PASSWORD`. The Windows job does not read repository secrets: Windows Firebase settings are already in `lib/firebase_options.dart`.
-
-The older [`android`](https://github.com/Mahinika/gramnota/releases/tag/android) and [`windows`](https://github.com/Mahinika/gramnota/releases/tag/windows) releases are no longer replaced. Their notes point at `latest`. `app-release.apk`, `Gramnota-Setup-1.0.0.exe`, and `Gramnota-1.0.0-windows-x64.zip` stay on those releases so existing links do not 404.
-
-If you change the upload keystore, register the new SHA-1/SHA-256 in Firebase, refresh `GOOGLE_SERVICES_JSON`, and uninstall the old APK before installing the new one (Android treats a new signature as a different app).
-
-The Windows installer asks for administrator permission, installs to `C:\Program Files\Gramnota`, and upgrades in place. `Gramnota-windows.zip` is the same build as a folder. Both include the Visual C++ runtime libraries next to `gramnota.exe` (`msvcp140.dll`, `vcruntime140.dll`, `vcruntime140_1.dll`, and the other runtime DLLs from the build).
-
-### Model links
-
-Paste a link, or on Android share it into the app.
-
-- MakerWorld, Printables, and Creality Cloud fill the title, print time, and filament grams.
-- Thingiverse, Thangs, Cults3D, MyMiniFactory, Makeronline, Nexprint, and GrabCAD fill the title when the page publishes one, and say that time and weight were not published. If that page links to MakerWorld, Printables, or Creality Cloud, Gramnota follows that link once.
-- The price still comes from your own spools.
-
-### G-code and 3MF
-
-On the calculator, **Import G-code** reads a `.gcode` or `.3mf` file. Gramnota scans the start and end of the file for slicer comments, so a large toolpath is not loaded into memory. PrusaSlicer, OrcaSlicer, Bambu Studio, Cura, and Creality Print supply print time and filament grams, including one row per extruder when the file lists them. A `.3mf` is used when it contains sliced G-code or plate metadata (Bambu Studio and OrcaSlicer write those into the archive). When that file has several plates, Gramnota asks whether to import all of them as separate prints on the quote, or to fill the form from one plate. The sale price still comes from your spools.
-
-On Android you can share a link, or a file whose type is G-code or 3MF, into Gramnota. It opens on the calculator. Gramnota does not register for every `application/octet-stream` share. Android does not reliably filter those shares by file name (the path is an extra, not the intent data), so a broad binary type would offer Gramnota for unrelated files. File managers that only advertise `application/octet-stream` will not list Gramnota; share the file as G-code or 3MF, or import it from the calculator.
-
-### Duplicate a quote
-
-On a quote, **Duplicate as new quote** copies the prints, the customer, and the print settings. The copy is a Quote with a new number and new dates. Filament already taken out of stock stays on the original order. Prices are calculated again from the current spool prices, printer costs, electricity price, and labor rate. Markup, failure, and VAT stay as they are on each print.
-
-### Product catalog
-
-**More → Products** stores a print you quote again: time, filaments, printer, labor minutes, extras, and percents. Save one from the calculator (**Save as product**) or from a print on a quote. **Add from catalog** on the calculator, or **Add product** on a quote, inserts it and prices filament, electricity, and machine wear from the spools, printer, and workshop rates you have at that moment. Markup, failure, and VAT stay as saved on the product.
-
-Each print keeps the catalog product's id. Home's top products follow that id, so renaming the product or the print title does not split the ranking. Quotes saved before this id existed are grouped by title.
-
-### Quote status
-
-An order moves Quote → Sent → Accepted → Printed → Paid. Declined and Cancelled are the other exits. The order list has a chip for each status, plus All, In progress (everything that is not Paid, Declined, or Cancelled), and Overdue.
-
-Filament leaves the spool when the order first becomes Printed or Paid. Changing Printed to Paid does not take filament again. Cancelling, declining, or moving the order back before Printed returns the grams that were actually taken, including when the spool was short. Older orders stored as Delivered open as Paid, with their stock and totals unchanged.
-
-A deposit is optional. Pick the date it was received; if you leave the date empty, saving a deposit uses today. Until the order is Paid, the quote shows what is still to pay. The customer PDF lists the deposit, its date, and the balance when a deposit is set.
-
-A Quote or Sent order shows Overdue the day after its valid-until date. The Overdue filter lists those quotes. Home counts them as well.
-
-### Home
-
-**Home** is the month view. A deposit counts in the month of its date. The rest of a Printed or Paid order counts in the month the work was first finished, so the deposit and the final payment can fall in different months. An older order with a deposit but no date keeps the whole total in the finish month. Profit is that month's revenue excl. VAT minus the cost of work finished in the month. The month follows the device calendar, so an order just before local midnight stays in that month. Sent and Accepted quotes, deposits still sitting on open orders, and overdue quotes are not limited to the month. The page also lists filament grams by material, top customers, top products, and spools at or under their warning threshold. Amounts in SEK, NOK, and DKK use a comma for öre and a space between thousands.
-
-### Stock warnings
-
-Settings has a workshop low-stock warning, 100 g unless you change it. A spool can follow that default or keep its own threshold. The filament list and Home mark a spool that is at or under the threshold.
-
-On a quote, Gramnota warns when the chosen spools cannot cover grams times quantity, plus the same sum on other Accepted quotes that have not taken stock yet. The warning is shown before the order is marked Printed. You can still print it; a short spool only deducts what is left.
+Every push to `master` publishes the three download files on the [latest](https://github.com/Mahinika/gramnota/releases/tag/latest) release. The README gallery is regenerated with `GRAMNOTA_SCREENSHOTS=1 flutter test test/readme_screenshots_test.dart`.
