@@ -18,6 +18,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSystem => 'System default';
 
   @override
+  String get chooseLanguageTitle => 'Choose language';
+
+  @override
+  String get chooseLanguageBody =>
+      'This language is used across Gramnota. You can change it later in Settings.';
+
+  @override
   String get themeLabel => 'Appearance';
 
   @override
@@ -187,6 +194,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVatOptional => 'VAT % (0 if not registered)';
 
   @override
+  String get settingsVatHint =>
+      'Most hobby sellers are not VAT-registered. New workshops start at 0% VAT, except Swedish, which starts at 25%. Use 0% if you do not charge VAT.';
+
+  @override
+  String get businessProfileTip =>
+      'Add your business name and address for PDF quotes';
+
+  @override
   String get settingsFailure => 'Default failure %';
 
   @override
@@ -293,11 +308,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupIntro =>
-      'Quotes use your printer, your electricity price, and your labor rate. This setup asks for each of those once. You can change every answer later in Settings.';
+      'Add your printer, a standard spool, and your electricity price. Markup, labor, and VAT start from defaults you can change in Settings.';
 
   @override
   String get setupSkipHint =>
-      'Skip keeps electricity and labor at zero, with 30% markup and 25% VAT, until you fill them in.';
+      'Skip saves your language and currency, 30% markup, and the VAT default. Electricity and labor stay at zero until you set them in Settings.';
 
   @override
   String get setupProfileHint =>

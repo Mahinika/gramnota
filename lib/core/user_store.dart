@@ -10,12 +10,22 @@ import '../features/printers/domain/printer_profile.dart';
 import '../features/settings/domain/workshop_backup.dart';
 import '../features/settings/domain/workshop_settings.dart';
 import '../features/sharing/domain/inbox_item.dart';
+import 'currencies.dart';
+import 'preference_echo.dart';
 
 class UserStore {
   UserStore(this.db, this.uid);
 
   final FirebaseFirestore db;
   final String uid;
+
+  final _currencyEcho = PreferenceEcho();
+
+  /// False until [watchSettings] sees a saved settings document.
+  /// A missing document is not an old Swedish workshop.
+  bool _settingsDocumentExists = false;
+
+  bool get settingsDocumentExists => _settingsDocumentExists;
 
   DocumentReference<Map<String, dynamic>> get settingsDoc =>
       db.collection('users').doc(uid).collection('settings').doc('main');
@@ -43,12 +53,68 @@ class UserStore {
 
   Stream<WorkshopSettings> watchSettings() {
     return settingsDoc.snapshots().map((snapshot) {
-      if (!snapshot.exists || snapshot.data() == null) {
-        // No document yet, so the workshop setup still has to run.
-        return const WorkshopSettings();
-      }
-      return WorkshopSettings.fromJson(snapshot.data()!);
+      final data = snapshot.data();
+      final exists = snapshot.exists && data != null;
+      _settingsDocumentExists = exists;
+      final settings = exists
+          ? WorkshopSettings.fromJson(data)
+          : const WorkshopSettings();
+      return _withCurrencyHold(settings);
     });
+  }
+
+  /// Call before writing [currencyCode] with [updatedAt].
+  /// An older snapshot keeps the currency that was just chosen.
+  void expectCurrencyEcho(String code, String updatedAt) {
+    _currencyEcho.expect(normalizeCurrencyCode(code), updatedAt);
+  }
+
+  void releaseCurrencyEcho() => _currencyEcho.release();
+
+  WorkshopSettings _withCurrencyHold(WorkshopSettings settings) {
+    final shown = _currencyEcho.resolve(
+      remoteCode: settings.currencyCode,
+      updatedAt: settings.currencyUpdatedAt,
+    );
+    if (shown == settings.currencyCode) {
+      return settings;
+    }
+    return settings.copyWith(currencyCode: shown);
+  }
+
+  /// Writes one or more of language, appearance, and currency.
+  /// The quote counter is left untouched.
+  Future<void> saveLocalePreferences({
+    String? languageCode,
+    String? languageUpdatedAt,
+    String? themeMode,
+    String? themeUpdatedAt,
+    String? currencyCode,
+    String? currencyUpdatedAt,
+  }) {
+    final data = <String, dynamic>{};
+    if (languageCode != null) {
+      data['languageCode'] = languageCode;
+      if (languageUpdatedAt != null) {
+        data['languageUpdatedAt'] = languageUpdatedAt;
+      }
+    }
+    if (themeMode != null) {
+      data['themeMode'] = themeMode;
+      if (themeUpdatedAt != null) {
+        data['themeUpdatedAt'] = themeUpdatedAt;
+      }
+    }
+    if (currencyCode != null) {
+      data['currencyCode'] = currencyCode;
+      if (currencyUpdatedAt != null) {
+        data['currencyUpdatedAt'] = currencyUpdatedAt;
+      }
+    }
+    if (data.isEmpty) {
+      return Future<void>.value();
+    }
+    return settingsDoc.set(data, SetOptions(merge: true));
   }
 
   /// Writes workshop settings without [WorkshopSettings.nextQuoteNumber].

@@ -11,6 +11,7 @@ import '../domain/workshop_backup.dart';
 import '../../../core/app_language_controller.dart';
 import '../../../core/app_languages.dart';
 import '../../../core/app_theme_controller.dart';
+import '../../../core/preference_echo.dart';
 import '../../../core/theme_mode.dart';
 import '../../../core/brand_icon.dart';
 import '../../../core/currencies.dart';
@@ -297,6 +298,97 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
+  Future<void> _commitLanguage(String code) async {
+    final next = code.trim().toLowerCase() == systemLanguageCode
+        ? systemLanguageCode
+        : normalizeLanguageCode(code);
+    if (next == _languageCode) {
+      return;
+    }
+    final previous = _languageCode;
+    final stamp = preferenceStamp();
+    final language = ref.read(appLanguageProvider.notifier);
+    language.expectEcho(next, stamp);
+    setState(() => _languageCode = next);
+    final store = ref.read(userStoreProvider);
+    if (store == null) {
+      await language.setLanguage(next);
+      return;
+    }
+    try {
+      await store.saveLocalePreferences(
+        languageCode: next,
+        languageUpdatedAt: stamp,
+      );
+    } on Object {
+      language.releaseEcho();
+      if (mounted) {
+        setState(() => _languageCode = previous);
+        showSaveError(context, context.l10n.settingsSaveFailed);
+      }
+      return;
+    }
+    await language.setLanguage(next);
+  }
+
+  Future<void> _commitTheme(String code) async {
+    final next = normalizeThemeMode(code);
+    if (next == _themeMode) {
+      return;
+    }
+    final previous = _themeMode;
+    final stamp = preferenceStamp();
+    final theme = ref.read(appThemeProvider.notifier);
+    theme.expectEcho(next, stamp);
+    setState(() => _themeMode = next);
+    final store = ref.read(userStoreProvider);
+    if (store == null) {
+      await theme.setTheme(next);
+      return;
+    }
+    try {
+      await store.saveLocalePreferences(
+        themeMode: next,
+        themeUpdatedAt: stamp,
+      );
+    } on Object {
+      theme.releaseEcho();
+      if (mounted) {
+        setState(() => _themeMode = previous);
+        showSaveError(context, context.l10n.settingsSaveFailed);
+      }
+      return;
+    }
+    await theme.setTheme(next);
+  }
+
+  Future<void> _commitCurrency(String code) async {
+    final next = normalizeCurrencyCode(code);
+    if (next == _currencyCode) {
+      return;
+    }
+    final previous = _currencyCode;
+    final stamp = preferenceStamp();
+    setState(() => _currencyCode = next);
+    final store = ref.read(userStoreProvider);
+    if (store == null) {
+      return;
+    }
+    store.expectCurrencyEcho(next, stamp);
+    try {
+      await store.saveLocalePreferences(
+        currencyCode: next,
+        currencyUpdatedAt: stamp,
+      );
+    } on Object {
+      store.releaseCurrencyEcho();
+      if (mounted) {
+        setState(() => _currencyCode = previous);
+        showSaveError(context, context.l10n.settingsSaveFailed);
+      }
+    }
+  }
+
   void _load(WorkshopSettings settings) {
     _nextQuote = settings.nextQuoteNumber;
     if (_loaded) {
@@ -359,17 +451,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           if (_message != null) Text(_message!),
           LanguageMenu(
             languageCode: _languageCode,
-            onChanged: (code) => setState(() => _languageCode = code),
+            onChanged: _commitLanguage,
           ),
           const SizedBox(height: 12),
           ThemeMenu(
             themeMode: _themeMode,
-            onChanged: (code) => setState(() => _themeMode = code),
+            onChanged: _commitTheme,
           ),
           const SizedBox(height: 12),
           CurrencyField(
             currencyCode: _currencyCode,
-            onChanged: (code) => setState(() => _currencyCode = code),
+            onChanged: _commitCurrency,
           ),
           const SizedBox(height: 8),
           Text(
@@ -399,6 +491,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             controller: _vat,
             decoration: InputDecoration(labelText: l10n.settingsVatOptional),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.settingsVatHint,
+            style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
           TextField(
@@ -502,6 +599,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 setState(() => _message = l10n.settingsLowStockRequired);
                 return;
               }
+              final stamp = preferenceStamp();
+              final language = ref.read(appLanguageProvider.notifier);
+              final theme = ref.read(appThemeProvider.notifier);
+              language.expectEcho(_languageCode, stamp);
+              theme.expectEcho(_themeMode, stamp);
+              store.expectCurrencyEcho(currency, stamp);
               try {
                 await store.saveSettings(
                   WorkshopSettings(
@@ -524,17 +627,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     nextQuoteNumber: _nextQuote,
                     quoteValidityDays: validity,
                     defaultLowStockGrams: lowStock,
+                    languageUpdatedAt: stamp,
+                    themeUpdatedAt: stamp,
+                    currencyUpdatedAt: stamp,
                   ),
                 );
               } on Object {
+                language.releaseEcho();
+                theme.releaseEcho();
+                store.releaseCurrencyEcho();
                 if (context.mounted) {
                   showSaveError(context, l10n.settingsSaveFailed);
                   setState(() => _message = l10n.settingsSaveFailed);
                 }
                 return;
               }
-              await ref.read(appLanguageProvider.notifier).setLanguage(_languageCode);
-              await ref.read(appThemeProvider.notifier).setTheme(_themeMode);
+              await language.setLanguage(_languageCode);
+              await theme.setTheme(_themeMode);
               if (mounted) {
                 setState(() => _message = l10n.settingsSaved);
               }

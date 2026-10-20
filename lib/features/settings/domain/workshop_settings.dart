@@ -42,6 +42,13 @@ abstract class WorkshopSettings with _$WorkshopSettings {
     @Default(1) int nextQuoteNumber,
     @Default(14) int quoteValidityDays,
     @Default(100) double defaultLowStockGrams,
+    /// When this device last saved the language. Empty on older documents.
+    /// A snapshot with a missing or older stamp does not undo a newer choice.
+    @Default('') String languageUpdatedAt,
+    /// When this device last saved the appearance.
+    @Default('') String themeUpdatedAt,
+    /// When this device last saved the workshop currency.
+    @Default('') String currencyUpdatedAt,
   }) = _WorkshopSettings;
 
   factory WorkshopSettings.fromJson(Map<String, dynamic> json) =>

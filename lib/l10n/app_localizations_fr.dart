@@ -18,6 +18,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get languageSystem => 'Valeur par défaut du système';
 
   @override
+  String get chooseLanguageTitle => 'Choisir la langue';
+
+  @override
+  String get chooseLanguageBody =>
+      'Cette langue est utilisée dans tout Gramnota. Vous pourrez la modifier plus tard dans les paramètres.';
+
+  @override
   String get themeLabel => 'Apparence';
 
   @override
@@ -187,6 +194,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settingsVatOptional => 'TVA % (0 si non assujetti)';
 
   @override
+  String get settingsVatHint =>
+      'La plupart des vendeurs amateurs ne sont pas assujettis à la TVA. Les nouveaux ateliers commencent à 0 % de TVA, sauf en suédois, à 25 %. Indiquez 0 % si vous ne facturez pas de TVA.';
+
+  @override
+  String get businessProfileTip =>
+      'Ajoutez le nom et l’adresse de votre activité pour les devis PDF';
+
+  @override
   String get settingsFailure => 'Rebut par défaut %';
 
   @override
@@ -293,11 +308,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get setupIntro =>
-      'Les devis utilisent votre imprimante, votre prix de l’électricité et votre taux de main-d’œuvre. Cette configuration demande chacun d’eux une fois. Vous pourrez modifier chaque réponse plus tard dans les paramètres.';
+      'Ajoutez votre imprimante, une bobine standard et votre prix de l’électricité. La marge, la main-d’œuvre et la TVA partent de valeurs par défaut que vous pouvez modifier dans les paramètres.';
 
   @override
   String get setupSkipHint =>
-      'Ignorer laisse l’électricité et la main-d’œuvre à zéro, avec une marge de 30 % et une TVA de 25 %, jusqu’à ce que vous les renseigniez.';
+      'Ignorer enregistre la langue et la devise, une marge de 30 % et la TVA par défaut. L’électricité et la main-d’œuvre restent à zéro jusqu’à ce que vous les indiquiez dans les paramètres.';
 
   @override
   String get setupProfileHint =>

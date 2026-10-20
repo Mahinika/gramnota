@@ -11,7 +11,13 @@ String? workshopRedirect({
   if (!done) {
     return location == '/workshop-setup' ? null : '/workshop-setup';
   }
-  const leave = {'/workshop-setup', '/starting', '/sign-in', '/setup'};
+  const leave = {
+    '/workshop-setup',
+    '/starting',
+    '/sign-in',
+    '/setup',
+    '/choose-language',
+  };
   if (leave.contains(location)) {
     return '/calculator';
   }
@@ -25,6 +31,7 @@ String? resolveRedirect({
   required bool signedIn,
   required bool? setupCompleted,
   required bool finishedLocally,
+  bool showLanguageOnboarding = false,
 }) {
   if (!firebaseConfigured) {
     return location == '/setup' ? null : '/setup';
@@ -33,6 +40,9 @@ String? resolveRedirect({
     return location == '/starting' ? null : '/starting';
   }
   if (!signedIn) {
+    if (showLanguageOnboarding) {
+      return location == '/choose-language' ? null : '/choose-language';
+    }
     return location == '/sign-in' ? null : '/sign-in';
   }
   return workshopRedirect(

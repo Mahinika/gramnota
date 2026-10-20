@@ -132,6 +132,18 @@ abstract class AppLocalizations {
   /// **'System default'**
   String get languageSystem;
 
+  /// Title of the first-run language screen
+  ///
+  /// In en, this message translates to:
+  /// **'Choose language'**
+  String get chooseLanguageTitle;
+
+  /// Explains the first-run language choice
+  ///
+  /// In en, this message translates to:
+  /// **'This language is used across Gramnota. You can change it later in Settings.'**
+  String get chooseLanguageBody;
+
   /// Settings field for light, dark, or system appearance
   ///
   /// In en, this message translates to:
@@ -468,6 +480,18 @@ abstract class AppLocalizations {
   /// **'VAT % (0 if not registered)'**
   String get settingsVatOptional;
 
+  /// Hint under the VAT field in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Most hobby sellers are not VAT-registered. New workshops start at 0% VAT, except Swedish, which starts at 25%. Use 0% if you do not charge VAT.'**
+  String get settingsVatHint;
+
+  /// Dismissible tip on Home and the calculator
+  ///
+  /// In en, this message translates to:
+  /// **'Add your business name and address for PDF quotes'**
+  String get businessProfileTip;
+
   /// settingsFailure
   ///
   /// In en, this message translates to:
@@ -657,13 +681,13 @@ abstract class AppLocalizations {
   /// setupIntro
   ///
   /// In en, this message translates to:
-  /// **'Quotes use your printer, your electricity price, and your labor rate. This setup asks for each of those once. You can change every answer later in Settings.'**
+  /// **'Add your printer, a standard spool, and your electricity price. Markup, labor, and VAT start from defaults you can change in Settings.'**
   String get setupIntro;
 
   /// setupSkipHint
   ///
   /// In en, this message translates to:
-  /// **'Skip keeps electricity and labor at zero, with 30% markup and 25% VAT, until you fill them in.'**
+  /// **'Skip saves your language and currency, 30% markup, and the VAT default. Electricity and labor stay at zero until you set them in Settings.'**
   String get setupSkipHint;
 
   /// setupProfileHint

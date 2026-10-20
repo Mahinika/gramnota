@@ -18,6 +18,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get languageSystem => 'Systeemstandaard';
 
   @override
+  String get chooseLanguageTitle => 'Kies een taal';
+
+  @override
+  String get chooseLanguageBody =>
+      'Deze taal geldt in heel Gramnota. Je kunt hem later wijzigen in Instellingen.';
+
+  @override
   String get themeLabel => 'Weergave';
 
   @override
@@ -187,6 +194,14 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsVatOptional => 'btw % (0 als je niet bent geregistreerd)';
 
   @override
+  String get settingsVatHint =>
+      'De meeste hobbyverkopers zijn niet btw-plichtig. Nieuwe werkplaatsen starten op 0% btw, Zweedse op 25%. Zet 0% als je geen btw rekent.';
+
+  @override
+  String get businessProfileTip =>
+      'Voeg je bedrijfsnaam en adres toe voor pdf-offertes';
+
+  @override
   String get settingsFailure => 'Standaarduitval %';
 
   @override
@@ -293,11 +308,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get setupIntro =>
-      'Offertes gebruiken je printer, je elektriciteitsprijs en je arbeidstarief. Deze instelling vraagt elk daarvan één keer. Je kunt elk antwoord later wijzigen in Instellingen.';
+      'Voeg je printer, een standaardspoel en je stroomprijs toe. Marge, arbeid en btw beginnen met standaardwaarden die je in Instellingen kunt wijzigen.';
 
   @override
   String get setupSkipHint =>
-      'Overslaan houdt elektriciteit en arbeid op nul, met 30% opslag en 25% btw, tot je ze invult.';
+      'Overslaan bewaart taal en valuta, 30% marge en de btw-standaard. Stroom en arbeid blijven op nul tot je ze instelt in Instellingen.';
 
   @override
   String get setupProfileHint =>

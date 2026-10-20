@@ -6,7 +6,7 @@ const systemLanguageCode = 'system';
 /// Existing settings documents have no language field. They stay Swedish.
 const defaultLanguageCode = 'sv';
 
-/// Languages shipped with the app, in picker order.
+/// Languages shipped with the app, in the Settings picker order.
 const supportedLanguageCodes = <String>[
   'sv',
   'en',
@@ -19,6 +19,37 @@ const supportedLanguageCodes = <String>[
   'pl',
   'nl',
 ];
+
+/// First-run list. Native names stay readable before the UI language changes.
+const onboardingLanguageCodes = <String>[
+  'sv',
+  'en',
+  'de',
+  'fr',
+  'pl',
+  'fi',
+  'nb',
+  'da',
+  'nl',
+  'es',
+];
+
+/// Flag shown beside the native name on the first-run language screen.
+const languageFlags = <String, String>{
+  'sv': '🇸🇪',
+  'en': '🇬🇧',
+  'de': '🇩🇪',
+  'fr': '🇫🇷',
+  'pl': '🇵🇱',
+  'fi': '🇫🇮',
+  'nb': '🇳🇴',
+  'da': '🇩🇰',
+  'nl': '🇳🇱',
+  'es': '🇪🇸',
+};
+
+String languageFlag(String languageCode) =>
+    languageFlags[languageCode] ?? languageFlags['en']!;
 
 /// Endonym shown in the language list so a user can find their language
 /// even when the rest of the UI is in another language.
@@ -52,8 +83,36 @@ Object? readLanguageCode(Map<dynamic, dynamic> json, String key) {
   return normalizeLanguageCode(code);
 }
 
+/// First launch, when nothing is cached. Unsupported device languages use English.
+/// A saved workshop with no language field still uses [defaultLanguageCode].
+const firstRunFallbackLanguageCode = 'en';
+
+/// Device language for a fresh install. `no` and `nn` map to `nb`.
+/// Unknown languages, including a missing locale, become English.
+String languageForDeviceLocale(Locale? device) {
+  if (device == null) {
+    return firstRunFallbackLanguageCode;
+  }
+  final language = device.languageCode
+      .trim()
+      .toLowerCase()
+      .replaceAll('_', '-')
+      .split('-')
+      .first;
+  if (language.isEmpty) {
+    return firstRunFallbackLanguageCode;
+  }
+  if (language == 'no' || language == 'nn') {
+    return 'nb';
+  }
+  if (supportedLanguageCodes.contains(language)) {
+    return language;
+  }
+  return firstRunFallbackLanguageCode;
+}
+
 /// Maps a stored or device code onto a shipped language.
-/// Unknown codes become Swedish.
+/// Unknown codes become Swedish so an old workshop does not change language.
 String normalizeLanguageCode(String raw) {
   final code = raw.trim().toLowerCase().replaceAll('_', '-');
   if (code == systemLanguageCode) {

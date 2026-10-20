@@ -32,6 +32,9 @@ _WorkshopSettings _$WorkshopSettingsFromJson(Map<String, dynamic> json) =>
       quoteValidityDays: (json['quoteValidityDays'] as num?)?.toInt() ?? 14,
       defaultLowStockGrams:
           (json['defaultLowStockGrams'] as num?)?.toDouble() ?? 100,
+      languageUpdatedAt: json['languageUpdatedAt'] as String? ?? '',
+      themeUpdatedAt: json['themeUpdatedAt'] as String? ?? '',
+      currencyUpdatedAt: json['currencyUpdatedAt'] as String? ?? '',
     );
 
 Map<String, dynamic> _$WorkshopSettingsToJson(_WorkshopSettings instance) =>
@@ -55,4 +58,7 @@ Map<String, dynamic> _$WorkshopSettingsToJson(_WorkshopSettings instance) =>
       'nextQuoteNumber': instance.nextQuoteNumber,
       'quoteValidityDays': instance.quoteValidityDays,
       'defaultLowStockGrams': instance.defaultLowStockGrams,
+      'languageUpdatedAt': instance.languageUpdatedAt,
+      'themeUpdatedAt': instance.themeUpdatedAt,
+      'currencyUpdatedAt': instance.currencyUpdatedAt,
     };

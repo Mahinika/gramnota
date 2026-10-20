@@ -14,6 +14,7 @@ import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
 import '../../../l10n/l10n.dart';
+import '../../settings/presentation/business_profile_tip.dart';
 import '../../catalog/presentation/product_picker.dart';
 import '../../customers/domain/customer.dart';
 import '../../customers/presentation/customer_quote_picker.dart';
@@ -1481,6 +1482,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ],
           ];
           final fields = <Widget>[
+            const BusinessProfileTip(),
             if (target != null) ...[
               Text(
                 widget.lineId == null

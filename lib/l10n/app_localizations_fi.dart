@@ -18,6 +18,13 @@ class AppLocalizationsFi extends AppLocalizations {
   String get languageSystem => 'Järjestelmän oletus';
 
   @override
+  String get chooseLanguageTitle => 'Valitse kieli';
+
+  @override
+  String get chooseLanguageBody =>
+      'Tätä kieltä käytetään koko Gramnotassa. Voit vaihtaa sen myöhemmin asetuksissa.';
+
+  @override
   String get themeLabel => 'Ulkoasu';
 
   @override
@@ -187,6 +194,14 @@ class AppLocalizationsFi extends AppLocalizations {
   String get settingsVatOptional => 'ALV % (0, jos ei alv-rekisterissä)';
 
   @override
+  String get settingsVatHint =>
+      'Useimmat harrastajamyyntiä tekevät eivät ole ALV-velvollisia. Uudet verstaat alkavat 0 % ALV:sta, ruotsinkieliset 25 %:sta. Käytä 0 %, jos et veloita ALV:ta.';
+
+  @override
+  String get businessProfileTip =>
+      'Lisää yrityksen nimi ja osoite PDF-tarjouksia varten';
+
+  @override
   String get settingsFailure => 'Oletushävikki %';
 
   @override
@@ -293,11 +308,11 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get setupIntro =>
-      'Tarjoukset käyttävät tulostintasi, sähkön hintaa ja työtunnin hintaa. Tämä käyttöönotto kysyy jokaisen niistä kerran. Voit muuttaa jokaista vastausta myöhemmin asetuksissa.';
+      'Lisää tulostin, vakiokela ja sähkön hinta. Kate, työ ja ALV alkavat oletuksista, joita voit muuttaa asetuksissa.';
 
   @override
   String get setupSkipHint =>
-      'Ohitus jättää sähkön ja työn nollaan, katteen 30 %:iin ja ALV:n 25 %:iin, kunnes täytät ne.';
+      'Ohita tallentaa kielen ja valuutan, 30 % katteen ja ALV-oletuksen. Sähkö ja työ pysyvät nollassa, kunnes asetat ne asetuksissa.';
 
   @override
   String get setupProfileHint =>

@@ -7,6 +7,7 @@ import 'core/app_language_controller.dart';
 import 'core/app_languages.dart';
 import 'core/app_theme_controller.dart';
 import 'core/providers.dart';
+import 'core/workshop_locale_sync.dart';
 import 'core/theme.dart';
 import 'core/theme_mode.dart';
 import 'features/orders/data/orders_providers.dart';
@@ -22,7 +23,10 @@ class GramnotaApp extends ConsumerWidget {
     ref.watch(sharedLinkBootstrapProvider);
     final router = ref.watch(routerProvider);
     final language =
-        ref.watch(appLanguageProvider).asData?.value ?? defaultLanguageCode;
+        ref.watch(appLanguageProvider).asData?.value ??
+        languageForDeviceLocale(
+          WidgetsBinding.instance.platformDispatcher.locale,
+        );
     final store = ref.watch(userStoreProvider);
     if (store != null) {
       ref.listen(settingsProvider(store), (previous, next) {
@@ -30,8 +34,12 @@ class GramnotaApp extends ConsumerWidget {
         if (settings == null) {
           return;
         }
-        ref.read(appLanguageProvider.notifier).applyRemote(settings.languageCode);
-        ref.read(appThemeProvider.notifier).applyRemote(settings.themeMode);
+        applyRemoteWorkshopLocale(
+          store: store,
+          settings: settings,
+          language: ref.read(appLanguageProvider.notifier),
+          theme: ref.read(appThemeProvider.notifier),
+        );
       });
     }
     final appearance =

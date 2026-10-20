@@ -201,6 +201,77 @@ void main() {
       ),
       '/starting',
     );
+    expect(
+      resolveRedirect(
+        location: '/sign-in',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+        showLanguageOnboarding: true,
+      ),
+      '/choose-language',
+    );
+    expect(
+      resolveRedirect(
+        location: '/choose-language',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+        showLanguageOnboarding: true,
+      ),
+      isNull,
+    );
+    expect(
+      resolveRedirect(
+        location: '/choose-language',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+      ),
+      '/sign-in',
+    );
+    expect(
+      resolveRedirect(
+        location: '/choose-language',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: true,
+        setupCompleted: true,
+        finishedLocally: false,
+        showLanguageOnboarding: true,
+      ),
+      '/calculator',
+    );
+    expect(
+      resolveRedirect(
+        location: '/choose-language',
+        firebaseConfigured: true,
+        authLoading: false,
+        signedIn: true,
+        setupCompleted: false,
+        finishedLocally: false,
+        showLanguageOnboarding: true,
+      ),
+      '/workshop-setup',
+    );
+    expect(
+      resolveRedirect(
+        location: '/choose-language',
+        firebaseConfigured: false,
+        authLoading: false,
+        signedIn: false,
+        setupCompleted: null,
+        finishedLocally: false,
+        showLanguageOnboarding: true,
+      ),
+      '/setup',
+    );
   });
 
   test('setupBypassForUid only matches the same uid', () {
