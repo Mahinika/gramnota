@@ -59,8 +59,16 @@ void main() {
     expect(readCurrencyCode({'currencyCode': 'btc'}, 'currencyCode'), 'SEK');
     expect(isIsoCurrency('SEK'), isTrue);
     expect(currencyFractionDigits('JPY'), 0);
+    expect(currencyFractionDigits('ISK'), 0);
     expect(currencyFractionDigits('SEK'), 2);
+    expect(currencyFractionDigits('KWD'), 3);
     expect(currencyCodesInPickerOrder().take(8), featuredCurrencyCodes);
+    expect(currencyOfferedInPicker('ISK'), isTrue);
+    expect(currencyOfferedInPicker('JPY'), isTrue);
+    expect(currencyOfferedInPicker('KWD'), isFalse);
+    expect(currencyOfferedInPicker('BHD'), isFalse);
+    expect(currencyCodesInPickerOrder(), contains('ISK'));
+    expect(currencyCodesInPickerOrder(), isNot(contains('KWD')));
   });
 
   test('money follows the locale without converting the amount', () {

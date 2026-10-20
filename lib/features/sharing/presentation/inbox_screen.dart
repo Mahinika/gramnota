@@ -7,6 +7,7 @@ import 'package:gramnota/l10n/l10n.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/menu_card.dart';
+import '../../../core/save_feedback.dart';
 import '../../../core/text_prompt.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
@@ -167,7 +168,15 @@ class InboxScreen extends ConsumerWidget {
     if (payload is! Map<String, dynamic>) {
       return;
     }
-    final stock = await _copy(store, item.type, payload, l10n);
+    final String stock;
+    try {
+      stock = await _copy(store, item.type, payload, l10n);
+    } on QuoteNumberAllocationFailed {
+      if (context.mounted) {
+        showSaveError(context, l10n.quoteNumberFailed);
+      }
+      return;
+    }
     await store.deleteInboxItem(item.id);
     if (context.mounted) {
       ScaffoldMessenger.of(
@@ -199,7 +208,12 @@ class InboxScreen extends ConsumerWidget {
         return l10n.inboxAddedPrinter;
       case SharedItemType.order:
         final order = PrintOrder.fromJson({...payload, 'id': id});
-        final number = await OrderStock(store).allocateQuoteNumber();
+        final int number;
+        try {
+          number = await OrderStock(store).allocateQuoteNumber();
+        } on Object {
+          throw const QuoteNumberAllocationFailed();
+        }
         await store.saveOrder(
           order.copyWith(
             customerId: '',
@@ -228,6 +242,10 @@ class InboxScreen extends ConsumerWidget {
         return l10n.inboxAddedQuote;
     }
   }
+}
+
+class QuoteNumberAllocationFailed implements Exception {
+  const QuoteNumberAllocationFailed();
 }
 
 String _inboxSentLine(AppLocalizations l10n, InboxItem item) {

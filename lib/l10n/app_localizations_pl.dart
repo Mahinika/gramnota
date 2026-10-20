@@ -1428,7 +1428,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get dashDepositHint =>
-      'Zaliczki liczą się w dniu, w którym je zapisujesz. Reszta liczy się, gdy zamówienie jest wydrukowane albo opłacone. Zysk to przychód bez VAT minus koszt pracy ukończonej w tym miesiącu.';
+      'Zaliczki liczą się w dniu, w którym je zapisujesz. Reszta liczy się, gdy zamówienie jest wydrukowane albo opłacone. Koszt jest dzielony tak samo, więc opłacalne zlecenie nie pokazuje straty w miesiącu zakończenia. Sumy klientów i produktów używają tych samych kwot.';
 
   @override
   String get dashOrders => 'Zamówienia';
@@ -2160,4 +2160,49 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get importPrintFile => 'Plik wydruku';
+
+  @override
+  String get settingsSaveFailed =>
+      'Nie udało się zapisać ustawień. Sprawdź połączenie i spróbuj ponownie.';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Nie udało się usunąć konta. Dane warsztatu nadal tu są.';
+
+  @override
+  String get settingsExportWorkshop => 'Eksportuj warsztat';
+
+  @override
+  String get settingsImportWorkshop => 'Importuj warsztat';
+
+  @override
+  String get settingsExportDone => 'Warsztat wyeksportowany.';
+
+  @override
+  String get settingsImportTitle => 'Importować warsztat?';
+
+  @override
+  String get settingsImportBody =>
+      'Wpisy z pliku są dodawane albo aktualizowane. To, co już tu jest i czego nie ma w pliku, zostaje. Filament już pobrany na wydruk nie wraca, a następny numer wyceny nie cofa się.';
+
+  @override
+  String get settingsImportDone => 'Warsztat zaimportowany.';
+
+  @override
+  String get settingsBackupFailed => 'Nie udało się odczytać tej kopii.';
+
+  @override
+  String get settingsBackupShareFailed =>
+      'Nie udało się wyeksportować warsztatu. Spróbuj ponownie.';
+
+  @override
+  String get orderCustomerSaveFailed =>
+      'Nie udało się powiązać klienta. Sprawdź połączenie i spróbuj ponownie.';
+
+  @override
+  String get quoteNumberFailed =>
+      'Nie udało się nadać numeru wyceny. Sprawdź połączenie i spróbuj ponownie.';
+
+  @override
+  String get calcQuantityAtLeastOne => 'Ilość musi wynosić co najmniej 1.';
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/money.dart';
+import '../../../core/save_feedback.dart';
 import '../../../core/text_prompt.dart';
 import '../../../core/user_store.dart';
 import '../../../l10n/l10n.dart';
@@ -44,7 +45,15 @@ Future<String?> duplicateQuoteAsNew({
   if (confirmed != true) {
     return null;
   }
-  final number = await OrderStock(store).allocateQuoteNumber();
+  final int number;
+  try {
+    number = await OrderStock(store).allocateQuoteNumber();
+  } on Object {
+    if (context.mounted) {
+      showSaveError(context, context.l10n.quoteNumberFailed);
+    }
+    return null;
+  }
   final duplicated = duplicateAsNewQuote(
     source: order,
     id: const Uuid().v4(),
@@ -76,10 +85,11 @@ Future<void> addProductToQuote({
   required List<FilamentSpool> spools,
   required List<PrinterProfile> printers,
 }) async {
+  final l10n = context.l10n;
   if (order.stockDeducted) {
+    showSaveError(context, l10n.calcPrintsLocked);
     return;
   }
-  final l10n = context.l10n;
   if (products.isEmpty) {
     ScaffoldMessenger.of(
       context,
@@ -112,12 +122,23 @@ Future<void> addProductToQuote({
     printers: printers,
   );
   final next = [...orderPrints(order), priced.line];
-  await store.saveOrder(
-    orderWithPrints(order, next).copyWith(
+  try {
+    await store.replaceOrderPrints(
+      orderId: order.id,
+      lines: next,
       title: quoteTitleFor(order, next),
-      updatedAt: DateTime.now().toUtc().toIso8601String(),
-    ),
-  );
+    );
+  } on OrderPrintsLocked {
+    if (context.mounted) {
+      showSaveError(context, context.l10n.calcPrintsLocked);
+    }
+    return;
+  } on Object {
+    if (context.mounted) {
+      showSaveError(context, context.l10n.calcSavePrintFailed);
+    }
+    return;
+  }
   if (context.mounted) {
     final warning = priced.warnings.isEmpty
         ? ''

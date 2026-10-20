@@ -391,7 +391,7 @@
   "dashSignIn": "Connectez-vous pour voir l’atelier.",
   "dashPreviousMonth": "Mois précédent",
   "dashNextMonth": "Mois suivant",
-  "dashDepositHint": "Les acomptes comptent à la date où vous les enregistrez. Le reste compte lorsque la commande est imprimée ou payée. Le bénéfice est le revenu hors TVA moins le coût du travail terminé ce mois-ci.",
+  "dashDepositHint": "Les acomptes comptent à la date où vous les enregistrez. Le reste compte lorsque la commande est imprimée ou payée. Le coût est réparti de la même façon, afin qu'un travail rentable n'apparaisse pas comme une perte le mois où il est terminé. Les totaux clients et produits utilisent ces mêmes montants.",
   "dashOrders": "Commandes",
   "dashRevenueIncl": "Revenu TVA incluse",
   "dashRevenueExcl": "Revenu hors TVA",
@@ -588,5 +588,18 @@
   "versionLabel": "Version",
   "versionWithBuild": "Version {version} (compilation {build})",
   "updateBuildOnly": "Compilation {build}.",
-  "importPrintFile": "Fichier d'impression"
+  "importPrintFile": "Fichier d'impression",
+  "settingsSaveFailed": "Impossible d'enregistrer les réglages. Vérifiez la connexion et réessayez.",
+  "settingsDeleteFailed": "Impossible de supprimer le compte. Les données de l'atelier sont toujours là.",
+  "settingsExportWorkshop": "Exporter l'atelier",
+  "settingsImportWorkshop": "Importer l'atelier",
+  "settingsExportDone": "Atelier exporté.",
+  "settingsImportTitle": "Importer l'atelier ?",
+  "settingsImportBody": "Les éléments du fichier sont ajoutés ou mis à jour. Ce qui est déjà ici et manque dans le fichier reste. Le filament déjà prélevé pour une impression n'est pas remis, et le prochain numéro de devis ne recule pas.",
+  "settingsImportDone": "Atelier importé.",
+  "settingsBackupFailed": "Impossible de lire cette sauvegarde.",
+  "settingsBackupShareFailed": "Impossible d'exporter l'atelier. Réessayez.",
+  "orderCustomerSaveFailed": "Impossible de lier le client. Vérifiez la connexion et réessayez.",
+  "quoteNumberFailed": "Impossible d'attribuer un numéro de devis. Vérifiez la connexion et réessayez.",
+  "calcQuantityAtLeastOne": "La quantité doit être d'au moins 1."
 }

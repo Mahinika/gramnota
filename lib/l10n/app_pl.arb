@@ -391,7 +391,7 @@
   "dashSignIn": "Zaloguj się, aby zobaczyć warsztat.",
   "dashPreviousMonth": "Poprzedni miesiąc",
   "dashNextMonth": "Następny miesiąc",
-  "dashDepositHint": "Zaliczki liczą się w dniu, w którym je zapisujesz. Reszta liczy się, gdy zamówienie jest wydrukowane albo opłacone. Zysk to przychód bez VAT minus koszt pracy ukończonej w tym miesiącu.",
+  "dashDepositHint": "Zaliczki liczą się w dniu, w którym je zapisujesz. Reszta liczy się, gdy zamówienie jest wydrukowane albo opłacone. Koszt jest dzielony tak samo, więc opłacalne zlecenie nie pokazuje straty w miesiącu zakończenia. Sumy klientów i produktów używają tych samych kwot.",
   "dashOrders": "Zamówienia",
   "dashRevenueIncl": "Przychód z VAT",
   "dashRevenueExcl": "Przychód bez VAT",
@@ -588,5 +588,18 @@
   "versionLabel": "Wersja",
   "versionWithBuild": "Wersja {version} (kompilacja {build})",
   "updateBuildOnly": "Kompilacja {build}.",
-  "importPrintFile": "Plik wydruku"
+  "importPrintFile": "Plik wydruku",
+  "settingsSaveFailed": "Nie udało się zapisać ustawień. Sprawdź połączenie i spróbuj ponownie.",
+  "settingsDeleteFailed": "Nie udało się usunąć konta. Dane warsztatu nadal tu są.",
+  "settingsExportWorkshop": "Eksportuj warsztat",
+  "settingsImportWorkshop": "Importuj warsztat",
+  "settingsExportDone": "Warsztat wyeksportowany.",
+  "settingsImportTitle": "Importować warsztat?",
+  "settingsImportBody": "Wpisy z pliku są dodawane albo aktualizowane. To, co już tu jest i czego nie ma w pliku, zostaje. Filament już pobrany na wydruk nie wraca, a następny numer wyceny nie cofa się.",
+  "settingsImportDone": "Warsztat zaimportowany.",
+  "settingsBackupFailed": "Nie udało się odczytać tej kopii.",
+  "settingsBackupShareFailed": "Nie udało się wyeksportować warsztatu. Spróbuj ponownie.",
+  "orderCustomerSaveFailed": "Nie udało się powiązać klienta. Sprawdź połączenie i spróbuj ponownie.",
+  "quoteNumberFailed": "Nie udało się nadać numeru wyceny. Sprawdź połączenie i spróbuj ponownie.",
+  "calcQuantityAtLeastOne": "Ilość musi wynosić co najmniej 1."
 }

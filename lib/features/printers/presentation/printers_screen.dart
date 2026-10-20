@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:gramnota/l10n/l10n.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/currencies.dart';
 import '../../../core/format.dart';
+import '../../../core/save_feedback.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
@@ -173,9 +175,33 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                   id: widget.id,
                   name: _name.text.trim(),
                   powerWatts: parsePositiveInt(_watts.text) ?? 0,
-                  purchasePriceMinor: parseMinor(_price.text) ?? 0,
+                  purchasePriceMinor:
+                      parseMoneyInput(
+                        _price.text,
+                        currencyCode:
+                            ref
+                                .read(settingsProvider(store))
+                                .asData
+                                ?.value
+                                .currencyCode ??
+                            defaultCurrencyCode,
+                        locale: context.formattingLocale,
+                      ) ??
+                      0,
                   lifetimeHours: parseNonNegativeDouble(_life.text) ?? 0,
-                  maintenanceMinorPerHour: parseMinor(_maintenance.text) ?? 0,
+                  maintenanceMinorPerHour:
+                      parseMoneyInput(
+                        _maintenance.text,
+                        currencyCode:
+                            ref
+                                .read(settingsProvider(store))
+                                .asData
+                                ?.value
+                                .currencyCode ??
+                            defaultCurrencyCode,
+                        locale: context.formattingLocale,
+                      ) ??
+                      0,
                 ).toJson(),
               ),
               icon: const Icon(Icons.send_outlined),
@@ -281,9 +307,21 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                 return;
               }
               final watts = parsePositiveInt(_watts.text);
-              final price = parseMinor(_price.text);
+              final currency =
+                  ref.read(settingsProvider(store)).asData?.value.currencyCode ??
+                  defaultCurrencyCode;
+              final locale = context.formattingLocale;
+              final price = parseMoneyInput(
+                _price.text,
+                currencyCode: currency,
+                locale: locale,
+              );
               final lifetime = parseNonNegativeDouble(_life.text);
-              final maintenance = parseMinor(_maintenance.text);
+              final maintenance = parseMoneyInput(
+                _maintenance.text,
+                currencyCode: currency,
+                locale: locale,
+              );
               if (watts == null || watts <= 0) {
                 setState(() => _error = context.l10n.setupWattsRequired);
                 return;
@@ -308,6 +346,7 @@ class _PrinterEditScreenState extends ConsumerState<PrinterEditScreen> {
                 await store.savePrinter(printer);
               } on Object {
                 if (context.mounted) {
+                  showSaveError(context, context.l10n.printerSaveFailed);
                   setState(() => _error = context.l10n.printerSaveFailed);
                 }
                 return;

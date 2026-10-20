@@ -391,7 +391,7 @@
   "dashSignIn": "Melde dich an, um die Werkstatt zu sehen.",
   "dashPreviousMonth": "Vorheriger Monat",
   "dashNextMonth": "Nächster Monat",
-  "dashDepositHint": "Anzahlungen zählen an dem Tag, an dem du sie erfasst. Der Rest zählt, wenn der Auftrag gedruckt oder bezahlt wird. Der Gewinn ist der Umsatz exkl. MwSt. abzüglich der Kosten für die Arbeit, die in diesem Monat abgeschlossen wurde.",
+  "dashDepositHint": "Anzahlungen zählen an dem Tag, an dem du sie erfasst. Der Rest zählt, wenn der Auftrag gedruckt oder bezahlt wird. Die Kosten werden genauso aufgeteilt, damit ein profitabler Auftrag im Abschlussmonat nicht als Verlust erscheint. Kunden- und Produktsummen verwenden dieselben Beträge.",
   "dashOrders": "Aufträge",
   "dashRevenueIncl": "Umsatz inkl. MwSt.",
   "dashRevenueExcl": "Umsatz exkl. MwSt.",
@@ -588,5 +588,18 @@
   "versionLabel": "Version",
   "versionWithBuild": "Version {version} (Build {build})",
   "updateBuildOnly": "Build {build}.",
-  "importPrintFile": "Druckdatei"
+  "importPrintFile": "Druckdatei",
+  "settingsSaveFailed": "Die Einstellungen konnten nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.",
+  "settingsDeleteFailed": "Das Konto konnte nicht gelöscht werden. Die Daten der Werkstatt sind noch da.",
+  "settingsExportWorkshop": "Werkstatt exportieren",
+  "settingsImportWorkshop": "Werkstatt importieren",
+  "settingsExportDone": "Werkstatt exportiert.",
+  "settingsImportTitle": "Werkstatt importieren?",
+  "settingsImportBody": "Einträge in der Datei werden hinzugefügt oder aktualisiert. Was hier schon ist und in der Datei fehlt, bleibt. Filament, das für einen Druck schon entnommen wurde, wird nicht zurückgelegt, und die nächste Angebotsnummer geht nicht zurück.",
+  "settingsImportDone": "Werkstatt importiert.",
+  "settingsBackupFailed": "Diese Sicherung konnte nicht gelesen werden.",
+  "settingsBackupShareFailed": "Die Werkstatt konnte nicht exportiert werden. Versuche es erneut.",
+  "orderCustomerSaveFailed": "Der Kunde konnte nicht verknüpft werden. Prüfe die Verbindung und versuche es erneut.",
+  "quoteNumberFailed": "Eine Angebotsnummer konnte nicht vergeben werden. Prüfe die Verbindung und versuche es erneut.",
+  "calcQuantityAtLeastOne": "Die Menge muss mindestens 1 sein."
 }

@@ -133,6 +133,12 @@ void main() {
     await tester.pump();
     expect(find.textContaining('whole number'), findsOneWidget);
 
+    await tester.enterText(find.widgetWithText(TextField, 'Quantity'), '0');
+    await tester.pump();
+    expect(find.text('Quantity must be at least 1.'), findsOneWidget);
+    expect(find.text('Quantity below 1 is priced as 1.'), findsNothing);
+    expect(find.text(formatMoney(2183, 'SEK', locale: 'en')), findsNothing);
+
     await tester.enterText(
       find.widgetWithText(TextField, 'Prep minutes'),
       '15,4',

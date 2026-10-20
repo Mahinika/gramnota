@@ -10,7 +10,9 @@ permissions:
 
 concurrency:
   group: android-apk-${{ github.ref }}
-  cancel-in-progress: true
+  # A cancel after the APK upload can leave latest.json pointing at a
+  # different file. Later pushes wait instead of interrupting a publish.
+  cancel-in-progress: false
 
 jobs:
   apk:

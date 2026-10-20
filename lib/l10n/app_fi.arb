@@ -391,7 +391,7 @@
   "dashSignIn": "Kirjaudu sisään nähdäksesi verstaan.",
   "dashPreviousMonth": "Edellinen kuukausi",
   "dashNextMonth": "Seuraava kuukausi",
-  "dashDepositHint": "Ennakot lasketaan kirjaamallesi päivälle. Loppu lasketaan, kun tilaus on tulostettu tai maksettu. Voitto on liikevaihto ilman ALV:tä miinus tässä kuussa valmistuneen työn kustannus.",
+  "dashDepositHint": "Ennakot lasketaan kirjaamallesi päivälle. Loppu lasketaan, kun tilaus on tulostettu tai maksettu. Kustannus jaetaan samalla tavalla, jotta kannattava työ ei näy tappiona valmistumiskuukautena. Asiakas- ja tuoteyhteissummat käyttävät samoja summia.",
   "dashOrders": "Tilaukset",
   "dashRevenueIncl": "Liikevaihto sis. ALV",
   "dashRevenueExcl": "Liikevaihto ilman ALV:tä",
@@ -588,5 +588,18 @@
   "versionLabel": "Versio",
   "versionWithBuild": "Versio {version} (koonti {build})",
   "updateBuildOnly": "Koonti {build}.",
-  "importPrintFile": "Tulostustiedosto"
+  "importPrintFile": "Tulostustiedosto",
+  "settingsSaveFailed": "Asetuksia ei voitu tallentaa. Tarkista yhteys ja yritä uudelleen.",
+  "settingsDeleteFailed": "Tiliä ei voitu poistaa. Verstaan tiedot ovat yhä täällä.",
+  "settingsExportWorkshop": "Vie verstas",
+  "settingsImportWorkshop": "Tuo verstas",
+  "settingsExportDone": "Verstas vietiin.",
+  "settingsImportTitle": "Tuodaanko verstas?",
+  "settingsImportBody": "Tiedoston tiedot lisätään tai päivitetään. Se, mikä on jo täällä ja puuttuu tiedostosta, säilyy. Tulosteeseen jo käytettyä filamenttia ei palauteta, eikä seuraava tarjousnumero pienene.",
+  "settingsImportDone": "Verstas tuotiin.",
+  "settingsBackupFailed": "Varmuuskopiota ei voitu lukea.",
+  "settingsBackupShareFailed": "Verstasta ei voitu viedä. Yritä uudelleen.",
+  "orderCustomerSaveFailed": "Asiakasta ei voitu liittää. Tarkista yhteys ja yritä uudelleen.",
+  "quoteNumberFailed": "Tarjousnumeroa ei voitu antaa. Tarkista yhteys ja yritä uudelleen.",
+  "calcQuantityAtLeastOne": "Määrän on oltava vähintään 1."
 }

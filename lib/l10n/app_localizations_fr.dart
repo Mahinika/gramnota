@@ -1433,7 +1433,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get dashDepositHint =>
-      'Les acomptes comptent à la date où vous les enregistrez. Le reste compte lorsque la commande est imprimée ou payée. Le bénéfice est le revenu hors TVA moins le coût du travail terminé ce mois-ci.';
+      'Les acomptes comptent à la date où vous les enregistrez. Le reste compte lorsque la commande est imprimée ou payée. Le coût est réparti de la même façon, afin qu\'un travail rentable n\'apparaisse pas comme une perte le mois où il est terminé. Les totaux clients et produits utilisent ces mêmes montants.';
 
   @override
   String get dashOrders => 'Commandes';
@@ -2168,4 +2168,49 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get importPrintFile => 'Fichier d\'impression';
+
+  @override
+  String get settingsSaveFailed =>
+      'Impossible d\'enregistrer les réglages. Vérifiez la connexion et réessayez.';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Impossible de supprimer le compte. Les données de l\'atelier sont toujours là.';
+
+  @override
+  String get settingsExportWorkshop => 'Exporter l\'atelier';
+
+  @override
+  String get settingsImportWorkshop => 'Importer l\'atelier';
+
+  @override
+  String get settingsExportDone => 'Atelier exporté.';
+
+  @override
+  String get settingsImportTitle => 'Importer l\'atelier ?';
+
+  @override
+  String get settingsImportBody =>
+      'Les éléments du fichier sont ajoutés ou mis à jour. Ce qui est déjà ici et manque dans le fichier reste. Le filament déjà prélevé pour une impression n\'est pas remis, et le prochain numéro de devis ne recule pas.';
+
+  @override
+  String get settingsImportDone => 'Atelier importé.';
+
+  @override
+  String get settingsBackupFailed => 'Impossible de lire cette sauvegarde.';
+
+  @override
+  String get settingsBackupShareFailed =>
+      'Impossible d\'exporter l\'atelier. Réessayez.';
+
+  @override
+  String get orderCustomerSaveFailed =>
+      'Impossible de lier le client. Vérifiez la connexion et réessayez.';
+
+  @override
+  String get quoteNumberFailed =>
+      'Impossible d\'attribuer un numéro de devis. Vérifiez la connexion et réessayez.';
+
+  @override
+  String get calcQuantityAtLeastOne => 'La quantité doit être d\'au moins 1.';
 }

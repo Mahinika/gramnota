@@ -1431,7 +1431,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get dashDepositHint =>
-      'Aanbetalingen tellen op de datum waarop je ze vastlegt. De rest telt wanneer de bestelling is geprint of betaald. Winst is omzet excl. btw min de kosten van werk dat deze maand is afgerond.';
+      'Aanbetalingen tellen op de datum waarop je ze vastlegt. De rest telt wanneer de bestelling is geprint of betaald. De kosten worden op dezelfde manier verdeeld, zodat een winstgevende klus geen verlies toont in de maand waarin je hem afrondt. Klant- en producttotalen gebruiken diezelfde bedragen.';
 
   @override
   String get dashOrders => 'Bestellingen';
@@ -2166,4 +2166,49 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get importPrintFile => 'Printbestand';
+
+  @override
+  String get settingsSaveFailed =>
+      'Instellingen opslaan is mislukt. Controleer de verbinding en probeer het opnieuw.';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Het account kon niet worden verwijderd. De gegevens van de werkplaats staan er nog.';
+
+  @override
+  String get settingsExportWorkshop => 'Werkplaats exporteren';
+
+  @override
+  String get settingsImportWorkshop => 'Werkplaats importeren';
+
+  @override
+  String get settingsExportDone => 'Werkplaats geëxporteerd.';
+
+  @override
+  String get settingsImportTitle => 'Werkplaats importeren?';
+
+  @override
+  String get settingsImportBody =>
+      'Records in het bestand worden toegevoegd of bijgewerkt. Wat hier al staat en in het bestand ontbreekt, blijft. Filament dat al voor een print is afgeboekt komt niet terug, en het volgende offertenummer gaat niet terug.';
+
+  @override
+  String get settingsImportDone => 'Werkplaats geïmporteerd.';
+
+  @override
+  String get settingsBackupFailed => 'Die back-up kon niet worden gelezen.';
+
+  @override
+  String get settingsBackupShareFailed =>
+      'De werkplaats kon niet worden geëxporteerd. Probeer het opnieuw.';
+
+  @override
+  String get orderCustomerSaveFailed =>
+      'De klant kon niet worden gekoppeld. Controleer de verbinding en probeer het opnieuw.';
+
+  @override
+  String get quoteNumberFailed =>
+      'Er kon geen offertenummer worden toegekend. Controleer de verbinding en probeer het opnieuw.';
+
+  @override
+  String get calcQuantityAtLeastOne => 'Het aantal moet minstens 1 zijn.';
 }

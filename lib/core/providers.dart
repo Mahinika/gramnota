@@ -108,15 +108,14 @@ String? sharedText(List<SharedMediaFile> files) {
   return null;
 }
 
-Future<void> signInWithGoogle({bool darkPage = false}) async {
-  final UserCredential credential;
+Future<AuthCredential> googleAuthCredential({bool darkPage = false}) async {
   if (_isAndroid) {
     final account = await GoogleSignIn.instance.authenticate();
-    final google = GoogleAuthProvider.credential(
+    return GoogleAuthProvider.credential(
       idToken: account.authentication.idToken,
     );
-    credential = await FirebaseAuth.instance.signInWithCredential(google);
-  } else if (_isWindows) {
+  }
+  if (_isWindows) {
     // signInWithProvider is rejected by the Firebase C++ SDK on Windows.
     final options = DefaultFirebaseOptions.windows;
     final tokens = await requestDesktopGoogleCredential(
@@ -127,16 +126,39 @@ Future<void> signInWithGoogle({bool darkPage = false}) async {
       storageBucket: options.storageBucket,
       dark: darkPage,
     );
-    credential = await FirebaseAuth.instance.signInWithCredential(
-      GoogleAuthProvider.credential(
-        idToken: tokens.idToken,
-        accessToken: tokens.accessToken,
-      ),
+    return GoogleAuthProvider.credential(
+      idToken: tokens.idToken,
+      accessToken: tokens.accessToken,
+    );
+  }
+  throw SignInFailed(activeGramnotaL10n.authGooglePlatforms);
+}
+
+Future<void> signInWithGoogle({bool darkPage = false}) async {
+  final credential = await FirebaseAuth.instance.signInWithCredential(
+    await googleAuthCredential(darkPage: darkPage),
+  );
+  await _rememberSignedInUser(credential.user);
+}
+
+/// Asks Google (or the emulator tester) to sign in again, then refreshes
+/// the current user. Account deletion calls this before it touches data.
+Future<void> reauthenticateCurrentUser({bool darkPage = false}) async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
+    throw FirebaseAuthException(code: 'requires-recent-login');
+  }
+  final AuthCredential credential;
+  if (useFirebaseEmulator &&
+      (user.email ?? '').trim().toLowerCase() == emulatorTesterEmail) {
+    credential = EmailAuthProvider.credential(
+      email: emulatorTesterEmail,
+      password: emulatorTesterPassword,
     );
   } else {
-    throw SignInFailed(activeGramnotaL10n.authGooglePlatforms);
+    credential = await googleAuthCredential(darkPage: darkPage);
   }
-  await _rememberSignedInUser(credential.user);
+  await user.reauthenticateWithCredential(credential);
 }
 
 /// Email sign-in for the local Auth emulator only. The button is compiled in

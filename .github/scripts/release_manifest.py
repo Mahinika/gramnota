@@ -48,12 +48,44 @@ def artifact(
     }
 
 
+class OlderBuild(ValueError):
+    """This platform's published build is already newer."""
+
+
+def published_build(current: dict[str, object], platform: str) -> int | None:
+    section = current.get(platform)
+    if not isinstance(section, dict):
+        return None
+    build = section.get("build")
+    if isinstance(build, bool):
+        return None
+    if isinstance(build, int):
+        return build
+    if isinstance(build, str) and build.isdigit():
+        return int(build)
+    return None
+
+
+def build_is_monotonic(current: dict[str, object], platform: str, build: int) -> bool:
+    """True when [build] does not go backwards for this platform only."""
+    existing = published_build(current, platform)
+    if existing is None:
+        return True
+    return build >= existing
+
+
 def merge_manifest(
     current: dict[str, object],
     platform: str,
     section: dict[str, object],
     version: str,
 ) -> dict[str, object]:
+    incoming = published_build({platform: section}, platform)
+    if incoming is not None and not build_is_monotonic(current, platform, incoming):
+        existing = published_build(current, platform)
+        raise OlderBuild(
+            f"{platform} build {incoming} is older than published build {existing}"
+        )
     other = other_platform(platform)
     merged: dict[str, object] = {"version": version}
     preserved = current.get(other)
@@ -113,10 +145,19 @@ def main(argv: list[str] | None = None) -> int:
     check.add_argument("--expected", required=True)
     check.add_argument("--platform", required=True)
 
+    accepts = sub.add_parser("accepts")
+    accepts.add_argument("--current", required=True)
+    accepts.add_argument("--platform", required=True)
+    accepts.add_argument("--build", required=True)
+
     args = parser.parse_args(argv)
     if args.cmd == "sha256":
         print(file_sha256(args.path))
         return 0
+    if args.cmd == "accepts":
+        current = _load(args.current)
+        ok = build_is_monotonic(current, args.platform, int(args.build))
+        return 0 if ok else 10
     if args.cmd == "merge":
         section = artifact(
             platform=args.platform,
@@ -126,7 +167,11 @@ def main(argv: list[str] | None = None) -> int:
             date=args.date,
             sha256=args.sha256,
         )
-        merged = merge_manifest(_load(args.current), args.platform, section, args.version)
+        try:
+            merged = merge_manifest(_load(args.current), args.platform, section, args.version)
+        except OlderBuild as error:
+            print(error, file=sys.stderr)
+            return 10
         Path(args.out).write_text(
             json.dumps(merged, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",

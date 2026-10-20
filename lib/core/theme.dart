@@ -23,8 +23,10 @@ ThemeData buildGramnotaTheme({Brightness brightness = Brightness.light}) {
           seedColor: gramnotaGreen,
           brightness: Brightness.dark,
         ).copyWith(
-          primary: gramnotaGreen,
-          onPrimary: Colors.white,
+          // Bright green is the primary text and icon color on night
+          // surfaces. Filled buttons keep the darker brand green below.
+          primary: gramnotaGreenBright,
+          onPrimary: const Color(0xFF04281C),
           primaryContainer: const Color(0xFF1F4A3C),
           onPrimaryContainer: const Color(0xFFE7F8F1),
           secondary: const Color(0xFFA9C7B8),
@@ -169,6 +171,8 @@ ThemeData buildGramnotaTheme({Brightness brightness = Brightness.light}) {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
+        backgroundColor: gramnotaGreen,
+        foregroundColor: Colors.white,
         minimumSize: const Size(48, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

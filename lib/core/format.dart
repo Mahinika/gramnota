@@ -23,6 +23,17 @@ String formatMoney(int minor, String currencyCode, {String? locale}) {
   final code = normalizeCurrencyCode(currencyCode);
   final loc = _formattingLocale(locale);
   final digits = currencyFractionDigits(code);
+  // ISK and SEK both render as "kr". The code keeps an Icelandic amount
+  // from looking like Swedish kronor. Storage is still hundredths.
+  if (code == 'ISK') {
+    final format = NumberFormat.currency(
+      locale: loc,
+      name: code,
+      symbol: 'ISK',
+      decimalDigits: digits,
+    );
+    return format.format(minor / 100);
+  }
   final format = NumberFormat.simpleCurrency(
     locale: loc,
     name: code,

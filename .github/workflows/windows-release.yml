@@ -13,7 +13,9 @@ permissions:
 
 concurrency:
   group: windows-release-${{ github.ref }}
-  cancel-in-progress: true
+  # A cancel after the installer upload can leave latest.json pointing at a
+  # different file. Later pushes wait instead of interrupting a publish.
+  cancel-in-progress: false
 
 jobs:
   windows:

@@ -230,13 +230,31 @@ void main() {
   });
 
   test('a dated deposit and the final payment land in different months', () {
+    final priced = money(cost: 10000, net: 13000, vat: 3250, total: 16250);
     final job = sample(
       id: 'split',
       status: OrderStatus.paid,
       stamp: '2026-04-10T10:00:00.000Z',
       revenueAt: '2026-04-10T10:00:00.000Z',
-      breakdown: money(cost: 10000, net: 13000, vat: 3250, total: 16250),
+      customerId: 'anna',
+      title: 'Dragon',
+      breakdown: priced,
       depositMinor: 5000,
+      lines: [
+        QuoteLine(
+          id: 'line',
+          title: 'Dragon',
+          quantity: 1,
+          printTimeSeconds: 60,
+          filaments: const [
+            FilamentUsage(filamentId: 'pla', grams: 10, material: 'PLA'),
+          ],
+          markupBasisPoints: 0,
+          failureBasisPoints: 0,
+          vatBasisPoints: 2500,
+          breakdown: priced,
+        ),
+      ],
     ).copyWith(depositAt: '2026-03-15T12:00:00.000Z');
 
     final march = buildDashboard(
@@ -244,6 +262,7 @@ void main() {
       spools: const [],
       year: 2026,
       month: 3,
+      customerNames: const {'anna': 'Anna'},
       toLocal: plusTwoHours,
     );
     expect(march.orderCount, 0);
@@ -251,14 +270,18 @@ void main() {
     expect(march.finalPaymentsMinor, 0);
     expect(march.revenueInclVatMinor, 5000);
     expect(march.revenueExclVatMinor, 4000);
-    expect(march.costMinor, 0);
-    expect(march.profitMinor, 4000);
+    expect(march.costMinor, 3077);
+    expect(march.profitMinor, 923);
+    expect(march.topCustomers.single.totalMinor, 5000);
+    expect(march.topProducts.single.totalMinor, 5000);
+    expect(march.materials, isEmpty);
 
     final april = buildDashboard(
       orders: [job],
       spools: const [],
       year: 2026,
       month: 4,
+      customerNames: const {'anna': 'Anna'},
       toLocal: plusTwoHours,
     );
     expect(april.orderCount, 1);
@@ -266,9 +289,15 @@ void main() {
     expect(april.finalPaymentsMinor, 11250);
     expect(april.revenueInclVatMinor, 11250);
     expect(april.revenueExclVatMinor, 9000);
-    expect(april.costMinor, 10000);
-    expect(april.profitMinor, -1000);
+    expect(april.costMinor, 6923);
+    expect(april.profitMinor, 2077);
+    expect(april.profitMinor, greaterThanOrEqualTo(0));
+    expect(march.profitMinor + april.profitMinor, 3000);
+    expect(march.costMinor + april.costMinor, 10000);
     expect(april.revenueOrders.single.totalMinor, 11250);
+    expect(april.topCustomers.single.totalMinor, 11250);
+    expect(april.topProducts.single.totalMinor, 11250);
+    expect(april.materials.single.grams, 10);
 
     final together = job.copyWith(depositAt: '2026-04-02T12:00:00.000Z');
     final sameMonth = buildDashboard(
@@ -280,9 +309,36 @@ void main() {
     );
     expect(sameMonth.revenueInclVatMinor, 16250);
     expect(sameMonth.revenueExclVatMinor, 13000);
+    expect(sameMonth.costMinor, 10000);
     expect(sameMonth.profitMinor, 3000);
     expect(sameMonth.depositsReceivedMinor, 5000);
     expect(sameMonth.finalPaymentsMinor, 11250);
+    expect(sameMonth.topCustomers.single.totalMinor, 16250);
+  });
+
+  test('an unfinished deposit counts cash but not cost', () {
+    final open = sample(
+      id: 'open',
+      status: OrderStatus.accepted,
+      stamp: '2026-03-01T10:00:00.000Z',
+      customerId: 'anna',
+      title: 'Clip',
+      breakdown: money(cost: 4000, net: 8000, vat: 2000, total: 10000),
+      depositMinor: 2500,
+    ).copyWith(depositAt: '2026-03-04T12:00:00.000Z');
+    final march = buildDashboard(
+      orders: [open],
+      spools: const [],
+      year: 2026,
+      month: 3,
+      customerNames: const {'anna': 'Anna'},
+      toLocal: plusTwoHours,
+    );
+    expect(march.revenueInclVatMinor, 2500);
+    expect(march.costMinor, 0);
+    expect(march.profitMinor, greaterThanOrEqualTo(0));
+    expect(march.orderCount, 0);
+    expect(march.topCustomers.single.totalMinor, 2500);
   });
 
   test('a deposit without a date stays in the finish month', () {

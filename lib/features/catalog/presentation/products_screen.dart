@@ -300,7 +300,13 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
       ?_percentError(l10n, l10n.productErrVat, _vat.text),
       for (final row in _filaments)
         ?_numberError(l10n, l10n.productErrGrams, row.grams.text),
-      for (final extra in _extras) ?_moneyError(l10n, extra.cost.text),
+      for (final extra in _extras)
+        ?_moneyError(
+          l10n,
+          extra.cost.text,
+          currencyCode: settings.currencyCode,
+          locale: context.formattingLocale,
+        ),
     ];
     if (problems.isNotEmpty) {
       setState(() => _message = problems.join(' '));
@@ -332,12 +338,24 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
       extras: [
         for (final extra in _extras)
           if (extra.name.text.trim().isNotEmpty ||
-              (parseMinor(extra.cost.text) ?? 0) > 0)
+              (parseMoneyInput(
+                    extra.cost.text,
+                    currencyCode: settings.currencyCode,
+                    locale: context.formattingLocale,
+                  ) ??
+                  0) >
+                  0)
             ExtraCost(
               name: extra.name.text.trim().isEmpty
                   ? context.l10n.productExtra
                   : extra.name.text.trim(),
-              costMinor: parseMinor(extra.cost.text) ?? 0,
+              costMinor:
+                  parseMoneyInput(
+                    extra.cost.text,
+                    currencyCode: settings.currencyCode,
+                    locale: context.formattingLocale,
+                  ) ??
+                  0,
             ),
       ],
       markupBasisPoints:
@@ -724,9 +742,16 @@ String? _percentError(AppLocalizations l10n, String label, String text) {
   return l10n.productReadPercent(label);
 }
 
-String? _moneyError(AppLocalizations l10n, String text) {
+String? _moneyError(
+  AppLocalizations l10n,
+  String text, {
+  required String currencyCode,
+  String? locale,
+}) {
   final trimmed = text.trim();
-  if (trimmed.isEmpty || parseMinor(trimmed) != null) {
+  if (trimmed.isEmpty ||
+      parseMoneyInput(trimmed, currencyCode: currencyCode, locale: locale) !=
+          null) {
     return null;
   }
   return l10n.productReadExtraCost;

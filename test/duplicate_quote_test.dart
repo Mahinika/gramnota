@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -157,7 +158,6 @@ void main() {
     await store.saveSettings(
       const WorkshopSettings(
         setupCompleted: true,
-        nextQuoteNumber: 4,
         electricityMinorPerKwh: 0,
         laborMinorPerHour: 0,
         defaultMarkupBasisPoints: 0,
@@ -165,6 +165,7 @@ void main() {
         defaultFailureBasisPoints: 0,
       ),
     );
+    await store.settingsDoc.set({'nextQuoteNumber': 4}, SetOptions(merge: true));
     await store.saveCustomer(const Customer(id: 'ada', name: 'Ada'));
     await store.saveFilament(
       const FilamentSpool(

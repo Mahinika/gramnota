@@ -198,15 +198,18 @@ String revenueRecognizedAt(PrintOrder order) {
 
 /// Month figures for printed and paid orders, plus the live pipeline.
 ///
-/// Revenue, cost, profit, filament, customers, and products use the selected
-/// month. A dated deposit counts in the month it was received. The rest of a
+/// Revenue, cost, profit, customers, and products use the selected month.
+/// A dated deposit counts in the month it was received. The rest of a
 /// printed or paid order counts in the month the work was first finished, so
 /// a deposit and the final payment can fall in different months. An order
-/// with no deposit date keeps its whole total in the finish month.
+/// with no deposit date keeps its whole total in the finish month. Cost is
+/// split in that same proportion, so each month's profit uses the cost that
+/// belongs to the revenue counted there. Customer and product totals use
+/// those same amounts. Filament grams stay on the finish month.
 ///
 /// Pipeline, open deposits, and overdue quotes are everything still open, so
 /// an empty month can still show work that is not finished. Profit is the
-/// month's revenue excl. VAT minus the cost of work finished that month.
+/// month's revenue excl. VAT minus the cost attributed to that month.
 DashboardSnapshot buildDashboard({
   required List<PrintOrder> orders,
   required List<FilamentSpool> spools,
@@ -249,46 +252,69 @@ DashboardSnapshot buildDashboard({
     final deposit = recognizedDepositMinor(order);
     final totalForShare = order.breakdown.totalMinor;
     final netForShare = order.breakdown.netMinor;
+    final costForShare = order.breakdown.costMinor;
     final sharedNet = _shareMinor(netForShare, deposit, totalForShare);
     final depositNet = sharedNet > netForShare ? netForShare : sharedNet;
-    if (deposit > 0 && _inMonth(order.depositAt, year, month, toLocal)) {
+    final counts = statusCountsAsRevenue(order.status);
+    final depositInMonth =
+        deposit > 0 && _inMonth(order.depositAt, year, month, toLocal);
+    final finishInMonth =
+        counts && _inMonth(revenueRecognizedAt(order), year, month, toLocal);
+    if (depositInMonth) {
       accum.depositsReceived += deposit;
       accum.incl += deposit;
       accum.excl += depositNet;
     }
-    if (!statusCountsAsRevenue(order.status)) {
+    if (counts) {
+      accum.cost += _monthPortion(
+        amount: costForShare,
+        deposit: deposit,
+        whole: totalForShare,
+        depositInMonth: depositInMonth,
+        finishInMonth: finishInMonth,
+      );
+    }
+    if (!depositInMonth && !finishInMonth) {
       continue;
     }
-    if (!_inMonth(revenueRecognizedAt(order), year, month, toLocal)) {
-      continue;
-    }
-    final total = totalForShare;
-    final net = netForShare;
-    final remainder = total - deposit;
-    final remainderNet = net - depositNet;
-    accum.orderCount += 1;
-    accum.incl += remainder;
-    accum.excl += remainderNet;
-    accum.finalPayments += remainder;
-    accum.cost += order.breakdown.costMinor;
     final customerLabel = _customerLabel(
       order.customerId,
       customerNames,
       strings,
     );
-    rows.add(
-      DashboardOrderRow(
-        id: order.id,
-        title: order.title.trim().isEmpty
-            ? strings.dashUntitled
-            : order.title.trim(),
-        status: order.status,
-        totalMinor: remainder,
-        customerLabel: customerLabel,
-        currencyCode: accum.currencyCode,
+    if (finishInMonth) {
+      final remainder = totalForShare - deposit;
+      final remainderNet = netForShare - depositNet;
+      accum.orderCount += 1;
+      accum.incl += remainder;
+      accum.excl += remainderNet;
+      accum.finalPayments += remainder;
+      rows.add(
+        DashboardOrderRow(
+          id: order.id,
+          title: order.title.trim().isEmpty
+              ? strings.dashUntitled
+              : order.title.trim(),
+          status: order.status,
+          totalMinor: remainder,
+          customerLabel: customerLabel,
+          currencyCode: accum.currencyCode,
+        ),
+      );
+    }
+    _addCustomer(
+      customers,
+      order,
+      customerLabel,
+      accum.currencyCode,
+      _monthPortion(
+        amount: totalForShare,
+        deposit: deposit,
+        whole: totalForShare,
+        depositInMonth: depositInMonth,
+        finishInMonth: finishInMonth,
       ),
     );
-    _addCustomer(customers, order, customerLabel, accum.currencyCode);
     for (final line in orderPrints(order)) {
       _addProduct(
         products,
@@ -297,7 +323,17 @@ DashboardSnapshot buildDashboard({
         productNames,
         accum.currencyCode,
         strings,
+        _monthPortion(
+          amount: line.breakdown.totalMinor,
+          deposit: deposit,
+          whole: totalForShare,
+          depositInMonth: depositInMonth,
+          finishInMonth: finishInMonth,
+        ),
       );
+      if (!finishInMonth) {
+        continue;
+      }
       for (final usage in line.filaments) {
         final grams = usage.grams * line.quantity;
         if (grams <= 0) {
@@ -402,6 +438,32 @@ int recognizedDepositMinor(PrintOrder order) {
   return deposit;
 }
 
+/// The part of [amount] that belongs to this month.
+///
+/// A dated deposit takes the same share as the cash. The finish month
+/// takes the rest. Both months together add back to [amount].
+int _monthPortion({
+  required int amount,
+  required int deposit,
+  required int whole,
+  required bool depositInMonth,
+  required bool finishInMonth,
+}) {
+  if (!depositInMonth && !finishInMonth) {
+    return 0;
+  }
+  final depositPart = deposit <= 0 ? 0 : _shareMinor(amount, deposit, whole);
+  final capped = depositPart > amount ? amount : depositPart;
+  var sum = 0;
+  if (depositInMonth) {
+    sum += capped;
+  }
+  if (finishInMonth) {
+    sum += amount - capped;
+  }
+  return sum;
+}
+
 int _shareMinor(int amount, int part, int whole) {
   if (amount <= 0 || part <= 0 || whole <= 0) {
     return 0;
@@ -448,6 +510,7 @@ void _addCustomer(
   PrintOrder order,
   String label,
   String currencyCode,
+  int amountMinor,
 ) {
   final id = order.customerId.isEmpty ? '' : order.customerId;
   final key = '$currencyCode:$id';
@@ -455,7 +518,7 @@ void _addCustomer(
     key,
     () => _MoneyBucket(id, label, currencyCode),
   );
-  bucket.totalMinor += order.breakdown.totalMinor;
+  bucket.totalMinor += amountMinor;
   bucket.count += 1;
 }
 
@@ -466,6 +529,7 @@ void _addProduct(
   Map<String, String> productNames,
   String currencyCode,
   AppLocalizations l10n,
+  int amountMinor,
 ) {
   final title = line.title.trim().isEmpty ? fallback.trim() : line.title.trim();
   final titleLabel = title.isEmpty ? l10n.dashUntitled : title;
@@ -484,7 +548,7 @@ void _addProduct(
   if (catalog.isNotEmpty) {
     bucket.label = catalog;
   }
-  bucket.totalMinor += line.breakdown.totalMinor;
+  bucket.totalMinor += amountMinor;
   bucket.count += line.quantity < 1 ? 1 : line.quantity;
 }
 
