@@ -1435,7 +1435,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dashDepositHint =>
-      'Anzahlungen zählen an dem Tag, an dem du sie erfasst. Der Rest zählt, wenn der Auftrag gedruckt oder bezahlt wird. Der Gewinn ist der Umsatz exkl. MwSt. abzüglich der Kosten für die Arbeit, die in diesem Monat abgeschlossen wurde.';
+      'Anzahlungen zählen an dem Tag, an dem du sie erfasst. Der Rest zählt, wenn der Auftrag gedruckt oder bezahlt wird. Die Kosten werden genauso aufgeteilt, damit ein profitabler Auftrag im Abschlussmonat nicht als Verlust erscheint. Kunden- und Produktsummen verwenden dieselben Beträge.';
 
   @override
   String get dashOrders => 'Aufträge';
@@ -2174,4 +2174,50 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get importPrintFile => 'Druckdatei';
+
+  @override
+  String get settingsSaveFailed =>
+      'Die Einstellungen konnten nicht gespeichert werden. Prüfe die Verbindung und versuche es erneut.';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Das Konto konnte nicht gelöscht werden. Die Daten der Werkstatt sind noch da.';
+
+  @override
+  String get settingsExportWorkshop => 'Werkstatt exportieren';
+
+  @override
+  String get settingsImportWorkshop => 'Werkstatt importieren';
+
+  @override
+  String get settingsExportDone => 'Werkstatt exportiert.';
+
+  @override
+  String get settingsImportTitle => 'Werkstatt importieren?';
+
+  @override
+  String get settingsImportBody =>
+      'Einträge in der Datei werden hinzugefügt oder aktualisiert. Was hier schon ist und in der Datei fehlt, bleibt. Filament, das für einen Druck schon entnommen wurde, wird nicht zurückgelegt, und die nächste Angebotsnummer geht nicht zurück.';
+
+  @override
+  String get settingsImportDone => 'Werkstatt importiert.';
+
+  @override
+  String get settingsBackupFailed =>
+      'Diese Sicherung konnte nicht gelesen werden.';
+
+  @override
+  String get settingsBackupShareFailed =>
+      'Die Werkstatt konnte nicht exportiert werden. Versuche es erneut.';
+
+  @override
+  String get orderCustomerSaveFailed =>
+      'Der Kunde konnte nicht verknüpft werden. Prüfe die Verbindung und versuche es erneut.';
+
+  @override
+  String get quoteNumberFailed =>
+      'Eine Angebotsnummer konnte nicht vergeben werden. Prüfe die Verbindung und versuche es erneut.';
+
+  @override
+  String get calcQuantityAtLeastOne => 'Die Menge muss mindestens 1 sein.';
 }

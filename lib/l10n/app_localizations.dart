@@ -2468,7 +2468,7 @@ abstract class AppLocalizations {
   /// Home explanation of deposits, revenue, and profit
   ///
   /// In en, this message translates to:
-  /// **'Deposits count on the date you record. The rest counts when the order is printed or paid. Profit is revenue excl. VAT minus the cost of work finished this month.'**
+  /// **'Deposits count on the date you record. The rest counts when the order is printed or paid. Cost is split the same way, so a profitable job does not show a loss in the month you finish it. Customer and product totals use those same amounts.'**
   String get dashDepositHint;
 
   /// Home count of printed and paid orders in the month
@@ -3663,6 +3663,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Print file'**
   String get importPrintFile;
+
+  /// No description provided for @settingsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save settings. Check the connection and try again.'**
+  String get settingsSaveFailed;
+
+  /// No description provided for @settingsDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account. Your workshop data is still here.'**
+  String get settingsDeleteFailed;
+
+  /// No description provided for @settingsExportWorkshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Export workshop'**
+  String get settingsExportWorkshop;
+
+  /// No description provided for @settingsImportWorkshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Import workshop'**
+  String get settingsImportWorkshop;
+
+  /// No description provided for @settingsExportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Workshop exported.'**
+  String get settingsExportDone;
+
+  /// No description provided for @settingsImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import workshop?'**
+  String get settingsImportTitle;
+
+  /// No description provided for @settingsImportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Records in the file are added or updated. Anything already here that is missing from the file stays. Filament already taken for a print is not put back, and the next quote number does not go backwards.'**
+  String get settingsImportBody;
+
+  /// No description provided for @settingsImportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Workshop imported.'**
+  String get settingsImportDone;
+
+  /// No description provided for @settingsBackupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read that backup.'**
+  String get settingsBackupFailed;
+
+  /// No description provided for @settingsBackupShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export the workshop. Try again.'**
+  String get settingsBackupShareFailed;
+
+  /// No description provided for @orderCustomerSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not link the customer. Check the connection and try again.'**
+  String get orderCustomerSaveFailed;
+
+  /// No description provided for @quoteNumberFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not assign a quote number. Check the connection and try again.'**
+  String get quoteNumberFailed;
+
+  /// No description provided for @calcQuantityAtLeastOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity must be at least 1.'**
+  String get calcQuantityAtLeastOne;
 }
 
 class _AppLocalizationsDelegate

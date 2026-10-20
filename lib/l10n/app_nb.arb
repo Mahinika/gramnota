@@ -391,7 +391,7 @@
   "dashSignIn": "Logg inn for å se verkstedet.",
   "dashPreviousMonth": "Forrige måned",
   "dashNextMonth": "Neste måned",
-  "dashDepositHint": "Forskudd telles på datoen du registrerer dem. Resten telles når ordren er skrevet ut eller betalt. Fortjeneste er omsetning ekskl. mva. minus kostnaden for arbeid som er ferdig denne måneden.",
+  "dashDepositHint": "Forskudd telles på datoen du registrerer dem. Resten telles når ordren er skrevet ut eller betalt. Kostnaden deles på samme måte, så en lønnsom jobb ikke vises som tap den måneden den blir ferdig. Kunde- og produktsummer bruker de samme beløpene.",
   "dashOrders": "Ordrer",
   "dashRevenueIncl": "Omsetning inkl. mva.",
   "dashRevenueExcl": "Omsetning ekskl. mva.",
@@ -588,5 +588,18 @@
   "versionLabel": "Versjon",
   "versionWithBuild": "Versjon {version} (bygg {build})",
   "updateBuildOnly": "Bygg {build}.",
-  "importPrintFile": "Utskriftsfil"
+  "importPrintFile": "Utskriftsfil",
+  "settingsSaveFailed": "Innstillingene kunne ikke lagres. Sjekk tilkoblingen og prøv igjen.",
+  "settingsDeleteFailed": "Kontoen kunne ikke slettes. Verkstedets data er fortsatt her.",
+  "settingsExportWorkshop": "Eksporter verksted",
+  "settingsImportWorkshop": "Importer verksted",
+  "settingsExportDone": "Verkstedet ble eksportert.",
+  "settingsImportTitle": "Importer verksted?",
+  "settingsImportBody": "Poster i filen legges til eller oppdateres. Det som allerede er her og mangler i filen, blir. Filament som allerede er trukket til et utskrift legges ikke tilbake, og neste tilbudsnummer går ikke bakover.",
+  "settingsImportDone": "Verkstedet ble importert.",
+  "settingsBackupFailed": "Kunne ikke lese den sikkerhetskopien.",
+  "settingsBackupShareFailed": "Kunne ikke eksportere verkstedet. Prøv igjen.",
+  "orderCustomerSaveFailed": "Kunne ikke knytte kunden. Sjekk tilkoblingen og prøv igjen.",
+  "quoteNumberFailed": "Kunne ikke gi et tilbudsnummer. Sjekk tilkoblingen og prøv igjen.",
+  "calcQuantityAtLeastOne": "Antallet må være minst 1."
 }

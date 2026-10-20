@@ -192,6 +192,7 @@ publish_manifest() {
   if ! gh release download latest --repo "$REPO" --pattern latest.json --dir "$download_dir"; then
     printf '%s\n' '{}' >"$download_dir/latest.json"
   fi
+  set +e
   "${PY[@]}" "$MANIFEST_PY" merge \
     --current "$download_dir/latest.json" \
     --platform "$PLATFORM" \
@@ -201,6 +202,16 @@ publish_manifest() {
     --date "$DATE" \
     --sha256 "$PRIMARY_SHA" \
     --out "$WORKDIR/latest.json"
+  local merged=$?
+  set -e
+  if [ "$merged" -eq 10 ]; then
+    echo "A newer $PLATFORM build is already published. Keeping latest.json."
+    return 0
+  fi
+  if [ "$merged" -ne 0 ]; then
+    echo "Could not merge latest.json."
+    return 1
+  fi
   local i
   for i in 1 2 3 4 5; do
     if gh release upload latest "$WORKDIR/latest.json" --clobber --repo "$REPO"; then
@@ -302,6 +313,22 @@ update_legacy_notes() {
   py patch-json --body-file "$notes" --title "$title" --out "$WORKDIR/legacy.json"
   gh api --method PATCH "repos/${REPO}/releases/${id}" --input "$WORKDIR/legacy.json" >/dev/null
 }
+
+# Do not replace a newer build of this platform. Android and Windows are
+# compared separately, so a high Android build does not block Windows.
+if gh release view latest --repo "$REPO" >/dev/null 2>&1; then
+  preflight="$WORKDIR/preflight"
+  rm -rf "$preflight"
+  mkdir -p "$preflight"
+  if gh release download latest --repo "$REPO" --pattern latest.json --dir "$preflight" \
+    && ! "${PY[@]}" "$MANIFEST_PY" accepts \
+      --current "$preflight/latest.json" \
+      --platform "$PLATFORM" \
+      --build "$BUILD"; then
+    echo "Published $PLATFORM build is newer than $BUILD. Leaving the release."
+    exit 0
+  fi
+fi
 
 ensure_release
 upload_assets "$@"

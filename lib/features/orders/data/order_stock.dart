@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../../core/format.dart';
 import '../../../core/user_store.dart';
 import '../../../l10n/l10n.dart';
@@ -26,10 +28,14 @@ class OrderStock {
       final number = settings.nextQuoteNumber < 1
           ? 1
           : settings.nextQuoteNumber;
-      transaction.set(
-        store.settingsDoc,
-        settings.copyWith(nextQuoteNumber: number + 1).toJson(),
-      );
+      // Only the counter moves. A full settings write here would put back
+      // a business name the seller changed while the number was allocated.
+      final next = {'nextQuoteNumber': number + 1};
+      if (snapshot.exists) {
+        transaction.update(store.settingsDoc, next);
+      } else {
+        transaction.set(store.settingsDoc, next, SetOptions(merge: true));
+      }
       return number;
     });
   }

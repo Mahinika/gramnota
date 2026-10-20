@@ -1423,7 +1423,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashDepositHint =>
-      'Deposits count on the date you record. The rest counts when the order is printed or paid. Profit is revenue excl. VAT minus the cost of work finished this month.';
+      'Deposits count on the date you record. The rest counts when the order is printed or paid. Cost is split the same way, so a profitable job does not show a loss in the month you finish it. Customer and product totals use those same amounts.';
 
   @override
   String get dashOrders => 'Orders';
@@ -2146,4 +2146,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importPrintFile => 'Print file';
+
+  @override
+  String get settingsSaveFailed =>
+      'Could not save settings. Check the connection and try again.';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Could not delete the account. Your workshop data is still here.';
+
+  @override
+  String get settingsExportWorkshop => 'Export workshop';
+
+  @override
+  String get settingsImportWorkshop => 'Import workshop';
+
+  @override
+  String get settingsExportDone => 'Workshop exported.';
+
+  @override
+  String get settingsImportTitle => 'Import workshop?';
+
+  @override
+  String get settingsImportBody =>
+      'Records in the file are added or updated. Anything already here that is missing from the file stays. Filament already taken for a print is not put back, and the next quote number does not go backwards.';
+
+  @override
+  String get settingsImportDone => 'Workshop imported.';
+
+  @override
+  String get settingsBackupFailed => 'Could not read that backup.';
+
+  @override
+  String get settingsBackupShareFailed =>
+      'Could not export the workshop. Try again.';
+
+  @override
+  String get orderCustomerSaveFailed =>
+      'Could not link the customer. Check the connection and try again.';
+
+  @override
+  String get quoteNumberFailed =>
+      'Could not assign a quote number. Check the connection and try again.';
+
+  @override
+  String get calcQuantityAtLeastOne => 'Quantity must be at least 1.';
 }

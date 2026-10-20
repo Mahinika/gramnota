@@ -7,6 +7,7 @@ import '../features/customers/domain/customer.dart';
 import '../features/filaments/domain/filament_spool.dart';
 import '../features/orders/domain/print_order.dart';
 import '../features/printers/domain/printer_profile.dart';
+import '../features/settings/domain/workshop_backup.dart';
 import '../features/settings/domain/workshop_settings.dart';
 import '../features/sharing/domain/inbox_item.dart';
 
@@ -50,8 +51,16 @@ class UserStore {
     });
   }
 
+  /// Writes workshop settings without [WorkshopSettings.nextQuoteNumber].
+  ///
+  /// The counter belongs to [OrderStock.allocateQuoteNumber]. A full
+  /// document write from a screen that loaded the number earlier would
+  /// hand the same quote number out twice.
   Future<void> saveSettings(WorkshopSettings settings) {
-    return settingsDoc.set(settings.toJson());
+    return settingsDoc.set(
+      settingsWithoutQuoteCounter(settings),
+      SetOptions(merge: true),
+    );
   }
 
   Stream<List<PrinterProfile>> watchPrinters() =>
@@ -94,6 +103,64 @@ class UserStore {
 
   Future<void> saveOrder(PrintOrder order) {
     return orders.doc(order.id).set(order.toJson());
+  }
+
+  /// Links a customer without rewriting status, stock, or the prints.
+  Future<void> updateOrderCustomer({
+    required String orderId,
+    required String customerId,
+  }) {
+    return _updateOrderFields(orderId, {'customerId': customerId});
+  }
+
+  /// Replaces the prints on an order that has not taken filament.
+  ///
+  /// The document is read inside the transaction. A stale screen copy
+  /// cannot clear [PrintOrder.stockDeducted] or put grams back. Throws
+  /// [OrderPrintsLocked] when stock was already taken.
+  Future<void> replaceOrderPrints({
+    required String orderId,
+    required List<QuoteLine> lines,
+    required String title,
+  }) {
+    if (lines.isEmpty) {
+      return Future.value();
+    }
+    final ref = orders.doc(orderId);
+    return db.runTransaction((transaction) async {
+      final snapshot = await transaction.get(ref);
+      if (!snapshot.exists || snapshot.data() == null) {
+        return;
+      }
+      final current = PrintOrder.fromJson({
+        ...snapshot.data()!,
+        'id': orderId,
+      });
+      if (current.stockDeducted) {
+        throw const OrderPrintsLocked();
+      }
+      final updated = orderWithPrints(current, lines).copyWith(
+        title: title,
+        updatedAt: DateTime.now().toUtc().toIso8601String(),
+      );
+      final payload = updated.toJson()
+        ..remove('id')
+        ..remove('quoteNumber')
+        ..remove('customerId')
+        ..remove('status')
+        ..remove('validUntil')
+        ..remove('currencyCode')
+        ..remove('quoteLanguage')
+        ..remove('stockDeducted')
+        ..remove('deductedGrams')
+        ..remove('stockWarning')
+        ..remove('depositMinor')
+        ..remove('depositAt')
+        ..remove('revenueAt')
+        ..remove('note')
+        ..remove('createdAt');
+      transaction.update(ref, payload);
+    });
   }
 
   /// Updates the note only. A full [saveOrder] of a screen snapshot can
@@ -182,6 +249,58 @@ class UserStore {
   }
 
   Future<void> deleteInboxItem(String id) => inbox.doc(id).delete();
+
+  Future<WorkshopBackup> loadWorkshopBackup() async {
+    final settingsSnap = await settingsDoc.get();
+    final settings = settingsSnap.exists && settingsSnap.data() != null
+        ? WorkshopSettings.fromJson(settingsSnap.data()!)
+        : const WorkshopSettings();
+    return WorkshopBackup(
+      settings: settings,
+      printers: await _loadAll(printers, PrinterProfile.fromJson),
+      filaments: await _loadAll(filaments, FilamentSpool.fromJson),
+      customers: await _loadAll(customers, Customer.fromJson),
+      orders: await _loadAll(orders, PrintOrder.fromJson),
+      products: await _loadAll(products, CatalogProduct.fromJson),
+      exportedAt: DateTime.now().toUtc().toIso8601String(),
+    );
+  }
+
+  /// Applies a merge plan. Documents that are not in the plan stay.
+  Future<void> applyWorkshopImport(WorkshopImportPlan plan) async {
+    await settingsDoc.set(plan.settings.toJson(), SetOptions(merge: true));
+    for (final printer in plan.printers) {
+      await savePrinter(printer);
+    }
+    for (final spool in plan.filaments) {
+      await saveFilament(spool);
+    }
+    for (final customer in plan.customers) {
+      await saveCustomer(customer);
+    }
+    for (final order in plan.orders) {
+      await saveOrder(order);
+    }
+    for (final product in plan.products) {
+      await saveProduct(product);
+    }
+  }
+
+  Future<List<T>> _loadAll<T>(
+    CollectionReference<Map<String, dynamic>> collection,
+    T Function(Map<String, dynamic> json) decode,
+  ) async {
+    final snapshot = await collection.get();
+    final items = <T>[];
+    for (final doc in snapshot.docs) {
+      try {
+        items.add(decode({...doc.data(), 'id': doc.id}));
+      } on Object {
+        // Skip a document the app can no longer read.
+      }
+    }
+    return items;
+  }
 
   Future<void> deleteOwnedData({required String? email}) async {
     for (final collection in [
@@ -374,4 +493,16 @@ String inboxCreatedAtText(Object? value) {
 
 class InboxPayloadTooLarge implements Exception {
   const InboxPayloadTooLarge();
+}
+
+/// The order already took filament, so its prints cannot be replaced.
+class OrderPrintsLocked implements Exception {
+  const OrderPrintsLocked();
+}
+
+/// Settings written by the workshop screen. The quote counter is omitted.
+Map<String, dynamic> settingsWithoutQuoteCounter(WorkshopSettings settings) {
+  final data = settings.toJson();
+  data.remove('nextQuoteNumber');
+  return data;
 }

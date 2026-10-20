@@ -1426,7 +1426,7 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get dashDepositHint =>
-      'Forskudd telles på datoen du registrerer dem. Resten telles når ordren er skrevet ut eller betalt. Fortjeneste er omsetning ekskl. mva. minus kostnaden for arbeid som er ferdig denne måneden.';
+      'Forskudd telles på datoen du registrerer dem. Resten telles når ordren er skrevet ut eller betalt. Kostnaden deles på samme måte, så en lønnsom jobb ikke vises som tap den måneden den blir ferdig. Kunde- og produktsummer bruker de samme beløpene.';
 
   @override
   String get dashOrders => 'Ordrer';
@@ -2154,4 +2154,49 @@ class AppLocalizationsNb extends AppLocalizations {
 
   @override
   String get importPrintFile => 'Utskriftsfil';
+
+  @override
+  String get settingsSaveFailed =>
+      'Innstillingene kunne ikke lagres. Sjekk tilkoblingen og prøv igjen.';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Kontoen kunne ikke slettes. Verkstedets data er fortsatt her.';
+
+  @override
+  String get settingsExportWorkshop => 'Eksporter verksted';
+
+  @override
+  String get settingsImportWorkshop => 'Importer verksted';
+
+  @override
+  String get settingsExportDone => 'Verkstedet ble eksportert.';
+
+  @override
+  String get settingsImportTitle => 'Importer verksted?';
+
+  @override
+  String get settingsImportBody =>
+      'Poster i filen legges til eller oppdateres. Det som allerede er her og mangler i filen, blir. Filament som allerede er trukket til et utskrift legges ikke tilbake, og neste tilbudsnummer går ikke bakover.';
+
+  @override
+  String get settingsImportDone => 'Verkstedet ble importert.';
+
+  @override
+  String get settingsBackupFailed => 'Kunne ikke lese den sikkerhetskopien.';
+
+  @override
+  String get settingsBackupShareFailed =>
+      'Kunne ikke eksportere verkstedet. Prøv igjen.';
+
+  @override
+  String get orderCustomerSaveFailed =>
+      'Kunne ikke knytte kunden. Sjekk tilkoblingen og prøv igjen.';
+
+  @override
+  String get quoteNumberFailed =>
+      'Kunne ikke gi et tilbudsnummer. Sjekk tilkoblingen og prøv igjen.';
+
+  @override
+  String get calcQuantityAtLeastOne => 'Antallet må være minst 1.';
 }

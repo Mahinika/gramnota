@@ -391,7 +391,7 @@
   "dashSignIn": "Meld je aan om de werkplaats te zien.",
   "dashPreviousMonth": "Vorige maand",
   "dashNextMonth": "Volgende maand",
-  "dashDepositHint": "Aanbetalingen tellen op de datum waarop je ze vastlegt. De rest telt wanneer de bestelling is geprint of betaald. Winst is omzet excl. btw min de kosten van werk dat deze maand is afgerond.",
+  "dashDepositHint": "Aanbetalingen tellen op de datum waarop je ze vastlegt. De rest telt wanneer de bestelling is geprint of betaald. De kosten worden op dezelfde manier verdeeld, zodat een winstgevende klus geen verlies toont in de maand waarin je hem afrondt. Klant- en producttotalen gebruiken diezelfde bedragen.",
   "dashOrders": "Bestellingen",
   "dashRevenueIncl": "Omzet incl. btw",
   "dashRevenueExcl": "Omzet excl. btw",
@@ -588,5 +588,18 @@
   "versionLabel": "Versie",
   "versionWithBuild": "Versie {version} (build {build})",
   "updateBuildOnly": "Build {build}.",
-  "importPrintFile": "Printbestand"
+  "importPrintFile": "Printbestand",
+  "settingsSaveFailed": "Instellingen opslaan is mislukt. Controleer de verbinding en probeer het opnieuw.",
+  "settingsDeleteFailed": "Het account kon niet worden verwijderd. De gegevens van de werkplaats staan er nog.",
+  "settingsExportWorkshop": "Werkplaats exporteren",
+  "settingsImportWorkshop": "Werkplaats importeren",
+  "settingsExportDone": "Werkplaats geëxporteerd.",
+  "settingsImportTitle": "Werkplaats importeren?",
+  "settingsImportBody": "Records in het bestand worden toegevoegd of bijgewerkt. Wat hier al staat en in het bestand ontbreekt, blijft. Filament dat al voor een print is afgeboekt komt niet terug, en het volgende offertenummer gaat niet terug.",
+  "settingsImportDone": "Werkplaats geïmporteerd.",
+  "settingsBackupFailed": "Die back-up kon niet worden gelezen.",
+  "settingsBackupShareFailed": "De werkplaats kon niet worden geëxporteerd. Probeer het opnieuw.",
+  "orderCustomerSaveFailed": "De klant kon niet worden gekoppeld. Controleer de verbinding en probeer het opnieuw.",
+  "quoteNumberFailed": "Er kon geen offertenummer worden toegekend. Controleer de verbinding en probeer het opnieuw.",
+  "calcQuantityAtLeastOne": "Het aantal moet minstens 1 zijn."
 }

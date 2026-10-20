@@ -9,6 +9,7 @@ import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/section_layout.dart';
 import '../../../core/money.dart';
+import '../../../core/save_feedback.dart';
 import '../../../core/providers.dart';
 import '../../../core/shell.dart';
 import '../../../core/user_store.dart';
@@ -205,17 +206,22 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     return context.l10n.calcReadNumber(label);
   }
 
-  String? _wholeNumberError(String label, String text) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty || parsePositiveInt(trimmed) != null) {
+  String? _quantityError() {
+    if (readQuoteQuantity(_quantity.text) != null) {
       return null;
     }
-    return context.l10n.calcReadWholeNumber(label);
+    final trimmed = _quantity.text.trim();
+    final parsed = int.tryParse(trimmed);
+    if (parsed != null && parsed < 1) {
+      return context.l10n.calcQuantityAtLeastOne;
+    }
+    return context.l10n.calcReadWholeNumber(context.l10n.fieldQuantity);
   }
 
   String? _moneyError(String label, String text) {
     final trimmed = text.trim();
-    if (trimmed.isEmpty || parseMinor(trimmed) != null) {
+    if (trimmed.isEmpty ||
+        parseMinor(trimmed, locale: context.formattingLocale) != null) {
       return null;
     }
     return context.l10n.calcReadNumber(label);
@@ -253,7 +259,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       ?_decimalError(l10n.calcErrMinutes, _minutes.text),
       ?_decimalError(l10n.calcErrPrepMinutes, _prep.text),
       ?_decimalError(l10n.calcErrPostMinutes, _post.text),
-      ?_wholeNumberError(l10n.fieldQuantity, _quantity.text),
+      ?_quantityError(),
       ?_percentError(l10n.calcErrMarkup, _markup.text),
       ?_percentError(l10n.calcErrFailure, _failure.text),
       ?_percentError(l10n.calcErrVat, _vat.text),
@@ -264,10 +270,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     ];
   }
 
-  int _quantityValue() {
-    final parsed = parsePositiveInt(_quantity.text) ?? 1;
-    return parsed < 1 ? 1 : parsed;
-  }
+  int? _quantityValue() => readQuoteQuantity(_quantity.text);
 
   void _scheduleDefaultPrinter(List<PrinterProfile> printers) {
     if (widget.lineId != null || printers.length != 1 || _printerId != null) {
@@ -656,13 +659,21 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         return;
       }
       final next = [...orderPrints(target), ...lines];
-      final updated = orderWithPrints(target, next).copyWith(
-        title: quoteTitleFor(target, next),
-        updatedAt: DateTime.now().toUtc().toIso8601String(),
-      );
-      await store.saveOrder(updated);
+      try {
+        await store.replaceOrderPrints(
+          orderId: target.id,
+          lines: next,
+          title: quoteTitleFor(target, next),
+        );
+      } on OrderPrintsLocked {
+        if (mounted) {
+          showSaveError(context, context.l10n.calcPrintsLocked);
+          setState(() => _importNote = context.l10n.calcPrintsLocked);
+        }
+        return;
+      }
       if (mounted) {
-        context.go('/orders/${updated.id}');
+        context.go('/orders/${target.id}');
       }
       return;
     }
@@ -682,7 +693,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     }
     setState(() => _saving = true);
     try {
-      final number = await OrderStock(store).allocateQuoteNumber();
+      final int number;
+      try {
+        number = await OrderStock(store).allocateQuoteNumber();
+      } on Object {
+        if (mounted) {
+          showSaveError(context, context.l10n.quoteNumberFailed);
+          setState(() => _importNote = context.l10n.quoteNumberFailed);
+        }
+        return;
+      }
       final now = DateTime.now().toUtc();
       final typed = _title.text.trim();
       final title = typed.isNotEmpty
@@ -717,6 +737,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       }
     } on Object {
       if (mounted) {
+        showSaveError(context, context.l10n.calcSaveQuoteFailed);
         setState(() => _importNote = context.l10n.calcSaveQuoteFailed);
       }
     } finally {
@@ -744,11 +765,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (picked == null || !mounted) {
       return;
     }
+    final quantity = _quantityValue();
+    if (quantity == null) {
+      setState(() => _importNote = context.l10n.calcQuantityAtLeastOne);
+      return;
+    }
     final priced = priceProduct(
       l10n: context.l10n,
       product: picked,
       lineId: 'draft',
-      quantity: _quantityValue(),
+      quantity: quantity,
       settings: settings,
       spools: spools,
       printers: printers,
@@ -767,6 +793,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     PriceInput input,
     PriceBreakdown breakdown,
     List<FilamentSpool> spools,
+    String currencyCode,
   ) async {
     final problems = _inputProblems();
     if (problems.isNotEmpty) {
@@ -777,7 +804,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       setState(() => _importNote = context.l10n.calcAddTitleBeforeProduct);
       return;
     }
-    final line = _captureLine('draft', input, breakdown, spools);
+    final line = _captureLine(
+      'draft',
+      input,
+      breakdown,
+      spools,
+      currencyCode: currencyCode,
+    );
     final existing = _productId.trim();
     final product = productFromLine(
       line,
@@ -832,12 +865,18 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       postMinutes: _minuteCount(_post),
       laborMinorPerHour: settings.laborMinorPerHour,
       extraMinors: [
-        for (final extra in _extras) parseMinor(extra.cost.text) ?? 0,
+        for (final extra in _extras)
+          parseMoneyInput(
+                extra.cost.text,
+                currencyCode: settings.currencyCode,
+                locale: context.formattingLocale,
+              ) ??
+              0,
       ],
       markupBasisPoints:
           parseBasisPoints(_markup.text) ?? settings.defaultMarkupBasisPoints,
       vatBasisPoints: parseBasisPoints(_vat.text) ?? settings.vatBasisPoints,
-      quantity: _quantityValue(),
+      quantity: _quantityValue() ?? 0,
     );
   }
 
@@ -993,8 +1032,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     String id,
     PriceInput input,
     PriceBreakdown breakdown,
-    List<FilamentSpool> spools,
-  ) {
+    List<FilamentSpool> spools, {
+    required String currencyCode,
+  }) {
     return QuoteLine(
       id: id,
       productId: _productId,
@@ -1017,12 +1057,24 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       extras: [
         for (final extra in _extras)
           if (extra.name.text.trim().isNotEmpty ||
-              (parseMinor(extra.cost.text) ?? 0) > 0)
+              (parseMoneyInput(
+                    extra.cost.text,
+                    currencyCode: currencyCode,
+                    locale: context.formattingLocale,
+                  ) ??
+                  0) >
+                  0)
             ExtraCost(
               name: extra.name.text.trim().isEmpty
                   ? context.l10n.calcExtra
                   : extra.name.text.trim(),
-              costMinor: parseMinor(extra.cost.text) ?? 0,
+              costMinor:
+                  parseMoneyInput(
+                    extra.cost.text,
+                    currencyCode: currencyCode,
+                    locale: context.formattingLocale,
+                  ) ??
+                  0,
             ),
       ],
       markupBasisPoints: input.markupBasisPoints,
@@ -1061,10 +1113,25 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     }
     setState(() => _saving = true);
     try {
-      final number = await OrderStock(store).allocateQuoteNumber();
+      final int number;
+      try {
+        number = await OrderStock(store).allocateQuoteNumber();
+      } on Object {
+        if (mounted) {
+          showSaveError(context, context.l10n.quoteNumberFailed);
+          setState(() => _importNote = context.l10n.quoteNumberFailed);
+        }
+        return;
+      }
       final now = DateTime.now().toUtc();
       final breakdown = const PriceCalculator().calculate(input);
-      final line = _captureLine(const Uuid().v4(), input, breakdown, spools);
+      final line = _captureLine(
+        const Uuid().v4(),
+        input,
+        breakdown,
+        spools,
+        currencyCode: settings.currencyCode,
+      );
       final draft = PrintOrder(
         id: const Uuid().v4(),
         quoteNumber: number,
@@ -1099,6 +1166,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       }
     } on Object {
       if (mounted) {
+        showSaveError(context, context.l10n.calcSaveQuoteFailed);
         setState(() => _importNote = context.l10n.calcSaveQuoteFailed);
       }
     } finally {
@@ -1130,6 +1198,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
         input,
         breakdown,
         spools,
+        currencyCode: target.currencyCode,
       );
       final current = orderPrints(target);
       final next = <QuoteLine>[];
@@ -1149,17 +1218,25 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           next.add(line);
         }
       }
-      final now = DateTime.now().toUtc().toIso8601String();
-      final updated = orderWithPrints(
-        target,
-        next,
-      ).copyWith(title: quoteTitleFor(target, next), updatedAt: now);
-      await store.saveOrder(updated);
+      try {
+        await store.replaceOrderPrints(
+          orderId: target.id,
+          lines: next,
+          title: quoteTitleFor(target, next),
+        );
+      } on OrderPrintsLocked {
+        if (mounted) {
+          showSaveError(context, context.l10n.calcPrintsLocked);
+          setState(() => _importNote = context.l10n.calcPrintsLocked);
+        }
+        return;
+      }
       if (mounted) {
-        context.go('/orders/${updated.id}');
+        context.go('/orders/${target.id}');
       }
     } on Object {
       if (mounted) {
+        showSaveError(context, context.l10n.calcSavePrintFailed);
         setState(() => _importNote = context.l10n.calcSavePrintFailed);
       }
     } finally {
@@ -1330,7 +1407,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       printers: printers,
       spools: spools,
     );
-    final breakdown = const PriceCalculator().calculate(input);
+    final breakdown = _quantityValue() == null
+        ? PriceBreakdown.zero()
+        : const PriceCalculator().calculate(input);
     final locked = target != null && target.stockDeducted;
     final l10n = context.l10n;
     final saveLabel = widget.lineId != null
@@ -1470,7 +1549,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 TextButton(
                   onPressed: _importing || _saving
                       ? null
-                      : () => _saveAsProduct(store, input, breakdown, spools),
+                      : () => _saveAsProduct(
+                          store,
+                          input,
+                          breakdown,
+                          spools,
+                          activeSettings.currencyCode,
+                        ),
                   child: Text(
                     l10n.calcSaveAsProduct,
                     maxLines: 2,
@@ -1696,13 +1781,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               controller: _quantity,
               decoration: InputDecoration(
                 label: _clipLabel(l10n.fieldQuantity),
-                helperText: (parsePositiveInt(_quantity.text) ?? 1) < 1
-                    ? l10n.calcQuantityPricedAsOne
-                    : l10n.calcQuantityScales,
-                errorText: _wholeNumberError(
-                  l10n.fieldQuantity,
-                  _quantity.text,
-                ),
+                helperText: l10n.calcQuantityScales,
+                errorText: _quantityError(),
               ),
               keyboardType: TextInputType.number,
             ),

@@ -35,7 +35,17 @@ void main() {
     final light = buildGramnotaTheme().colorScheme;
     expect(dark.brightness, Brightness.dark);
     expect(light.primary, gramnotaGreen);
-    expect(dark.primary, gramnotaGreen);
+    expect(dark.primary, gramnotaGreenBright);
+    expect(_contrast(dark.primary, dark.surface), greaterThanOrEqualTo(4.5));
+    expect(
+      _contrast(dark.primary, dark.surfaceContainerLowest),
+      greaterThanOrEqualTo(4.5),
+    );
+    expect(_contrast(light.primary, light.surface), greaterThanOrEqualTo(4.5));
+    expect(
+      _contrast(light.primary, light.surfaceContainerLowest),
+      greaterThanOrEqualTo(4.5),
+    );
     expect(_contrast(dark.onSurface, dark.surface), greaterThanOrEqualTo(4.5));
     expect(
       _contrast(dark.onSurface, dark.surfaceContainerLowest),
@@ -65,6 +75,24 @@ void main() {
     );
     final darkTheme = buildGramnotaTheme(brightness: Brightness.dark);
     final lightTheme = buildGramnotaTheme();
+    final darkFilled = darkTheme.filledButtonTheme.style;
+    final lightFilled = lightTheme.filledButtonTheme.style;
+    expect(
+      darkFilled?.backgroundColor?.resolve(const <WidgetState>{}),
+      gramnotaGreen,
+    );
+    expect(
+      lightFilled?.backgroundColor?.resolve(const <WidgetState>{}),
+      gramnotaGreen,
+    );
+    expect(
+      darkFilled?.foregroundColor?.resolve(const <WidgetState>{}),
+      Colors.white,
+    );
+    expect(
+      lightFilled?.foregroundColor?.resolve(const <WidgetState>{}),
+      Colors.white,
+    );
     expect(
       _contrast(
         darkTheme.snackBarTheme.actionTextColor!,

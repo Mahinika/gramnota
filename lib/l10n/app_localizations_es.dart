@@ -1429,7 +1429,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dashDepositHint =>
-      'Los anticipos cuentan en la fecha en que los registras. El resto cuenta cuando el pedido se imprime o se paga. La ganancia es el ingreso sin IVA menos el costo del trabajo terminado este mes.';
+      'Los anticipos cuentan en la fecha en que los registras. El resto cuenta cuando el pedido se imprime o se paga. El costo se reparte igual, para que un trabajo rentable no aparezca como pérdida el mes en que se termina. Los totales de clientes y productos usan esos mismos importes.';
 
   @override
   String get dashOrders => 'Pedidos';
@@ -2161,4 +2161,49 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get importPrintFile => 'Archivo de impresión';
+
+  @override
+  String get settingsSaveFailed =>
+      'No se pudieron guardar los ajustes. Comprueba la conexión e inténtalo de nuevo.';
+
+  @override
+  String get settingsDeleteFailed =>
+      'No se pudo eliminar la cuenta. Los datos del taller siguen aquí.';
+
+  @override
+  String get settingsExportWorkshop => 'Exportar taller';
+
+  @override
+  String get settingsImportWorkshop => 'Importar taller';
+
+  @override
+  String get settingsExportDone => 'Taller exportado.';
+
+  @override
+  String get settingsImportTitle => '¿Importar taller?';
+
+  @override
+  String get settingsImportBody =>
+      'Los registros del archivo se añaden o actualizan. Lo que ya está aquí y falta en el archivo se queda. El filamento ya descontado para una impresión no se devuelve, y el siguiente número de presupuesto no retrocede.';
+
+  @override
+  String get settingsImportDone => 'Taller importado.';
+
+  @override
+  String get settingsBackupFailed => 'No se pudo leer esa copia.';
+
+  @override
+  String get settingsBackupShareFailed =>
+      'No se pudo exportar el taller. Inténtalo de nuevo.';
+
+  @override
+  String get orderCustomerSaveFailed =>
+      'No se pudo vincular al cliente. Comprueba la conexión e inténtalo de nuevo.';
+
+  @override
+  String get quoteNumberFailed =>
+      'No se pudo asignar un número de presupuesto. Comprueba la conexión e inténtalo de nuevo.';
+
+  @override
+  String get calcQuantityAtLeastOne => 'La cantidad debe ser al menos 1.';
 }

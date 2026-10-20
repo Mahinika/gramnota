@@ -391,7 +391,7 @@
   "dashSignIn": "Logga in för att se verkstaden.",
   "dashPreviousMonth": "Föregående månad",
   "dashNextMonth": "Nästa månad",
-  "dashDepositHint": "Handpenningar räknas på det datum du registrerar dem. Resten räknas när ordern skrivs ut eller betalas. Vinst är intäkt exkl. moms minus kostnaden för arbete som blev klart den här månaden.",
+  "dashDepositHint": "Handpenningar räknas på det datum du registrerar dem. Resten räknas när ordern skrivs ut eller betalas. Kostnaden delas på samma sätt, så ett lönsamt jobb inte visas som förlust den månad det blir klart. Kund- och produktsummor använder samma belopp.",
   "dashOrders": "Ordrar",
   "dashRevenueIncl": "Intäkt inkl. moms",
   "dashRevenueExcl": "Intäkt exkl. moms",
@@ -588,5 +588,18 @@
   "versionLabel": "Version",
   "versionWithBuild": "Version {version} (build {build})",
   "updateBuildOnly": "Build {build}.",
-  "importPrintFile": "Utskriftsfil"
+  "importPrintFile": "Utskriftsfil",
+  "settingsSaveFailed": "Inställningarna kunde inte sparas. Kontrollera anslutningen och försök igen.",
+  "settingsDeleteFailed": "Kontot kunde inte tas bort. Verkstadens data finns kvar.",
+  "settingsExportWorkshop": "Exportera verkstad",
+  "settingsImportWorkshop": "Importera verkstad",
+  "settingsExportDone": "Verkstaden exporterades.",
+  "settingsImportTitle": "Importera verkstad?",
+  "settingsImportBody": "Poster i filen läggs till eller uppdateras. Det som redan finns här men saknas i filen blir kvar. Filament som redan dragits för ett utskrift läggs inte tillbaka, och nästa offertnummer går inte bakåt.",
+  "settingsImportDone": "Verkstaden importerades.",
+  "settingsBackupFailed": "Kunde inte läsa den säkerhetskopian.",
+  "settingsBackupShareFailed": "Kunde inte exportera verkstaden. Försök igen.",
+  "orderCustomerSaveFailed": "Kunde inte koppla kunden. Kontrollera anslutningen och försök igen.",
+  "quoteNumberFailed": "Kunde inte ge ett offertnummer. Kontrollera anslutningen och försök igen.",
+  "calcQuantityAtLeastOne": "Antalet måste vara minst 1."
 }

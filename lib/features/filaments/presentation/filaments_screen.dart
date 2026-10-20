@@ -5,6 +5,7 @@ import 'package:gramnota/l10n/l10n.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/currencies.dart';
+import '../../../core/save_feedback.dart';
 import '../../../core/format.dart';
 import '../../../core/menu_card.dart';
 import '../../../core/money.dart';
@@ -407,7 +408,14 @@ Future<void> _addStandardSpool(
     pricePerSpoolMinor: preset.pricePerSpoolMinor,
     lowStockUsesDefault: true,
   );
-  await store.saveFilament(spool);
+  try {
+    await store.saveFilament(spool);
+  } on Object {
+    if (context.mounted) {
+      showSaveError(context, context.l10n.filamentSaveFailed);
+    }
+    return;
+  }
   if (!context.mounted) {
     return;
   }
@@ -499,8 +507,12 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
     _loaded = true;
   }
 
-  FilamentSpool? _draft() {
-    final price = parseMinor(_price.text);
+  FilamentSpool? _draft(String currencyCode) {
+    final price = parseMoneyInput(
+      _price.text,
+      currencyCode: currencyCode,
+      locale: context.formattingLocale,
+    );
     final spoolWeight = parseNonNegativeDouble(_spoolWeight.text);
     final remaining = parseNonNegativeDouble(_remaining.text);
     if (_brand.text.trim().isEmpty ||
@@ -542,9 +554,9 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
         _load(match.first, context.formattingLocale);
       }
     }
-    final draft = _draft();
     final settings = ref.watch(settingsProvider(store)).asData?.value;
     final currency = settings?.currencyCode ?? defaultCurrencyCode;
+    final draft = _draft(currency);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -743,7 +755,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
           const SizedBox(height: 12),
           FilledButton(
             onPressed: () async {
-              final spool = _draft();
+              final spool = _draft(currency);
               if (spool == null) {
                 setState(() => _error = context.l10n.filamentRequired);
                 return;
@@ -752,6 +764,7 @@ class _FilamentEditScreenState extends ConsumerState<FilamentEditScreen> {
                 await store.saveFilament(spool);
               } on Object {
                 if (context.mounted) {
+                  showSaveError(context, context.l10n.filamentSaveFailed);
                   setState(() => _error = context.l10n.filamentSaveFailed);
                 }
                 return;

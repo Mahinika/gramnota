@@ -1,16 +1,56 @@
+import 'currencies.dart';
 import 'format.dart';
 
-/// Parses a decimal amount typed by the user into minor units (öre/cents).
+/// Languages whose grouping mark is a dot (`1.249` is one thousand).
+const _dotGroupingLanguages = {'de', 'nl', 'es', 'da', 'nb', 'no'};
+
+/// Parses a decimal amount typed by the user into stored minor units.
 ///
-/// Accepts a comma or a dot, and spaces used as thousands separators.
-/// Hundredths are taken from the digits, so "19.99" and "1,005" do not
-/// depend on binary floating point.
-int? parseMinor(String text) => _parseHundredths(text);
+/// Storage stays hundredths (`100` is one major unit) so existing SEK
+/// quotes do not move. [fractionDigits] `0` (yen, króna) still stores
+/// hundredths of a whole unit: `20` becomes `2000`. A dot used as a
+/// thousands separator in [locale] (`de`, `nl`, `es`, `da`, `nb`) is
+/// grouping, so `1.249` is 1249. Without a locale, a single separator
+/// stays a decimal mark, which is how `1,005` rounds to 1.01.
+int? parseMinor(String text, {String? locale, int fractionDigits = 2}) =>
+    _parseHundredths(text, locale: locale, fractionDigits: fractionDigits);
+
+/// Typed money for [currencyCode]. Zero-decimal currencies store hundredths
+/// of a whole unit so an existing SEK document is unchanged.
+int? parseMoneyInput(
+  String text, {
+  required String currencyCode,
+  String? locale,
+}) {
+  return parseMinor(
+    text,
+    locale: locale,
+    fractionDigits: currencyFractionDigits(currencyCode),
+  );
+}
 
 /// Parses a percent such as "25" or "12,5" into basis points (10000 = 100%).
 int? parseBasisPoints(String text) => _parseHundredths(text);
 
-int? _parseHundredths(String text) {
+/// Empty input is one print. Zero and anything that is not a positive
+/// whole number are rejected so the quote is not priced as a single unit.
+int? readQuoteQuantity(String text) {
+  final trimmed = text.trim();
+  if (trimmed.isEmpty) {
+    return 1;
+  }
+  final value = int.tryParse(trimmed);
+  if (value == null || value < 1) {
+    return null;
+  }
+  return value;
+}
+
+int? _parseHundredths(
+  String text, {
+  String? locale,
+  int fractionDigits = 2,
+}) {
   var normalized = text
       .trim()
       .replaceAll('\u00a0', '')
@@ -25,7 +65,7 @@ int? _parseHundredths(String text) {
   if (normalized.startsWith('-') || normalized.isEmpty) {
     return null;
   }
-  normalized = _decimalNormalized(normalized);
+  normalized = _decimalNormalized(normalized, locale);
   final parts = normalized.split('.');
   if (parts.length > 2) {
     return null;
@@ -44,6 +84,10 @@ int? _parseHundredths(String text) {
   if (frac.isNotEmpty && !RegExp(r'^\d+$').hasMatch(frac)) {
     return null;
   }
+  if (fractionDigits <= 0) {
+    final major = frac.isEmpty ? whole : _roundMajor(whole, frac);
+    return major * 100;
+  }
   if (frac.isEmpty) {
     return whole * 100;
   }
@@ -59,10 +103,19 @@ int? _parseHundredths(String text) {
   return whole * 100 + cents;
 }
 
+int _roundMajor(int whole, String frac) {
+  if (frac.isEmpty) {
+    return whole;
+  }
+  final roundUp = int.parse(frac[0]) >= 5;
+  return roundUp ? whole + 1 : whole;
+}
+
 /// The last of `.` and `,` is the decimal mark when both appear
 /// (`1.234,50` and `1,234.50`). A single separator stays a decimal mark,
-/// which is how `1,005` already rounds to 1.01.
-String _decimalNormalized(String text) {
+/// which is how `1,005` already rounds to 1.01, unless [locale] groups
+/// thousands with a dot.
+String _decimalNormalized(String text, [String? locale]) {
   final lastComma = text.lastIndexOf(',');
   final lastDot = text.lastIndexOf('.');
   if (lastComma >= 0 && lastDot >= 0) {
@@ -71,7 +124,33 @@ String _decimalNormalized(String text) {
     }
     return text.replaceAll(',', '');
   }
+  if (lastDot >= 0 && lastComma < 0 && _dotGroupsThousands(text, locale)) {
+    return text.replaceAll('.', '');
+  }
   return text.replaceAll(',', '.');
+}
+
+bool _dotGroupsThousands(String text, String? locale) {
+  if (locale == null || locale.trim().isEmpty) {
+    return false;
+  }
+  final language = locale.trim().toLowerCase().split(RegExp(r'[_-]')).first;
+  if (!_dotGroupingLanguages.contains(language)) {
+    return false;
+  }
+  final parts = text.split('.');
+  if (parts.length < 2 || parts.first.isEmpty) {
+    return false;
+  }
+  if (!RegExp(r'^\d+$').hasMatch(parts.first)) {
+    return false;
+  }
+  for (final part in parts.skip(1)) {
+    if (!RegExp(r'^\d{3}$').hasMatch(part)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 double basisPointsToPercent(int basisPoints) => basisPoints / 100;

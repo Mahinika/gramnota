@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/format.dart';
+import '../../../core/save_feedback.dart';
 import '../../../core/locale_pickers.dart';
 import '../../../core/money.dart';
 import '../../../core/text_prompt.dart';
@@ -46,8 +47,13 @@ Future<void> _assignOrderCustomer(
   if (id == null || !context.mounted) {
     return;
   }
-  final now = DateTime.now().toUtc().toIso8601String();
-  await store.saveOrder(order.copyWith(customerId: id, updatedAt: now));
+  try {
+    await store.updateOrderCustomer(orderId: order.id, customerId: id);
+  } on Object {
+    if (context.mounted) {
+      showSaveError(context, context.l10n.orderCustomerSaveFailed);
+    }
+  }
 }
 
 Widget _chipLabel(BuildContext context, String text) {
@@ -908,7 +914,11 @@ class _DepositFieldState extends State<_DepositField> {
   }
 
   Future<void> _save() async {
-    final parsed = parseMinor(_amount.text.trim().isEmpty ? '0' : _amount.text);
+    final parsed = parseMoneyInput(
+      _amount.text.trim().isEmpty ? '0' : _amount.text,
+      currencyCode: widget.order.currencyCode,
+      locale: context.formattingLocale,
+    );
     if (parsed == null) {
       ScaffoldMessenger.of(
         context,
@@ -1243,6 +1253,7 @@ Future<void> _removePrint(
   QuoteLine line,
 ) async {
   if (order.stockDeducted) {
+    showSaveError(context, context.l10n.calcPrintsLocked);
     return;
   }
   final l10n = context.l10n;
@@ -1261,12 +1272,21 @@ Future<void> _removePrint(
   if (next.isEmpty) {
     return;
   }
-  await store.saveOrder(
-    orderWithPrints(order, next).copyWith(
+  try {
+    await store.replaceOrderPrints(
+      orderId: order.id,
+      lines: next,
       title: quoteTitleFor(order, next),
-      updatedAt: DateTime.now().toUtc().toIso8601String(),
-    ),
-  );
+    );
+  } on OrderPrintsLocked {
+    if (context.mounted) {
+      showSaveError(context, context.l10n.calcPrintsLocked);
+    }
+  } on Object {
+    if (context.mounted) {
+      showSaveError(context, context.l10n.calcSavePrintFailed);
+    }
+  }
 }
 
 String _filamentLine(

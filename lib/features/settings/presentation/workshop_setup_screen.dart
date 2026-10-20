@@ -161,6 +161,14 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
     super.dispose();
   }
 
+  int? _money(String text) {
+    return parseMoneyInput(
+      text,
+      currencyCode: _currencyCode,
+      locale: context.formattingLocale,
+    );
+  }
+
   List<CommonSpool> _matchingSpools() => matchingCommonSpools(_spoolQuery.text);
 
   List<CommonPrinter> _matchingPrinters() {
@@ -184,12 +192,12 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
         }
         return null;
       case 2:
-        if (parseMinor(_electricity.text) == null) {
+        if (_money(_electricity.text) == null) {
           return context.l10n.settingsElectricityRequired;
         }
         return null;
       case 3:
-        if (parseMinor(_labor.text) == null) {
+        if (_money(_labor.text) == null) {
           return context.l10n.settingsLaborRequired;
         }
         return null;
@@ -214,14 +222,14 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
         if (watts == null || watts <= 0) {
           return context.l10n.setupWattsRequired;
         }
-        if (parseMinor(_price.text) == null) {
+        if (_money(_price.text) == null) {
           return context.l10n.setupPriceRequired;
         }
         final life = parseNonNegativeDouble(_life.text);
         if (life == null) {
           return context.l10n.setupLifeRequired;
         }
-        if (parseMinor(_maintenance.text) == null) {
+        if (_money(_maintenance.text) == null) {
           return context.l10n.setupMaintenanceRequired;
         }
         return null;
@@ -272,8 +280,8 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
               languageCode: _languageCode,
               currencyCode: normalizeCurrencyCode(_currencyCode),
               themeMode: normalizeThemeMode(_themeMode),
-              electricityMinorPerKwh: parseMinor(_electricity.text) ?? 0,
-              laborMinorPerHour: parseMinor(_labor.text) ?? 0,
+              electricityMinorPerKwh: _money(_electricity.text) ?? 0,
+              laborMinorPerHour: _money(_labor.text) ?? 0,
               defaultMarkupBasisPoints: parseBasisPoints(_markup.text) ?? 3000,
               vatBasisPoints: parseBasisPoints(_vat.text) ?? 2500,
               defaultFailureBasisPoints: parseBasisPoints(_failure.text) ?? 0,
@@ -296,9 +304,9 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
             id: const Uuid().v4(),
             name: _printerName.text.trim(),
             powerWatts: parsePositiveInt(_watts.text) ?? 0,
-            purchasePriceMinor: parseMinor(_price.text) ?? 0,
+            purchasePriceMinor: _money(_price.text) ?? 0,
             lifetimeHours: parseNonNegativeDouble(_life.text) ?? 0,
-            maintenanceMinorPerHour: parseMinor(_maintenance.text) ?? 0,
+            maintenanceMinorPerHour: _money(_maintenance.text) ?? 0,
           ),
         );
         final preset = _selectedSpool;
@@ -722,11 +730,11 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           _ReviewRow(l10n.fieldEmail, _email.text.trim()),
           _ReviewRow(
             l10n.setupElectricity,
-            context.money(parseMinor(_electricity.text) ?? 0, currency),
+            context.money(_money(_electricity.text) ?? 0, currency),
           ),
           _ReviewRow(
             l10n.setupLabor,
-            context.money(parseMinor(_labor.text) ?? 0, currency),
+            context.money(_money(_labor.text) ?? 0, currency),
           ),
           _ReviewRow(
             l10n.setupMarkup,
@@ -750,7 +758,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           _ReviewRow(l10n.setupPower, l10n.setupPowerValue(_watts.text.trim())),
           _ReviewRow(
             l10n.setupPurchasePrice,
-            context.money(parseMinor(_price.text) ?? 0, currency),
+            context.money(_money(_price.text) ?? 0, currency),
           ),
           _ReviewRow(
             l10n.setupLifetime,
@@ -758,7 +766,7 @@ class _WorkshopSetupScreenState extends ConsumerState<WorkshopSetupScreen> {
           ),
           _ReviewRow(
             l10n.setupMaintenance,
-            context.money(parseMinor(_maintenance.text) ?? 0, currency),
+            context.money(_money(_maintenance.text) ?? 0, currency),
           ),
           _ReviewRow(l10n.navFilament, _selectedSpool?.label ?? ''),
         ];

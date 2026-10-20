@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/save_feedback.dart';
+import '../../auth/domain/account_deletion.dart';
+import '../data/workshop_backup_io.dart';
+import '../domain/workshop_backup.dart';
+
 import '../../../core/app_language_controller.dart';
 import '../../../core/app_languages.dart';
 import '../../../core/app_theme_controller.dart';
@@ -17,6 +22,7 @@ import '../../../l10n/l10n.dart';
 import '../../customers/domain/customer.dart';
 import '../../../core/money.dart';
 import '../../../core/providers.dart';
+import '../../../core/user_store.dart';
 import '../../../core/shell.dart';
 import '../../orders/data/orders_providers.dart';
 import '../../updates/presentation/update_section.dart';
@@ -184,6 +190,90 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   var _themeMode = defaultThemeCode;
   String? _message;
 
+  Future<void> _exportWorkshop(UserStore store) async {
+    final l10n = context.l10n;
+    try {
+      final backup = await store.loadWorkshopBackup();
+      await deliverWorkshopBackup(backup.encode());
+      if (mounted) {
+        setState(() => _message = l10n.settingsExportDone);
+      }
+    } on Object {
+      if (mounted) {
+        showSaveError(context, l10n.settingsBackupShareFailed);
+        setState(() => _message = l10n.settingsBackupShareFailed);
+      }
+    }
+  }
+
+  Future<void> _importWorkshop(UserStore store) async {
+    final l10n = context.l10n;
+    final String raw;
+    try {
+      final picked = await readPickedWorkshopBackup();
+      if (picked == null || !mounted) {
+        return;
+      }
+      raw = picked;
+    } on Object {
+      if (mounted) {
+        showSaveError(context, l10n.settingsBackupFailed);
+      }
+      return;
+    }
+    final WorkshopBackup backup;
+    try {
+      backup = WorkshopBackup.decode(raw);
+    } on Object {
+      if (mounted) {
+        showSaveError(context, l10n.settingsBackupFailed);
+        setState(() => _message = l10n.settingsBackupFailed);
+      }
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.settingsImportTitle),
+        content: Text(l10n.settingsImportBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.settingsImportWorkshop),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+    try {
+      final local = await store.loadWorkshopBackup();
+      final plan = planWorkshopImport(
+        incoming: backup,
+        localSettings: local.settings,
+        localFilaments: {for (final spool in local.filaments) spool.id: spool},
+        localOrders: {for (final order in local.orders) order.id: order},
+      );
+      await store.applyWorkshopImport(plan);
+      if (mounted) {
+        setState(() => _message = l10n.settingsImportDone);
+      }
+    } on Object {
+      if (mounted) {
+        showSaveError(context, l10n.settingsBackupFailed);
+        setState(() => _message = l10n.settingsBackupFailed);
+      }
+    }
+  }
+
   @override
   void dispose() {
     for (final controller in [
@@ -208,6 +298,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _load(WorkshopSettings settings) {
+    _nextQuote = settings.nextQuoteNumber;
     if (_loaded) {
       return;
     }
@@ -241,7 +332,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _lowStock.text = low == low.roundToDouble()
         ? low.round().toString()
         : low.toString();
-    _nextQuote = settings.nextQuoteNumber;
     _setupCompleted = settings.setupCompleted;
     _loaded = true;
   }
@@ -378,11 +468,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               final markup = parseBasisPoints(_markup.text);
               final vat = parseBasisPoints(_vat.text);
               final failure = parseBasisPoints(_failure.text);
-              final electricity = parseMinor(_electricity.text);
-              final labor = parseMinor(_labor.text);
+              final locale = context.formattingLocale;
+              final currency = normalizeCurrencyCode(_currencyCode);
+              final electricity = parseMoneyInput(
+                _electricity.text,
+                currencyCode: currency,
+                locale: locale,
+              );
+              final labor = parseMoneyInput(
+                _labor.text,
+                currencyCode: currency,
+                locale: locale,
+              );
               final validity = parsePositiveInt(_validity.text);
               final lowStock = parseNonNegativeDouble(_lowStock.text);
-              final currency = normalizeCurrencyCode(_currencyCode);
               if (electricity == null) {
                 setState(() => _message = l10n.settingsElectricityRequired);
                 return;
@@ -403,29 +502,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 setState(() => _message = l10n.settingsLowStockRequired);
                 return;
               }
-              await store.saveSettings(
-                WorkshopSettings(
-                  setupCompleted: _setupCompleted,
-                  languageCode: _languageCode,
-                  currencyCode: currency,
-                  themeMode: normalizeThemeMode(_themeMode),
-                  electricityMinorPerKwh: electricity,
-                  laborMinorPerHour: labor,
-                  defaultMarkupBasisPoints: markup,
-                  vatBasisPoints: vat,
-                  defaultFailureBasisPoints: failure,
-                  businessName: _business.text.trim(),
-                  street: _street.text.trim(),
-                  postalCode: _postal.text.trim(),
-                  city: _city.text.trim(),
-                  orgNumber: _org.text.trim(),
-                  phone: _phone.text.trim(),
-                  email: _email.text.trim(),
-                  nextQuoteNumber: _nextQuote,
-                  quoteValidityDays: validity,
-                  defaultLowStockGrams: lowStock,
-                ),
-              );
+              try {
+                await store.saveSettings(
+                  WorkshopSettings(
+                    setupCompleted: _setupCompleted,
+                    languageCode: _languageCode,
+                    currencyCode: currency,
+                    themeMode: normalizeThemeMode(_themeMode),
+                    electricityMinorPerKwh: electricity,
+                    laborMinorPerHour: labor,
+                    defaultMarkupBasisPoints: markup,
+                    vatBasisPoints: vat,
+                    defaultFailureBasisPoints: failure,
+                    businessName: _business.text.trim(),
+                    street: _street.text.trim(),
+                    postalCode: _postal.text.trim(),
+                    city: _city.text.trim(),
+                    orgNumber: _org.text.trim(),
+                    phone: _phone.text.trim(),
+                    email: _email.text.trim(),
+                    nextQuoteNumber: _nextQuote,
+                    quoteValidityDays: validity,
+                    defaultLowStockGrams: lowStock,
+                  ),
+                );
+              } on Object {
+                if (context.mounted) {
+                  showSaveError(context, l10n.settingsSaveFailed);
+                  setState(() => _message = l10n.settingsSaveFailed);
+                }
+                return;
+              }
               await ref.read(appLanguageProvider.notifier).setLanguage(_languageCode);
               await ref.read(appThemeProvider.notifier).setTheme(_themeMode);
               if (mounted) {
@@ -433,6 +540,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               }
             },
             child: Text(l10n.actionSave),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: () => _exportWorkshop(store),
+            child: Text(l10n.settingsExportWorkshop),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: () => _importWorkshop(store),
+            child: Text(l10n.settingsImportWorkshop),
           ),
           const SizedBox(height: 24),
           OutlinedButton(
@@ -462,16 +579,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 return;
               }
               try {
-                await store.deleteOwnedData(email: user.email);
-                await user.delete();
+                await AccountDeletion(
+                  reauthenticate: () => reauthenticateCurrentUser(
+                    darkPage: Theme.of(context).brightness == Brightness.dark,
+                  ),
+                  deleteOwnedData: () =>
+                      store.deleteOwnedData(email: user.email),
+                  deleteUser: user.delete,
+                ).run();
               } on FirebaseAuthException catch (error) {
-                if (error.code == 'requires-recent-login') {
-                  setState(
-                    () => _message = l10n.settingsRecentLogin,
-                  );
+                if (!context.mounted) {
                   return;
                 }
-                setState(() => _message = error.message ?? error.code);
+                final message = error.code == 'requires-recent-login'
+                    ? l10n.settingsRecentLogin
+                    : (error.message ?? l10n.settingsDeleteFailed);
+                showSaveError(context, message);
+                setState(() => _message = message);
+              } on Object {
+                if (!context.mounted) {
+                  return;
+                }
+                showSaveError(context, l10n.settingsDeleteFailed);
+                setState(() => _message = l10n.settingsDeleteFailed);
               }
             },
             child: Text(l10n.settingsDeleteAccount),

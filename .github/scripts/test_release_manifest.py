@@ -87,6 +87,39 @@ class ReleaseManifestTest(unittest.TestCase):
                 sha256="abcd",
             )
 
+    def test_each_platform_build_is_monotonic_on_its_own(self) -> None:
+        current = {
+            "version": "1.0.0",
+            "android": {"build": 40},
+            "windows": {"build": 3},
+        }
+        self.assertTrue(release_manifest.build_is_monotonic(current, "windows", 3))
+        self.assertTrue(release_manifest.build_is_monotonic(current, "windows", 4))
+        self.assertFalse(release_manifest.build_is_monotonic(current, "windows", 2))
+        self.assertTrue(release_manifest.build_is_monotonic(current, "android", 40))
+        self.assertFalse(release_manifest.build_is_monotonic(current, "android", 12))
+        windows = release_manifest.artifact(
+            platform="windows",
+            version="1.0.0",
+            build=9,
+            commit="def",
+            date="2026-10-20",
+            sha256=SHA_B,
+        )
+        merged = release_manifest.merge_manifest(current, "windows", windows, "1.0.0")
+        self.assertEqual(merged["android"]["build"], 40)
+        self.assertEqual(merged["windows"]["build"], 9)
+        older = release_manifest.artifact(
+            platform="android",
+            version="1.0.0",
+            build=11,
+            commit="aaa",
+            date="2026-10-18",
+            sha256=SHA_A,
+        )
+        with self.assertRaises(release_manifest.OlderBuild):
+            release_manifest.merge_manifest(current, "android", older, "1.0.0")
+
     def test_roundtrip_json(self) -> None:
         section = release_manifest.artifact(
             platform="windows",

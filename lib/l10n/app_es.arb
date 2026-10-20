@@ -391,7 +391,7 @@
   "dashSignIn": "Inicia sesión para ver el taller.",
   "dashPreviousMonth": "Mes anterior",
   "dashNextMonth": "Mes siguiente",
-  "dashDepositHint": "Los anticipos cuentan en la fecha en que los registras. El resto cuenta cuando el pedido se imprime o se paga. La ganancia es el ingreso sin IVA menos el costo del trabajo terminado este mes.",
+  "dashDepositHint": "Los anticipos cuentan en la fecha en que los registras. El resto cuenta cuando el pedido se imprime o se paga. El costo se reparte igual, para que un trabajo rentable no aparezca como pérdida el mes en que se termina. Los totales de clientes y productos usan esos mismos importes.",
   "dashOrders": "Pedidos",
   "dashRevenueIncl": "Ingresos con IVA",
   "dashRevenueExcl": "Ingresos sin IVA",
@@ -588,5 +588,18 @@
   "versionLabel": "Versión",
   "versionWithBuild": "Versión {version} (compilación {build})",
   "updateBuildOnly": "Compilación {build}.",
-  "importPrintFile": "Archivo de impresión"
+  "importPrintFile": "Archivo de impresión",
+  "settingsSaveFailed": "No se pudieron guardar los ajustes. Comprueba la conexión e inténtalo de nuevo.",
+  "settingsDeleteFailed": "No se pudo eliminar la cuenta. Los datos del taller siguen aquí.",
+  "settingsExportWorkshop": "Exportar taller",
+  "settingsImportWorkshop": "Importar taller",
+  "settingsExportDone": "Taller exportado.",
+  "settingsImportTitle": "¿Importar taller?",
+  "settingsImportBody": "Los registros del archivo se añaden o actualizan. Lo que ya está aquí y falta en el archivo se queda. El filamento ya descontado para una impresión no se devuelve, y el siguiente número de presupuesto no retrocede.",
+  "settingsImportDone": "Taller importado.",
+  "settingsBackupFailed": "No se pudo leer esa copia.",
+  "settingsBackupShareFailed": "No se pudo exportar el taller. Inténtalo de nuevo.",
+  "orderCustomerSaveFailed": "No se pudo vincular al cliente. Comprueba la conexión e inténtalo de nuevo.",
+  "quoteNumberFailed": "No se pudo asignar un número de presupuesto. Comprueba la conexión e inténtalo de nuevo.",
+  "calcQuantityAtLeastOne": "La cantidad debe ser al menos 1."
 }

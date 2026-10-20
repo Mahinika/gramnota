@@ -216,13 +216,29 @@ String currencySymbol(String currencyCode, {String? locale}) {
   return symbol.isEmpty ? code : symbol;
 }
 
-/// Picker order: featured codes, then every other ISO code.
+/// The picker offers 2-decimal currencies and 0-decimal ones (yen, króna).
+/// Three-decimal currencies are left out so a typed amount is not stored
+/// with a missing third digit. Stored documents keep whatever code they have.
+bool currencyOfferedInPicker(String currencyCode) {
+  final digits = currencyFractionDigits(currencyCode);
+  return digits == 0 || digits == 2;
+}
+
+/// Picker order: featured codes, then every other offered ISO code.
 List<String> currencyCodesInPickerOrder() {
   final rest = iso4217Currencies.keys
-      .where((code) => !featuredCurrencyCodes.contains(code))
+      .where(
+        (code) =>
+            !featuredCurrencyCodes.contains(code) &&
+            currencyOfferedInPicker(code),
+      )
       .toList()
     ..sort();
-  return [...featuredCurrencyCodes, ...rest];
+  final featured = [
+    for (final code in featuredCurrencyCodes)
+      if (currencyOfferedInPicker(code)) code,
+  ];
+  return [...featured, ...rest];
 }
 
 /// English ISO name plus code, used when filtering the picker.

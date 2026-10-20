@@ -25,6 +25,38 @@ void main() {
     expect(parseMinor('9' * 40), isNull);
   });
 
+  test('groups thousands only for locales that use a dot', () {
+    for (final locale in ['de', 'nl', 'es', 'da', 'nb', 'de_DE', 'nl-NL']) {
+      expect(parseMinor('1.249', locale: locale), 124900, reason: locale);
+    }
+    expect(parseMinor('1.249'), 125);
+    expect(parseMinor('1.249', locale: 'sv'), 125);
+    expect(parseMinor('1.249', locale: 'en'), 125);
+    expect(parseMinor('1,005'), 101);
+    expect(parseMinor('1,005', locale: 'sv'), 101);
+    expect(parseMinor('1.25', locale: 'de'), 125);
+    expect(parseMinor('1.249,50', locale: 'de'), 124950);
+    expect(parseMoneyInput('1.249', currencyCode: 'EUR', locale: 'de'), 124900);
+  });
+
+  test('zero-decimal currencies store hundredths of a whole unit', () {
+    expect(parseMinor('20', fractionDigits: 0), 2000);
+    expect(parseMinor('20,5', locale: 'sv', fractionDigits: 0), 2100);
+    expect(parseMinor('20,4', locale: 'sv', fractionDigits: 0), 2000);
+    expect(parseMoneyInput('20', currencyCode: 'JPY'), 2000);
+    expect(parseMoneyInput('20', currencyCode: 'ISK', locale: 'sv'), 2000);
+    expect(parseMoneyInput('19,99', currencyCode: 'SEK', locale: 'sv'), 1999);
+  });
+
+  test('reads a quote quantity and rejects zero', () {
+    expect(readQuoteQuantity(''), 1);
+    expect(readQuoteQuantity('  '), 1);
+    expect(readQuoteQuantity('2'), 2);
+    expect(readQuoteQuantity('0'), isNull);
+    expect(readQuoteQuantity('-1'), isNull);
+    expect(readQuoteQuantity('2,5'), isNull);
+  });
+
   test('parses percents into basis points', () {
     expect(parseBasisPoints('25'), 2500);
     expect(parseBasisPoints('12,5'), 1250);
@@ -37,6 +69,13 @@ void main() {
     expect(formatMoney(123450, 'sek', locale: 'sv'), '1\u00a0234,50\u00a0kr');
     expect(formatMoney(-150, 'SEK', locale: 'sv'), '\u22121,50\u00a0kr');
     expect(formatMoney(0, 'NOK', locale: 'sv'), '0,00\u00a0kr');
+    expect(formatMoney(2000, 'ISK', locale: 'sv'), contains('ISK'));
+    expect(formatMoney(2000, 'ISK', locale: 'en'), contains('ISK'));
+    expect(
+      formatMoney(2000, 'ISK', locale: 'sv'),
+      isNot(formatMoney(2000, 'SEK', locale: 'sv')),
+    );
+    expect(formatMoney(2000, 'ISK', locale: 'sv'), isNot(contains('kr')));
   });
 
   test('formats a stored timestamp as a local date', () {

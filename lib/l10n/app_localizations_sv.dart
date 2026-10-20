@@ -1427,7 +1427,7 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get dashDepositHint =>
-      'Handpenningar räknas på det datum du registrerar dem. Resten räknas när ordern skrivs ut eller betalas. Vinst är intäkt exkl. moms minus kostnaden för arbete som blev klart den här månaden.';
+      'Handpenningar räknas på det datum du registrerar dem. Resten räknas när ordern skrivs ut eller betalas. Kostnaden delas på samma sätt, så ett lönsamt jobb inte visas som förlust den månad det blir klart. Kund- och produktsummor använder samma belopp.';
 
   @override
   String get dashOrders => 'Ordrar';
@@ -2155,4 +2155,49 @@ class AppLocalizationsSv extends AppLocalizations {
 
   @override
   String get importPrintFile => 'Utskriftsfil';
+
+  @override
+  String get settingsSaveFailed =>
+      'Inställningarna kunde inte sparas. Kontrollera anslutningen och försök igen.';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Kontot kunde inte tas bort. Verkstadens data finns kvar.';
+
+  @override
+  String get settingsExportWorkshop => 'Exportera verkstad';
+
+  @override
+  String get settingsImportWorkshop => 'Importera verkstad';
+
+  @override
+  String get settingsExportDone => 'Verkstaden exporterades.';
+
+  @override
+  String get settingsImportTitle => 'Importera verkstad?';
+
+  @override
+  String get settingsImportBody =>
+      'Poster i filen läggs till eller uppdateras. Det som redan finns här men saknas i filen blir kvar. Filament som redan dragits för ett utskrift läggs inte tillbaka, och nästa offertnummer går inte bakåt.';
+
+  @override
+  String get settingsImportDone => 'Verkstaden importerades.';
+
+  @override
+  String get settingsBackupFailed => 'Kunde inte läsa den säkerhetskopian.';
+
+  @override
+  String get settingsBackupShareFailed =>
+      'Kunde inte exportera verkstaden. Försök igen.';
+
+  @override
+  String get orderCustomerSaveFailed =>
+      'Kunde inte koppla kunden. Kontrollera anslutningen och försök igen.';
+
+  @override
+  String get quoteNumberFailed =>
+      'Kunde inte ge ett offertnummer. Kontrollera anslutningen och försök igen.';
+
+  @override
+  String get calcQuantityAtLeastOne => 'Antalet måste vara minst 1.';
 }

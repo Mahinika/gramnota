@@ -304,7 +304,7 @@ Future<Uint8List> buildQuotePdf({
                   ),
                   cell('${prints[index].quantity}', align: pw.Alignment.center),
                   cell(
-                    money(_unitNet(prints[index])),
+                    _unitPriceText(prints[index], money),
                     align: pw.Alignment.centerRight,
                   ),
                   cell(
@@ -395,12 +395,24 @@ Future<Uint8List> buildQuotePdf({
             ),
           ),
         ),
-        if (prints.length == 1) ...[
+        if (prints.length == 1 &&
+            exactUnitMinor(
+                  prints.single.breakdown.totalMinor,
+                  prints.single.quantity,
+                ) !=
+                null) ...[
           pw.SizedBox(height: 10),
           pw.Align(
             alignment: pw.Alignment.centerRight,
             child: pw.Text(
-              l10n.pdfPerUnit(money(prints.single.breakdown.perUnitMinor)),
+              l10n.pdfPerUnit(
+                money(
+                  exactUnitMinor(
+                    prints.single.breakdown.totalMinor,
+                    prints.single.quantity,
+                  )!,
+                ),
+              ),
               style: quiet,
             ),
           ),
@@ -433,9 +445,26 @@ String _vatLabel(List<QuoteLine> prints, AppLocalizations l10n) {
   return l10n.pdfVat;
 }
 
-int _unitNet(QuoteLine line) {
-  final quantity = line.quantity <= 0 ? 1 : line.quantity;
-  return (line.breakdown.netMinor / quantity).round();
+/// Unit amount that multiplies back to [amountMinor].
+///
+/// Null when the division is not exact, so a customer document never shows
+/// a unit price whose product disagrees with the line or the total.
+int? exactUnitMinor(int amountMinor, int quantity) {
+  if (quantity <= 0) {
+    return null;
+  }
+  if (amountMinor % quantity != 0) {
+    return null;
+  }
+  return amountMinor ~/ quantity;
+}
+
+String _unitPriceText(QuoteLine line, String Function(int minor) money) {
+  final unit = exactUnitMinor(line.breakdown.netMinor, line.quantity);
+  if (unit == null) {
+    return '—';
+  }
+  return money(unit);
 }
 
 String _lineDetail(QuoteLine line) {

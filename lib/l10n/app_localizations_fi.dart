@@ -1429,7 +1429,7 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get dashDepositHint =>
-      'Ennakot lasketaan kirjaamallesi päivälle. Loppu lasketaan, kun tilaus on tulostettu tai maksettu. Voitto on liikevaihto ilman ALV:tä miinus tässä kuussa valmistuneen työn kustannus.';
+      'Ennakot lasketaan kirjaamallesi päivälle. Loppu lasketaan, kun tilaus on tulostettu tai maksettu. Kustannus jaetaan samalla tavalla, jotta kannattava työ ei näy tappiona valmistumiskuukautena. Asiakas- ja tuoteyhteissummat käyttävät samoja summia.';
 
   @override
   String get dashOrders => 'Tilaukset';
@@ -2157,4 +2157,49 @@ class AppLocalizationsFi extends AppLocalizations {
 
   @override
   String get importPrintFile => 'Tulostustiedosto';
+
+  @override
+  String get settingsSaveFailed =>
+      'Asetuksia ei voitu tallentaa. Tarkista yhteys ja yritä uudelleen.';
+
+  @override
+  String get settingsDeleteFailed =>
+      'Tiliä ei voitu poistaa. Verstaan tiedot ovat yhä täällä.';
+
+  @override
+  String get settingsExportWorkshop => 'Vie verstas';
+
+  @override
+  String get settingsImportWorkshop => 'Tuo verstas';
+
+  @override
+  String get settingsExportDone => 'Verstas vietiin.';
+
+  @override
+  String get settingsImportTitle => 'Tuodaanko verstas?';
+
+  @override
+  String get settingsImportBody =>
+      'Tiedoston tiedot lisätään tai päivitetään. Se, mikä on jo täällä ja puuttuu tiedostosta, säilyy. Tulosteeseen jo käytettyä filamenttia ei palauteta, eikä seuraava tarjousnumero pienene.';
+
+  @override
+  String get settingsImportDone => 'Verstas tuotiin.';
+
+  @override
+  String get settingsBackupFailed => 'Varmuuskopiota ei voitu lukea.';
+
+  @override
+  String get settingsBackupShareFailed =>
+      'Verstasta ei voitu viedä. Yritä uudelleen.';
+
+  @override
+  String get orderCustomerSaveFailed =>
+      'Asiakasta ei voitu liittää. Tarkista yhteys ja yritä uudelleen.';
+
+  @override
+  String get quoteNumberFailed =>
+      'Tarjousnumeroa ei voitu antaa. Tarkista yhteys ja yritä uudelleen.';
+
+  @override
+  String get calcQuantityAtLeastOne => 'Määrän on oltava vähintään 1.';
 }
